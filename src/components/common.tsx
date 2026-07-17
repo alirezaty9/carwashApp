@@ -107,9 +107,12 @@ export function Field({
   hint?: string;
   children: ReactNode;
 }) {
+  // تیترِ گام‌های شماره‌دار (که با رقمِ فارسی یا انگلیسی شروع می‌شوند: ۱، ۲، ... ۸ ...)
+  // به‌صورتِ خودکار آبی می‌شوند — بدون نیاز به تنظیمِ دستی برای هر فیلد.
+  const isNumbered = /^\s*[۰-۹0-9]/.test(label);
   return (
     <div>
-      <label className="block text-xs font-bold text-[var(--text-muted)] mb-2">
+      <label className={`block text-xs font-bold mb-2 ${isNumbered ? 'text-[#7f8081]' : 'text-[var(--text-muted)]'}`}>
         {label} {required && <span className="text-[var(--danger-text)]">*</span>}
         {hint && <span className="text-[var(--text-faint)] font-medium mr-1">{hint}</span>}
       </label>
@@ -120,7 +123,7 @@ export function Field({
 
 /** کلاس‌های مشترک ورودی‌ها برای یکدستی و DRY */
 export const inputClass =
-  'w-full bg-[var(--bg)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-faint)] placeholder:font-normal placeholder:text-xs rounded-xl px-3.5 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-[var(--accent-soft)] focus:border-[var(--accent-strong)] outline-none transition-all';
+  'w-full bg-white text-slate-900 border border-[var(--border)] placeholder-slate-400 placeholder:font-normal placeholder:text-xs rounded-xl px-3.5 py-2.5 text-sm font-semibold hover:bg-[var(--accent-soft)] focus:bg-white focus:ring-2 focus:ring-[var(--accent-soft)] focus:border-[var(--accent-strong)] outline-none transition-all';
 
 /** دکمه‌ی اصلی */
 export function PrimaryButton({

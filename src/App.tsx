@@ -4,10 +4,10 @@
  */
 
 import { FormEvent, useEffect, useState } from 'react';
-import { Car, ShieldCheck, Lock, Clock, Sun, Moon, ArrowRight } from 'lucide-react';
+import { CarFront, Droplets, ShieldCheck, Lock, Sun, Moon, ArrowRight } from 'lucide-react';
 import { Receipt } from './types';
 import { useCarwashStore } from './data/store';
-import { getFormattedJalali } from './utils/jalali';
+import { getJalaliDateParts, JALALI_MONTH_NAMES, toPersianDigits } from './utils/jalali';
 import { NotificationBar, useNotification, Modal, ModalHeader, Field, inputClass, PrimaryButton, GhostButton } from './components/common';
 import NewReceipt from './components/pos/NewReceipt';
 import AdminPanel from './components/admin/AdminPanel';
@@ -38,14 +38,18 @@ export default function App() {
     window.setTimeout(() => window.print(), 250);
   };
 
-  // ساعت زنده
-  const [liveTime, setLiveTime] = useState('');
+  // ساعت زنده — هر ثانیه به‌روز می‌شود (ریل‌تایم)
+  const [now, setNow] = useState<Date>(() => new Date());
   useEffect(() => {
-    const tick = () => setLiveTime(getFormattedJalali(new Date(), true));
+    const tick = () => setNow(new Date());
     tick();
-    const id = window.setInterval(tick, 30000);
+    const id = window.setInterval(tick, 1000);
     return () => window.clearInterval(id);
   }, []);
+  const { year: jYear, month: jMonth, day: jDay } = getJalaliDateParts(now);
+  const dateLabel = `${toPersianDigits(jDay)} ${JALALI_MONTH_NAMES[jMonth - 1]} ${toPersianDigits(jYear)}`;
+  const pad2 = (n: number) => toPersianDigits(n.toString().padStart(2, '0'));
+  const timeLabel = `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
 
   // ورود به پنل مدیریت (با رمز اختیاری)
   const [adminUnlocked, setAdminUnlocked] = useState(false);
@@ -82,27 +86,30 @@ export default function App() {
         {/* ===== هدر ===== */}
         <header className="bg-[var(--header-bg)] backdrop-blur-md border-b border-[var(--border)] sticky top-0 z-40 shadow-[0_10px_30px_-24px_rgba(0,0,0,0.6)]">
           <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-            {/* برند */}
-            <div className="flex items-center gap-3">
-              <div className="cw-badge p-2.5 rounded-2xl">
-                <Car className="w-6 h-6 relative z-10" />
+            {/* برند = لینکِ ورود به پنل مدیریت */}
+            <button
+              type="button"
+              onClick={goAdmin}
+              title="ورود به پنل مدیریت"
+              className="flex items-center gap-3 rounded-2xl -mr-1 pr-1 pl-2 py-1 cursor-pointer hover:bg-[var(--surface-2)] transition-all group"
+            >
+              <div className="cw-badge p-2.5 rounded-2xl relative">
+                <CarFront className="w-6 h-6 relative z-10" strokeWidth={2.2} />
+                <Droplets className="w-3 h-3 absolute top-1 left-1 z-10 text-white/75" strokeWidth={2.4} />
+                {locked ? (
+                  <Lock className="w-3 h-3 absolute -bottom-1 -left-1 bg-[var(--surface)] text-[var(--text-muted)] rounded-full p-[1px] border border-[var(--border)]" />
+                ) : (
+                  <ShieldCheck className="w-3 h-3 absolute -bottom-1 -left-1 bg-[var(--surface)] text-[var(--text-muted)] rounded-full p-[1px] border border-[var(--border)]" />
+                )}
               </div>
-              <div>
-                <h1 className="font-display text-2xl text-[var(--text)] leading-none">{store.config.shopName}</h1>
-                <p className="text-[11px] text-[var(--accent-text)] font-medium mt-1 tracking-wide">
-                  {mode === 'admin' ? 'پنل مدیریت' : 'صندوقِ صدور قبض'}
-                </p>
-              </div>
-            </div>
+              <h1 className="font-display text-2xl text-[var(--text)] leading-none group-hover:text-[var(--accent-text)] transition-colors">
+                {store.config.shopName}
+              </h1>
+            </button>
 
             {/* کنترل‌ها */}
             <div className="flex items-center gap-2">
-              <div className="hidden md:flex items-center gap-2 bg-[var(--surface-2)] text-[var(--text-muted)] px-3 py-2 rounded-xl text-[11px] font-semibold border border-[var(--border)]">
-                <Clock className="w-4 h-4" />
-                <span>{liveTime}</span>
-              </div>
-
-              {/* تغییر تم */}
+              {/* تغییر تم — جای ساعت */}
               <button
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                 title={theme === 'dark' ? 'تمِ روشن' : 'تمِ تیره'}
@@ -111,16 +118,14 @@ export default function App() {
                 {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
 
-              {/* ورود / بازگشت */}
-              {mode === 'pos' ? (
-                <button
-                  onClick={goAdmin}
-                  className="cw-primary flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold cursor-pointer"
-                >
-                  {locked ? <Lock className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
-                  پنل مدیریت
-                </button>
-              ) : (
+              {/* ساعت زنده — بدون آیکون، جای دارک‌مود */}
+              <div className="hidden md:flex flex-col leading-tight items-end bg-[var(--surface-2)] px-3.5 py-1.5 rounded-xl border border-[var(--border)]">
+                <span className="text-[13px] font-bold text-[var(--text)] font-mono tabular-nums">{timeLabel}</span>
+                <span className="text-[10px] font-semibold text-[var(--text-muted)]">{dateLabel}</span>
+              </div>
+
+              {/* بازگشت به صندوق — فقط در حالتِ پنل مدیریت */}
+              {mode === 'admin' && (
                 <button
                   onClick={() => setMode('pos')}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] cursor-pointer transition-all"

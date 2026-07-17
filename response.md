@@ -1,59 +1,8 @@
 <div dir="rtl" align="right">
 
-# 🧾 گزارش تغییرات — تخفیف + رنگ قیمت‌ها + placeholder ها
+# 🧾 گزارش تغییرات — ساعتِ ریل‌تایم، لوگوی جدید، بوردرِ تیپ و سکشن‌بندی
 
-<div style="background:#ebfbee;border-right:4px solid #2f9e44;color:#14532d;padding:8px 12px;border-radius:6px">✅ هر سه درخواست انجام شد: (۱) اینپوت تخفیف در پایین فرم که از مبلغ کل کم می‌شود، (۲) رنگ قیمت‌ها از آبی/فیروزه‌ای به مشکی تغییر کرد، (۳) placeholder ها معمولی‌تر (نازک‌تر و کوچک‌تر) شدند.</div>
-
-<br>
-
----
-
-<br>
-
-## ۱) 🧭 اپ چطور کار می‌کند؟
-
-این یک سیستمِ صندوق (POS) کارواش است. جریانِ صدور قبض:
-
-<table dir="rtl" style="border-collapse:collapse;width:100%;font-size:14px">
-  <thead>
-    <tr>
-      <th style="border:1px solid #999;padding:10px;text-align:right">لایه</th>
-      <th style="border:1px solid #999;padding:10px;text-align:right">فایل</th>
-      <th style="border:1px solid #999;padding:10px;text-align:right">مسئولیت</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">UI فرم قبض</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">src/components/pos/NewReceipt.tsx</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">گرفتنِ ورودی‌ها (مشتری، تیپ، خدمات، تخفیف) و محاسبه‌ی مبلغ</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">منطق/داده</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">src/data/store.ts</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">ساختِ رکوردِ قبض، محاسبه‌ی نهاییِ مبلغ و ذخیره‌سازی</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">مدلِ داده</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">src/types.ts</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">تعریفِ شکلِ قبض (Receipt)</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">چاپ فیش</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">src/components/print/PrintReceipt.tsx</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">فیشِ حرارتیِ ۸۰mm هنگام چاپ</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">استایلِ مشترک</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">common.tsx + index.css</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">کلاسِ اینپوت‌ها و متغیرهای رنگیِ تم (روشن/تیره)</td>
-    </tr>
-  </tbody>
-</table>
-
-<br>
-
-**مسیر:** کاربر فرم را پر می‌کند → `total` در NewReceipt محاسبه می‌شود → با «ثبت و چاپ»، تابعِ `createReceipt` در store مبلغِ نهایی را دوباره امن محاسبه و قبض را ذخیره می‌کند → قبض به `PrintReceipt` می‌رود و چاپ می‌شود.
+<div style="background:#ebfbee;border-right:4px solid #2f9e44;color:#14532d;padding:8px 12px;border-radius:6px">✅ چهار تغییر انجام شد: ساعت واقعاً لحظه‌ای شد، لوگو خفن‌تر شد، پررنگیِ بوردرِ هاورِ تیپ ماشین ملایم شد، و فرمِ قبض به سکشن‌های جدا با خطِ فاصله تقسیم شد.</div>
 
 <br>
 
@@ -61,83 +10,18 @@
 
 <br>
 
-## ۲) 🔧 تک‌تکِ تغییرات
+## ۱) 🕒 ساعت ریل‌تایم شد (فایل `src/App.tsx`)
 
-### 🟢 الف) اینپوت تخفیف (پایینِ فرم، بالای دکمه‌ی ثبت)
-
-<table dir="rtl" style="border-collapse:collapse;width:100%;font-size:14px">
-  <thead>
-    <tr>
-      <th style="border:1px solid #999;padding:10px;text-align:right">فایل</th>
-      <th style="border:1px solid #999;padding:10px;text-align:right">چه شد</th>
-      <th style="border:1px solid #999;padding:10px;text-align:right">چرا</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">NewReceipt.tsx</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">state جدید <code>discount</code> + فیلدِ «۷) تخفیف» + محاسبه‌ی <code>total = subtotal − discountValue</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">مبلغی که کاربر می‌زند از مبلغِ کل کم شود</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">store.ts</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right"><code>discount</code> به ورودی افزوده شد؛ سمتِ store هم <code>total = subtotal − discount</code> و در قبض ذخیره می‌شود</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">مبلغِ ذخیره‌شده و گزارش‌ها هم درست باشند، نه فقط نمایش</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">types.ts</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">فیلدِ اختیاریِ <code>discount?: number</code> به Receipt</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">اختیاری‌بودن یعنی قبض‌های قدیمی بدون خطا کار می‌کنند</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">PrintReceipt.tsx</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">اگر تخفیف باشد، دو ردیفِ «جمع خدمات» و «تخفیف» روی فیش چاپ می‌شود</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">مشتری تخفیفِ اعمال‌شده را روی فیش ببیند</td>
-    </tr>
-  </tbody>
-</table>
+<div style="background:#fff4e6;border-right:4px solid #f08c00;color:#7c3f00;padding:8px 12px;border-radius:6px">⚠️ مشکل: قبلاً تایمر هر <b>۳۰ ثانیه</b> یک‌بار به‌روز می‌شد، برای همین حس می‌شد آپدیت نمی‌شود.</div>
 
 <br>
 
-<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">ℹ️ محافظت در برابر خطا: تخفیف بین <b>صفر</b> و <b>جمعِ خدمات</b> محدود شده تا مبلغ هرگز منفی نشود. اعداد فارسی هم پشتیبانی می‌شوند (با <code>toEnglishDigits</code> تبدیل می‌شوند).</div>
+**راه‌حل:** بازه به <code>۱۰۰۰ms</code> (هر ثانیه) کاهش یافت و <b>ثانیه‌شمار</b> به نمایش اضافه شد تا زنده‌بودنش دیده شود:
 
-<br>
-
-**نمونه‌ی عینی:**
-
-```text
-جمع خدمات: ۱۵۰٬۰۰۰ تومان
-کاربر در اینپوت تخفیف می‌زند: ۲۰۰۰۰
-────────────────────────────
-مبلغ قابل پرداخت: ۱۳۰٬۰۰۰ تومان
-(روی چیپِ مبلغ هم خطِ «جمع خدمات — تخفیف» نمایش داده می‌شود)
+```tsx
+window.setInterval(tick, 1000);          // به‌جای 30000
+timeLabel = `${ساعت}:${دقیقه}:${ثانیه}`; // مثلِ ۱۴:۳۰:۰۵
 ```
-
-<br>
-
-### 🟢 ب) رنگِ قیمت‌ها مشکی شد (قبلاً آبی/فیروزه‌ای بود)
-
-در `src/index.css` متغیرِ `--price` (رنگِ متنِ همه‌ی قیمت‌ها) عوض شد:
-
-```css
-/* قبل */  --price: #06B6D4;    /* آبیِ فیروزه‌ای */
-/* بعد */  --price: var(--text); /* مشکی در تمِ روشن، سفید در تمِ تیره */
-```
-
-<div style="background:#fff4e6;border-right:4px solid #f08c00;color:#7c3f00;padding:8px 12px;border-radius:6px">⚠️ چرا <code>var(--text)</code> و نه مستقیماً <code>#000</code>؟ چون اپ تمِ تیره هم دارد و مشکیِ ثابت در تمِ تیره نامرئی می‌شد. این روش در تمِ روشن مشکی و در تمِ تیره سفید نشان می‌دهد. ته‌رنگِ ملایمِ فیروزه‌ای فقط برای <b>پس‌زمینه‌ی چیپِ مبلغ</b> حفظ شد.</div>
-
-<br>
-
-### 🟢 ج) placeholder ها معمولی شدند
-
-در `src/components/common.tsx` به `inputClass` اضافه شد:
-
-```text
-placeholder:font-normal   → نازک به‌جای بولد
-placeholder:text-xs        → کمی کوچک‌تر
-```
-
-قبلاً placeholder از `font-semibold` و `text-sm`ِ خودِ اینپوت ارث می‌برد و درشت/بولد دیده می‌شد؛ حالا فقط متنِ واقعیِ ورودی بولد است و راهنما ظریف.
 
 <br>
 
@@ -145,39 +29,80 @@ placeholder:text-xs        → کمی کوچک‌تر
 
 <br>
 
-## ۳) ⚖️ جایگزین‌ها و انتخاب
+## ۲) 🚗 لوگوی خفن‌تر
 
 <table dir="rtl" style="border-collapse:collapse;width:100%;font-size:14px">
   <thead>
     <tr>
-      <th style="border:1px solid #999;padding:10px;text-align:right">تصمیم</th>
-      <th style="border:1px solid #999;padding:10px;text-align:right">جایگزین</th>
-      <th style="border:1px solid #999;padding:10px;text-align:right">چرا این روش</th>
+      <th style="border:1px solid #999;padding:10px;text-align:right">قبل</th>
+      <th style="border:1px solid #999;padding:10px;text-align:right">بعد</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">تخفیف در store هم اعمال شد</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">فقط در UI کم شود</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">اگر فقط UI بود، مبلغِ ذخیره‌شده و گزارشِ درآمد اشتباه می‌شد</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right"><code>--price: var(--text)</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">مشکیِ ثابت <code>#000</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">سازگاری با هر دو تمِ روشن/تیره</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">آیکونِ سادهٔ <code>Car</code> روی بَجِ گرادیانی</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">آیکونِ <code>CarFront</code> (نمای جلو) + قطرهٔ آب <code>Droplets</code> + جلای شیشه‌ای و سایهٔ عمیق‌تر</td>
     </tr>
   </tbody>
 </table>
 
 <br>
 
-<div style="background:#fff4e6;border-right:4px solid #f08c00;color:#7c3f00;padding:8px 12px;border-radius:6px">⚠️ در این محیط <code>node</code>/<code>bun</code> نصب نبود، پس <code>tsc</code> اجرا نشد. تغییرات از نظر تایپ امن‌اند (همه‌ی فیلدهای جدید اختیاری‌اند). یک‌بار روی سیستمِ خودتان اجرا و بصری بررسی کنید.</div>
+<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">ℹ️ گرادیانِ بَج سه‌رنگه (فیروزه‌ای→آبی) شد و با یک لایهٔ <code>::after</code> جلای نوریِ بالای بَج اضافه شد (در <code>index.css</code>). قطرهٔ آب حسِ «کارواش/تمیزی» می‌دهد. نشانِ 🛡️/🔒 گوشهٔ لوگو (ورود به پنل) دست‌نخورده ماند.</div>
 
 <br>
 
-## ۴) 📌 قدم بعدیِ پیشنهادی
+---
 
-- افزودنِ «تخفیفِ درصدی» (مثلاً ۱۰٪) کنارِ تخفیفِ مبلغی.
-- ستونِ «تخفیف» در صفحه‌ی گزارش‌ها برای جمعِ کلِ تخفیف‌های داده‌شده.
+<br>
+
+## ۳) 🎨 بوردرِ هاورِ تیپ ماشین ملایم شد
+
+در `src/components/pos/NewReceipt.tsx`، رنگِ بوردرِ هاورِ دکمه‌های تیپ از <code>border-strong</code> (شفافیت ۰٫۴۵ = پررنگ) به <code>accent-border</code> (شفافیت ۰٫۳۲ = ملایم) تغییر کرد. فقط همین بخش عوض شد، طبقِ درخواست.
+
+<br>
+
+---
+
+<br>
+
+## ۴) 🧩 سکشن‌بندیِ فرم (بدون تغییر استایلِ فیلدها)
+
+فرمِ قبض به چهار سکشنِ جدا تقسیم شد که با یک <b>خطِ کامل</b> و فاصلهٔ بیشتر (<code>gap-7</code>) از هم جدا می‌شوند:
+
+<table dir="rtl" style="border-collapse:collapse;width:100%;font-size:14px">
+  <thead>
+    <tr>
+      <th style="border:1px solid #999;padding:10px;text-align:right">سکشن</th>
+      <th style="border:1px solid #999;padding:10px;text-align:right">محتوا</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">۱</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">گام‌های ۱، ۲ و ۳ در یک ردیف + پنلِ سوابقِ مشتری</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">۲</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">گام ۴ (تیپ ماشین) — تنها</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">۳</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">گام ۵ (خدمات) — تنها</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">۴</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">گام ۶ و ۷ (کارگر + تخفیف) + توضیحات</td>
+    </tr>
+  </tbody>
+</table>
+
+<br>
+
+<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">ℹ️ فقط سه المانِ <code>&lt;div className="border-t border-[var(--border)]"&gt;</code> بین سکشن‌ها اضافه شد و فاصلهٔ فرم از <code>gap-6</code> به <code>gap-7</code> رفت. هیچ استایلی روی خودِ فیلدها تغییر نکرد. بخشِ «جمع و ثبت» هم از قبل خطِ بالایی داشت و به‌عنوان جداکنندهٔ آخر عمل می‌کند.</div>
+
+<br>
+
+<div style="background:#fff4e6;border-right:4px solid #f08c00;color:#7c3f00;padding:8px 12px;border-radius:6px">⚠️ در این محیط <code>node</code>/<code>bun</code> نبود و <code>tsc</code> اجرا نشد؛ تغییرات امن‌اند. لطفاً بصری چک کن.</div>
 
 </div>

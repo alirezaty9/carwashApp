@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { Printer, UserCheck, History as HistoryIcon, Sparkles } from 'lucide-react';
+import { Printer, UserCheck, History as HistoryIcon } from 'lucide-react';
 import { Receipt } from '../../types';
 import { Store } from '../../data/store';
 import { formatCurrencyToman, toEnglishDigits, toPersianDigits } from '../../utils/jalali';
@@ -51,9 +51,18 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
   };
 
   const subtotal = serviceIds.reduce((sum, id) => sum + priceFor(id), 0);
-  // تخفیفِ واردشده را به عدد تبدیل و بین صفر و جمعِ خدمات محدود می‌کنیم
-  const discountValue = Math.min(Math.max(0, Number(toEnglishDigits(discount)) || 0), subtotal);
+  // کاربر تخفیف را به «تومان» وارد می‌کند؛ قیمت‌ها داخل سیستم به ریال ذخیره‌اند،
+  // پس ×۱۰ می‌کنیم و بین صفر و جمعِ خدمات محدود می‌کنیم تا مبلغ منفی نشود.
+  const discountToman = Math.max(0, Number(toEnglishDigits(discount).replace(/[^0-9]/g, '')) || 0);
+  const discountValue = Math.min(discountToman * 10, subtotal);
   const total = subtotal - discountValue;
+
+  // ورودیِ تخفیف را حینِ تایپ به «رقمِ فارسی + جداکننده‌ی سه‌رقمی» تبدیل می‌کنیم
+  // تا هم‌شکلِ قیمت‌هایِ نمایش‌داده‌شده باشد (مثلِ ۱۲٬۵۰۰).
+  const handleDiscountChange = (raw: string) => {
+    const digits = toEnglishDigits(raw).replace(/[^0-9]/g, '');
+    setDiscount(digits ? new Intl.NumberFormat('fa-IR').format(Number(digits)) : '');
+  };
 
   const toggleService = (id: string) => {
     setServiceIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -99,9 +108,10 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
       title="صدور قبض جدید"
       subtitle="شماره‌ی مشتری را بزنید، خدمات را انتخاب کنید و فیش را چاپ کنید."
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-        {/* گام ۱ و ۲: مشتری */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-7">
+        {/* ===== سکشن ۱: مشتری و خودرو (گام‌های ۱، ۲، ۳) ===== */}
+        {/* گام ۱، ۲ و ۳: مشتری و خودرو — در یک خط */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <Field label="۱) شماره‌ی مشتری" required>
             <input
               inputMode="numeric"
@@ -117,6 +127,14 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
               placeholder="نام و نام خانوادگی"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              className={inputClass}
+            />
+          </Field>
+          <Field label="۳) نوع و مدل ماشین" hint="(اختیاری)">
+            <input
+              placeholder="برند، رنگ یا مدل خودرو"
+              value={carModel}
+              onChange={(e) => setCarModel(e.target.value)}
               className={inputClass}
             />
           </Field>
@@ -147,17 +165,10 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
           </div>
         )}
 
-        {/* گام ۳: نوع/مدل ماشین */}
-        <Field label="۳) نوع و مدل ماشین" hint="(اختیاری، مثال: پژو ۲۰۶ سفید)">
-          <input
-            placeholder="برند، رنگ یا مدل خودرو"
-            value={carModel}
-            onChange={(e) => setCarModel(e.target.value)}
-            className={inputClass}
-          />
-        </Field>
+        {/* خطِ جداکننده‌ی سکشن */}
+        <div className="border-t border-[var(--border)]" />
 
-        {/* گام ۴: تیپ ماشین */}
+        {/* ===== سکشن ۲: تیپ ماشین (گام ۴) ===== */}
         <Field label="۴) تیپ ماشین" required>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {tiers.map((t) => (
@@ -167,8 +178,8 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
                 onClick={() => setTierId(t.id)}
                 className={`px-3 py-3 rounded-xl border-2 text-xs font-bold cursor-pointer transition-all ${
                   tierId === t.id
-                    ? 'border-[var(--accent-strong)] bg-[var(--accent-soft)] text-[var(--text)]'
-                    : 'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-muted)] hover:border-[var(--border-strong)]'
+                    ? 'border-[var(--accent-strong)] bg-white text-slate-900'
+                    : 'border-[var(--border)] bg-white text-slate-700 hover:bg-[var(--accent-soft)] hover:border-[var(--accent-border)]'
                 }`}
               >
                 {t.name}
@@ -177,7 +188,10 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
           </div>
         </Field>
 
-        {/* گام ۵: خدمات (بر اساس تیپ) */}
+        {/* خطِ جداکننده‌ی سکشن */}
+        <div className="border-t border-[var(--border)]" />
+
+        {/* ===== سکشن ۳: خدمات (گام ۵) ===== */}
         <Field label="۵) خدمات" required hint="(قیمت‌ها بر اساس تیپِ انتخابی)">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {services.map((s) => {
@@ -187,8 +201,8 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
                   key={s.id}
                   className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
                     selected
-                      ? 'border-[var(--money-border)] bg-[var(--money-soft)] text-[var(--text)]'
-                      : 'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-muted)] hover:border-[var(--border)]'
+                      ? 'border-[var(--money-border)] bg-white text-slate-900'
+                      : 'border-[var(--border)] bg-white text-slate-700 hover:bg-[var(--accent-soft)] hover:border-[var(--border-strong)]'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -209,7 +223,11 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
           </div>
         </Field>
 
-        {/* گام ۶: کارگر (اختیاری) + توضیحات */}
+        {/* خطِ جداکننده‌ی سکشن */}
+        <div className="border-t border-[var(--border)]" />
+
+        {/* ===== سکشن ۴: کارگر، تخفیف و توضیحات (گام‌های ۶ و ۷) ===== */}
+        {/* گام ۶ و ۷: کارگر + تخفیف — در یک خط */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <Field label="۶) کارگرِ شوینده" hint="(اختیاری)">
             <select value={workerId} onChange={(e) => setWorkerId(e.target.value)} className={inputClass}>
@@ -221,40 +239,40 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
               ))}
             </select>
           </Field>
-          <Field label="توضیحات" hint="(اختیاری)">
+          <Field label="۷) تخفیف (تومان)" hint="(اختیاری، از مبلغ کل کم می‌شود)">
             <input
-              placeholder="یادداشت یا خدمات خاص..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className={inputClass}
+              inputMode="numeric"
+              placeholder="۰"
+              value={discount}
+              onChange={(e) => handleDiscountChange(e.target.value)}
+              className={`${inputClass} text-right font-mono tabular-nums`}
             />
           </Field>
         </div>
 
-        {/* گام ۷: تخفیف (اختیاری) */}
-        <Field label="۷) تخفیف (تومان)" hint="(اختیاری، از مبلغ کل کم می‌شود)">
+        {/* توضیحات — در خطِ جداگانه پایین */}
+        <Field label="توضیحات" hint="(اختیاری)">
           <input
-            inputMode="numeric"
-            placeholder="۰"
-            value={discount}
-            onChange={(e) => setDiscount(e.target.value)}
-            className={`${inputClass} text-right font-mono`}
+            placeholder="یادداشت یا خدمات خاص..."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className={inputClass}
           />
         </Field>
 
         {/* جمع و ثبت */}
         <div className="border-t border-[var(--border)] pt-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="cw-total rounded-2xl px-5 py-3 flex items-center gap-3 w-full sm:w-auto">
-            <Sparkles className="w-6 h-6 text-[var(--price)] shrink-0" />
-            <div className="flex flex-col">
-              <span className="text-[11px] font-bold text-[var(--text-muted)]">مبلغ کل قابل پرداخت</span>
-              {discountValue > 0 && (
-                <span className="text-[11px] font-semibold text-[var(--text-muted)] mt-0.5">
-                  جمع خدمات: {formatCurrencyToman(subtotal)}
-                  <span className="text-[var(--danger-text)]"> — تخفیف: {formatCurrencyToman(discountValue)}</span>
-                </span>
-              )}
-              <span className="font-display text-3xl text-[var(--price)] leading-none mt-0.5">
+          <div className="w-full sm:w-auto flex flex-col gap-1.5">
+            {discountValue > 0 && (
+              <span className="text-[11px] font-semibold text-[var(--text-muted)] px-1">
+                جمع خدمات: {formatCurrencyToman(subtotal)}
+                <span className="text-[var(--danger-text)]"> — تخفیف: {formatCurrencyToman(discountValue)}</span>
+              </span>
+            )}
+            {/* مبلغ کل: یک خط، بدون آیکون، فونتِ معمولی */}
+            <div className="cw-total rounded-2xl px-5 py-3 flex items-center justify-between gap-4">
+              <span className="text-sm font-bold text-[var(--text-muted)]">مبلغ کل قابل پرداخت</span>
+              <span className="text-2xl font-extrabold text-[var(--price)] font-mono leading-none">
                 {formatCurrencyToman(total)}
               </span>
             </div>
