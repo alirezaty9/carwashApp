@@ -1,0 +1,192 @@
+@import url('https://fonts.googleapis.com/css2?family=Lalezar&family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------
+   پالتِ رسمی: آبی به‌عنوان رنگِ اصلی (حسِ آب/تمیزی/اعتماد)،
+   فیروزه‌ای به‌عنوان اکسنت، خنثی‌های اسلیت، مینیمال و تخت.
+   منبع: پالتِ انتخابیِ کاربر (Primary #2563EB / Accent #06B6D4).
+   تایپوگرافی: لاله‌زار (نمایشی) + وزیرمتن (متن/اعداد).
+--------------------------------------------------------------- */
+@theme {
+  --font-sans: "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Lalezar", "Vazirmatn", ui-sans-serif, cursive;
+  --font-mono: "Vazirmatn", ui-monospace, monospace;
+}
+
+/* ===== تمِ تیره ===== */
+:root, :root[data-theme="dark"] {
+  --primary: #3B82F6;
+  --primary-hover: #60A5FA;
+
+  --bg: #0F172A;
+  --surface: #1E293B;
+  --surface-2: #334155;
+  --border: #334155;
+  --border-strong: rgba(59, 130, 246, 0.45);
+  --overlay: rgba(15, 23, 42, 0.7);
+
+  --text: #F8FAFC;
+  --text-muted: #CBD5E1;
+  --text-faint: #64748B;
+
+  --accent-text: #60A5FA;
+  --accent-strong: #3B82F6;
+  --accent-soft: rgba(59, 130, 246, 0.14);
+  --accent-border: rgba(59, 130, 246, 0.32);
+
+  --money-text: #22C55E;
+  --money-strong: #22C55E;
+  --money-soft: rgba(34, 197, 94, 0.14);
+  --money-border: rgba(34, 197, 94, 0.32);
+
+  /* رنگِ متنِ قیمت‌ها = همرنگِ متنِ اصلی (مشکی در روشن، سفید در تیره)؛
+     ته‌رنگِ فیروزه‌ای فقط برای پس‌زمینه/حاشیه‌ی چیپِ مبلغ باقی می‌ماند */
+  --price: var(--text);
+  --price-strong: var(--text);
+  --price-soft: rgba(34, 211, 238, 0.14);
+  --price-border: rgba(34, 211, 238, 0.32);
+
+  --danger-text: #F87171;
+  --danger-strong: #EF4444;
+  --danger-soft: rgba(239, 68, 68, 0.14);
+  --danger-border: rgba(239, 68, 68, 0.32);
+
+  --card-bg: #1E293B;
+  --card-border: #334155;
+  --card-shadow: 0 16px 38px -22px rgba(0, 0, 0, 0.5);
+  --header-bg: rgba(30, 41, 59, 0.85);
+}
+
+/* ===== تمِ روشن ===== */
+:root[data-theme="light"] {
+  --primary: #2563EB;
+  --primary-hover: #1D4ED8;
+
+  --bg: #F8FAFC;
+  --surface: #FFFFFF;
+  --surface-2: #E2E8F0;
+  --border: #E2E8F0;
+  --border-strong: rgba(37, 99, 235, 0.35);
+  --overlay: rgba(15, 23, 42, 0.4);
+
+  --text: #0F172A;
+  --text-muted: #64748B;
+  --text-faint: #64748B;
+
+  --accent-text: #2563EB;
+  --accent-strong: #2563EB;
+  --accent-soft: rgba(37, 99, 235, 0.08);
+  --accent-border: rgba(37, 99, 235, 0.28);
+
+  --money-text: #22C55E;
+  --money-strong: #22C55E;
+  --money-soft: rgba(34, 197, 94, 0.10);
+  --money-border: rgba(34, 197, 94, 0.30);
+
+  /* رنگِ متنِ قیمت‌ها = همرنگِ متنِ اصلی (مشکی)؛
+     ته‌رنگِ فیروزه‌ای فقط برای پس‌زمینه/حاشیه‌ی چیپِ مبلغ باقی می‌ماند */
+  --price: var(--text);
+  --price-strong: var(--text);
+  --price-soft: rgba(6, 182, 212, 0.10);
+  --price-border: rgba(6, 182, 212, 0.30);
+
+  --danger-text: #EF4444;
+  --danger-strong: #EF4444;
+  --danger-soft: rgba(239, 68, 68, 0.09);
+  --danger-border: rgba(239, 68, 68, 0.28);
+
+  --card-bg: #FFFFFF;
+  --card-border: #E2E8F0;
+  --card-shadow: 0 16px 38px -26px rgba(15, 23, 42, 0.14);
+  --header-bg: rgba(255, 255, 255, 0.85);
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    direction: rtl;
+    text-align: right;
+    color: var(--text);
+    background-color: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    transition: background-color .2s ease, color .2s ease;
+  }
+
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 400; letter-spacing: .2px; }
+  .font-mono { font-variant-numeric: tabular-nums; }
+}
+
+/* --- اسکرول‌بارِ ظریف --- */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface-2); border-radius: 8px; }
+
+/* --- انیمیشنِ ورودِ ملایم --- */
+@keyframes cw-fade-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: cw-fade-in .2s ease-out; }
+
+/* ---------------------------------------------------------------
+   اجزای پایه — تخت و مینیمال (بدونِ گرادیانِ شلوغ)
+--------------------------------------------------------------- */
+.cw-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 1rem;
+  box-shadow: var(--card-shadow);
+}
+
+/* دکمه‌ی اصلی: آبیِ توپُر، هاورِ کمی تیره/روشن‌تر، متنِ سفید */
+.cw-primary {
+  background: var(--primary);
+  color: #ffffff;
+  border: 1px solid transparent;
+  box-shadow: 0 6px 16px -10px rgba(37, 99, 235, 0.6);
+  transition: background-color .16s ease, transform .05s ease;
+}
+.cw-primary:hover { background: var(--primary-hover); }
+.cw-primary:active { transform: translateY(1px); }
+.cw-primary:disabled { opacity: .5; }
+
+/* نشانِ لوگو: تنها جایی که اکسنتِ فیروزه‌ای→آبی دیده می‌شود */
+.cw-badge {
+  background: linear-gradient(145deg, #22D3EE, #2563EB);
+  color: #ffffff;
+  box-shadow: 0 6px 16px -10px rgba(37, 99, 235, 0.5);
+}
+
+/* چیپِ مبلغِ کل */
+.cw-total {
+  background: var(--price-soft);
+  border: 1px solid var(--price-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in { animation: none; }
+  body { transition: none; }
+}
+
+/* ---------------------------------------------------------------
+   چاپِ فیشِ حرارتی (۸۰mm) — همیشه سیاه روی سفید، مستقل از تم
+--------------------------------------------------------------- */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+    font-family: "Vazirmatn", sans-serif !important;
+    margin: 0 !important; padding: 0 !important; direction: rtl !important;
+  }
+  .no-print { display: none !important; }
+  .print-area {
+    display: block !important;
+    width: 80mm !important; max-width: 80mm !important;
+    padding: 4mm !important; margin: 0 auto !important;
+    box-sizing: border-box !important; border: none !important; box-shadow: none !important;
+  }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+}
+
+.print-area { display: none; }
