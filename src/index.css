@@ -55,6 +55,14 @@
   --card-border: #334155;
   --card-shadow: 0 16px 38px -22px rgba(0, 0, 0, 0.5);
   --header-bg: rgba(30, 41, 59, 0.85);
+
+  /* کنترل‌ها (اینپوت‌ها، دکمه‌های تیپ و کارت‌های خدمات) — تمِ تیره */
+  --field-bg: #3C4353;
+  --field-text: #F8FAFC;
+  --field-muted: #CBD5E1;
+  --field-hover-bg: rgba(59, 130, 246, 0.16);
+  --field-hover-border: rgba(96, 165, 250, 0.55);
+  --field-active-border: #60A5FA;
 }
 
 /* ===== تمِ روشن ===== */
@@ -99,6 +107,14 @@
   --card-border: #E2E8F0;
   --card-shadow: 0 16px 38px -26px rgba(15, 23, 42, 0.14);
   --header-bg: rgba(255, 255, 255, 0.85);
+
+  /* کنترل‌ها — تمِ روشن (سفیدِ تمیز؛ همان چیزی که پسندیده شد) */
+  --field-bg: #FFFFFF;
+  --field-text: #0F172A;
+  --field-muted: #334155;
+  --field-hover-bg: #EFF6FF;   /* blue-50 */
+  --field-hover-border: #BFDBFE; /* blue-200 */
+  --field-active-border: #60A5FA; /* blue-400 */
 }
 
 @layer base {

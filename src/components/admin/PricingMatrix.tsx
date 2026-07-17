@@ -15,7 +15,7 @@ export default function PricingMatrix({
   store: Store;
   notify: (m: string, t?: 'success' | 'error' | 'info') => void;
 }) {
-  const { tiers, services, addTier, removeTier, renameTier, addService, removeService, renameService, setServicePrice } = store;
+  const { tiers, services, addTier, removeTier, renameTier, addService, removeService, renameService, setServicePrice, setServiceCommission } = store;
 
   const [newService, setNewService] = useState('');
   const [newTier, setNewTier] = useState('');
@@ -37,7 +37,7 @@ export default function PricingMatrix({
   return (
     <SectionCard
       title="قیمت‌گذاری خدمات و تیپ‌ها"
-      subtitle="هر خدمت برای همه‌ی تیپ‌ها هست؛ فقط قیمتِ هر سلول را جدا تعیین کنید (تومان)."
+      subtitle="قیمتِ هر سلول را جدا تعیین کنید (تومان). ستونِ «٪ پورسانت» = سهمِ کارگر از هر خدمت که در «دستمزد کارگرها» محاسبه می‌شود."
     >
       <div className="overflow-x-auto border border-[var(--border)] rounded-xl">
         <table className="w-full text-right border-collapse text-xs">
@@ -68,6 +68,9 @@ export default function PricingMatrix({
                   </div>
                 </th>
               ))}
+              <th className="px-3 py-3 font-bold text-[var(--money-text)] min-w-[120px] text-center whitespace-nowrap">
+                ٪ پورسانت کارگر
+              </th>
               <th className="px-2 py-3 w-10" />
             </tr>
           </thead>
@@ -91,6 +94,19 @@ export default function PricingMatrix({
                     />
                   </td>
                 ))}
+                <td className="px-3 py-2">
+                  <div className="flex items-center justify-center gap-1">
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={s.commissionPct ?? 0}
+                      onChange={(e) => setServiceCommission(s.id, Number(e.target.value))}
+                      className="bg-[var(--bg)] border border-[var(--money-border)] rounded px-2.5 py-1.5 text-xs font-mono font-bold text-[var(--money-text)] w-16 text-center outline-none focus:border-[var(--money-strong)]"
+                    />
+                    <span className="text-[var(--text-faint)] text-xs font-bold">٪</span>
+                  </div>
+                </td>
                 <td className="px-2 py-2 text-center">
                   <button
                     onClick={() => {

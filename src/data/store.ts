@@ -133,6 +133,14 @@ export function useCarwashStore() {
     );
   }, []);
 
+  // درصدِ پورسانتِ کارگر برای یک خدمت (بین ۰ و ۱۰۰ محدود می‌شود)
+  const setServiceCommission = useCallback((serviceId: string, pct: number) => {
+    const clamped = Math.min(100, Math.max(0, Math.round(pct)));
+    setServices((prev) =>
+      prev.map((s) => (s.id === serviceId ? { ...s, commissionPct: clamped } : s)),
+    );
+  }, []);
+
   // ================= کارگرها =================
   const addWorker = useCallback((name: string) => {
     const trimmed = name.trim();
@@ -185,9 +193,12 @@ export function useCarwashStore() {
       const phone = toEnglishDigits(input.customerPhone).trim();
       const name = input.customerName.trim();
 
-      const chosen: ReceiptService[] = services
-        .filter((s) => input.serviceIds.includes(s.id))
-        .map((s) => ({ id: s.id, name: s.name, price: s.prices[tier.id] ?? 0 }));
+      const chosenServices = services.filter((s) => input.serviceIds.includes(s.id));
+      const chosen: ReceiptService[] = chosenServices.map((s) => ({
+        id: s.id,
+        name: s.name,
+        price: s.prices[tier.id] ?? 0,
+      }));
 
       if (chosen.length === 0) return null;
       const subtotal = chosen.reduce((sum, s) => sum + s.price, 0);
@@ -196,6 +207,16 @@ export function useCarwashStore() {
       const total = subtotal - discount;
 
       const worker = input.workerId ? workers.find((w) => w.id === input.workerId) : undefined;
+
+      // پورسانتِ کارگر = جمعِ (قیمتِ هر خدمت × درصدِ پورسانتِ همان خدمت).
+      // بر پایه‌ی قیمتِ ناخالصِ خدمات (قبل از تخفیف) حساب می‌شود، چون تخفیف سهمِ
+      // کارواش است نه کارگر. فقط وقتی کارگری انتخاب شده باشد ثبت می‌شود.
+      const workerCommission = worker
+        ? chosenServices.reduce(
+            (sum, s) => sum + Math.round(((s.prices[tier.id] ?? 0) * (s.commissionPct ?? 0)) / 100),
+            0,
+          )
+        : 0;
 
       const now = new Date();
       const { year, month, day } = getJalaliDateParts(now);
@@ -211,6 +232,7 @@ export function useCarwashStore() {
         services: chosen,
         price: total,
         discount: discount || undefined,
+        workerCommission: workerCommission || undefined,
         workerId: worker?.id,
         workerName: worker?.name,
         notes: input.notes?.trim() || undefined,
@@ -313,6 +335,7 @@ export function useCarwashStore() {
     renameService,
     removeService,
     setServicePrice,
+    setServiceCommission,
     // workers
     addWorker,
     renameWorker,

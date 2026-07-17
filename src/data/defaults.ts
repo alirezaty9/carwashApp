@@ -16,26 +16,31 @@ export const DEFAULT_SERVICES: Service[] = [
     id: 'srv-roshuyi',
     name: 'روشویی (نظافت بدنه)',
     prices: { 'tier-sedan': 400000, 'tier-suv': 600000, 'tier-heavy': 800000 },
+    commissionPct: 40,
   },
   {
     id: 'srv-jaru',
     name: 'جارو و نظافت داخل',
     prices: { 'tier-sedan': 300000, 'tier-suv': 400000, 'tier-heavy': 500000 },
+    commissionPct: 50,
   },
   {
     id: 'srv-toshuyi',
     name: 'توشویی (شستشوی کامل داخل)',
     prices: { 'tier-sedan': 800000, 'tier-suv': 1200000, 'tier-heavy': 1500000 },
+    commissionPct: 40,
   },
   {
     id: 'srv-motorshuyi',
     name: 'موتورشویی',
     prices: { 'tier-sedan': 500000, 'tier-suv': 700000, 'tier-heavy': 900000 },
+    commissionPct: 40,
   },
   {
     id: 'srv-sefrshuyi',
     name: 'صفرشویی کامل خودرو',
     prices: { 'tier-sedan': 2000000, 'tier-suv': 3000000, 'tier-heavy': 4000000 },
+    commissionPct: 30,
   },
 ];
 

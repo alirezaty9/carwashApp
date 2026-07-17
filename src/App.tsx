@@ -139,7 +139,7 @@ export default function App() {
         </header>
 
         {/* ===== محتوا ===== */}
-        <main className="max-w-6xl mx-auto px-4 py-6 w-full flex-1 flex flex-col gap-6">
+        <main className="max-w-6xl mx-auto px-4 py-6 w-full flex-1 flex flex-col justify-center gap-6">
           {mode === 'pos' ? (
             <NewReceipt store={store} notify={notify} onPrint={handlePrint} />
           ) : (

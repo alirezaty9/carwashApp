@@ -178,8 +178,8 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
                 onClick={() => setTierId(t.id)}
                 className={`px-3 py-3 rounded-xl border-2 text-xs font-bold cursor-pointer transition-all ${
                   tierId === t.id
-                    ? 'border-[var(--accent-strong)] bg-white text-slate-900'
-                    : 'border-[var(--border)] bg-white text-slate-700 hover:bg-[var(--accent-soft)] hover:border-[var(--accent-border)]'
+                    ? 'border-[var(--field-active-border)] bg-[var(--field-bg)] text-[var(--field-text)] shadow-sm'
+                    : 'border-[var(--border)] bg-[var(--field-bg)] text-[var(--field-muted)] hover:bg-[var(--field-hover-bg)] hover:border-[var(--field-hover-border)]'
                 }`}
               >
                 {t.name}
@@ -201,8 +201,8 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
                   key={s.id}
                   className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
                     selected
-                      ? 'border-[var(--money-border)] bg-white text-slate-900'
-                      : 'border-[var(--border)] bg-white text-slate-700 hover:bg-[var(--accent-soft)] hover:border-[var(--border-strong)]'
+                      ? 'border-[var(--money-border)] bg-[var(--field-bg)] text-[var(--field-text)] shadow-sm'
+                      : 'border-[var(--border)] bg-[var(--field-bg)] text-[var(--field-muted)] hover:bg-[var(--field-hover-bg)] hover:border-[var(--field-hover-border)]'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -214,7 +214,7 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
                     />
                     <span className="text-xs font-bold">{s.name}</span>
                   </div>
-                  <span className="text-xs font-extrabold text-[var(--price)] font-mono">
+                  <span className="text-xs font-extrabold text-[var(--price)] font-mono px-2 py-0.5 rounded-md bg-[var(--price-soft)] shrink-0">
                     {formatCurrencyToman(priceFor(s.id))}
                   </span>
                 </label>

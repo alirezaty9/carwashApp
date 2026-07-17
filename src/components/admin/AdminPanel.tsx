@@ -1,17 +1,19 @@
 import { useState } from 'react';
-import { DollarSign, Users, SlidersHorizontal, FileSpreadsheet, History as HistoryIcon } from 'lucide-react';
+import { DollarSign, Users, SlidersHorizontal, FileSpreadsheet, History as HistoryIcon, Wallet } from 'lucide-react';
 import { Receipt } from '../../types';
 import { Store } from '../../data/store';
 import Reports from '../pos/Reports';
 import History from '../pos/History';
 import PricingMatrix from './PricingMatrix';
 import WorkersManager from './WorkersManager';
+import WorkerPayroll from './WorkerPayroll';
 import GeneralSettings from './GeneralSettings';
 
-type AdminTab = 'reports' | 'history' | 'pricing' | 'workers' | 'general';
+type AdminTab = 'reports' | 'payroll' | 'history' | 'pricing' | 'workers' | 'general';
 
 const TABS: { id: AdminTab; label: string; icon: typeof DollarSign }[] = [
   { id: 'reports', label: 'گزارش‌ها', icon: FileSpreadsheet },
+  { id: 'payroll', label: 'دستمزد کارگرها', icon: Wallet },
   { id: 'history', label: 'تاریخچه و ابطال', icon: HistoryIcon },
   { id: 'pricing', label: 'قیمت‌ها و تیپ‌ها', icon: DollarSign },
   { id: 'workers', label: 'کارگرها', icon: Users },
@@ -48,6 +50,7 @@ export default function AdminPanel({
       </div>
 
       {tab === 'reports' && <Reports store={store} />}
+      {tab === 'payroll' && <WorkerPayroll store={store} />}
       {tab === 'history' && <History store={store} notify={notify} onPrint={onPrint} />}
       {tab === 'pricing' && <PricingMatrix store={store} notify={notify} />}
       {tab === 'workers' && <WorkersManager store={store} notify={notify} />}

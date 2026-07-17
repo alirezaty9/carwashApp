@@ -123,7 +123,7 @@ export function Field({
 
 /** کلاس‌های مشترک ورودی‌ها برای یکدستی و DRY */
 export const inputClass =
-  'w-full bg-white text-slate-900 border border-[var(--border)] placeholder-slate-400 placeholder:font-normal placeholder:text-xs rounded-xl px-3.5 py-2.5 text-sm font-semibold hover:bg-[var(--accent-soft)] focus:bg-white focus:ring-2 focus:ring-[var(--accent-soft)] focus:border-[var(--accent-strong)] outline-none transition-all';
+  'w-full bg-[var(--field-bg)] text-[var(--field-text)] border border-[var(--border)] placeholder-[var(--text-faint)] placeholder:font-normal placeholder:text-xs rounded-xl px-3.5 py-2.5 text-sm font-semibold hover:bg-[var(--field-hover-bg)] focus:bg-[var(--field-bg)] focus:ring-2 focus:ring-[var(--accent-soft)] focus:border-[var(--accent-strong)] outline-none transition-all';
 
 /** دکمه‌ی اصلی */
 export function PrimaryButton({

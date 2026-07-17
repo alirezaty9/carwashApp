@@ -17,6 +17,8 @@ export interface Service {
   name: string;
   /** نگاشتِ tierId → قیمت (تومان) برای آن تیپ */
   prices: Record<string, number>;
+  /** درصدِ پورسانتِ کارگر از این خدمت (۰ تا ۱۰۰)؛ نبودنش یعنی صفر */
+  commissionPct?: number;
 }
 
 /** کارگرِ کارواش — انتخابش روی قبض اختیاری است */
@@ -58,6 +60,7 @@ export interface Receipt {
   services: ReceiptService[];
   price: number; // مبلغ قابل پرداخت = جمع خدمات منهای تخفیف
   discount?: number; // مبلغِ تخفیفِ اعمال‌شده (تومان)؛ نبودنش یعنی صفر
+  workerCommission?: number; // پورسانتِ کارگرِ این قبض (اسنپ‌شات در لحظه‌ی صدور)
 
   // کارگر (اختیاری)
   workerId?: string;
