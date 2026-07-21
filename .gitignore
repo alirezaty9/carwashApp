@@ -1,8 +1,14 @@
 node_modules/
 build/
 dist/
+release/
 coverage/
 .DS_Store
 *.log
 .env*
 !.env.example
+
+# کلیدِ خصوصیِ لایسنس و فایل‌های صادرشده — هرگز نباید commit شوند
+*.pem
+license.dat
+yatash-private*

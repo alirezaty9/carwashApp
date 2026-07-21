@@ -1,18 +1,24 @@
 {
-  "name": "react-example",
+  "name": "yatash-carwash",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "description": "Yatash — offline carwash management app",
+  "author": "Yatash",
+  "main": "electron/main.cjs",
   "scripts": {
-    "dev": "vite --port=3000 --host=0.0.0.0",
+    "dev": "concurrently -k \"vite --port=3000\" \"wait-on tcp:127.0.0.1:3000 && electron .\"",
     "build": "vite build",
     "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "clean": "rm -rf dist server.js release",
+    "lint": "tsc --noEmit",
+    "electron:start": "electron .",
+    "electron:build": "vite build && electron-builder --win"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
+    "electron-store": "^8.2.0",
     "lucide-react": "^0.546.0",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
@@ -20,8 +26,38 @@
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
+    "concurrently": "^8.2.2",
+    "electron": "^31.3.0",
+    "electron-builder": "^24.13.3",
     "tailwindcss": "^4.1.14",
     "typescript": "~5.8.2",
-    "vite": "^6.2.3"
+    "vite": "^6.2.3",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.yatash.carwash",
+    "productName": "Yatash Carwash",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Yatash Carwash"
+    }
   }
 }

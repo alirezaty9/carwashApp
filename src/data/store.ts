@@ -21,13 +21,14 @@ import {
 } from './defaults';
 import { getFormattedJalali, getJalaliDateParts } from '../utils/jalali';
 import { toEnglishDigits } from '../utils/format';
+import { loadRaw, saveRaw } from './persistence';
 
 /**
  * لایه‌ی داده‌ی برنامه. تمام state، ذخیره‌سازی و اکشن‌ها اینجا متمرکز است تا
  * کامپوننت‌های UI فقط «مصرف‌کننده» باشند (جداسازیِ لایه‌ی UI از داده).
  *
- * ذخیره‌سازی فعلاً روی localStorage است؛ برای انتقال به Electron کافی است
- * فقط توابع load/save زیر به فایل/SQLite تغییر کنند و بقیه‌ی برنامه دست‌نخورده بماند.
+ * ذخیره‌سازی از طریقِ آداپتورِ `persistence` انجام می‌شود: داخلِ Electron روی یک
+ * فایلِ واقعی و در مرورگر روی localStorage. خودِ این فایل از محلِ ذخیره بی‌خبر است.
  */
 
 // کلیدهای نسخه‌ی جدید (پیشوند cw2 تا با داده‌ی نسخه‌ی قدیمی تداخل نکند)
@@ -44,7 +45,7 @@ const KEYS = {
 
 function load<T>(key: string, fallback: T): T {
   try {
-    const raw = localStorage.getItem(key);
+    const raw = loadRaw(key);
     return raw ? (JSON.parse(raw) as T) : fallback;
   } catch {
     return fallback;
@@ -52,11 +53,7 @@ function load<T>(key: string, fallback: T): T {
 }
 
 function save<T>(key: string, value: T): void {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    /* در حالتی که حافظه پر باشد بی‌صدا رد می‌شویم */
-  }
+  saveRaw(key, JSON.stringify(value));
 }
 
 // شناسه‌ی یکتا بدون وابستگی به Math.random (سازگار با محیط‌های محدود)

@@ -5,6 +5,9 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
+    // مسیرِ نسبی برای دارایی‌ها؛ لازم است تا در Electron که فایل‌ها را از دیسک
+    // (file://) بارگذاری می‌کند، لینکِ اسکریپت/استایل درست پیدا شود.
+    base: './',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {

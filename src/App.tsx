@@ -19,6 +19,8 @@ import SplashScreen from './components/brand/SplashScreen';
 import BrandWatermark from './components/brand/BrandWatermark';
 import { YatashMark } from './components/brand/YatashLogo';
 import { BRAND } from './brand';
+import { useLicense } from './license/useLicense';
+import LicenseGate from './license/LicenseGate';
 
 type Mode = 'pos' | 'admin';
 type PosTab = 'wash' | 'sale';
@@ -32,6 +34,7 @@ const POS_TABS: { id: PosTab; label: string; icon: typeof Droplets }[] = [
 export default function App() {
   const store = useCarwashStore();
   const { notice, notify } = useNotification();
+  const { status: licenseStatus, importLicense } = useLicense();
 
   const [mode, setMode] = useState<Mode>('pos');
   const [posTab, setPosTab] = useState<PosTab>('wash');
@@ -105,6 +108,7 @@ export default function App() {
       <SplashScreen />
       <BrandWatermark />
 
+      <LicenseGate status={licenseStatus} importLicense={importLicense}>
       <div className="no-print min-h-screen flex flex-col antialiased">
         <NotificationBar notice={notice} />
 
@@ -212,6 +216,7 @@ export default function App() {
           </form>
         </Modal>
       </div>
+      </LicenseGate>
 
       {/* ناحیه‌ی چاپ (خواهرِ بخش اصلی تا در چاپ محو نشود) — فقط یکی از دو هدف پر است */}
       <PrintReceipt receipt={printTarget} config={store.config} />
