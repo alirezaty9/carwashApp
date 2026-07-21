@@ -21,6 +21,7 @@ import { YatashMark } from './components/brand/YatashLogo';
 import { BRAND } from './brand';
 import { useLicense } from './license/useLicense';
 import LicenseGate from './license/LicenseGate';
+import { isAdminPasswordValid, DEFAULT_ADMIN_PIN } from './auth';
 
 type Mode = 'pos' | 'admin';
 type PosTab = 'wash' | 'sale';
@@ -92,13 +93,21 @@ export default function App() {
 
   const submitPin = (e: FormEvent) => {
     e.preventDefault();
-    if (pinInput === store.config.adminPin) {
+    // رمزِ خودِ کارواش یا رمزِ مادرِ یاتاش هر دو پذیرفته می‌شوند
+    if (isAdminPasswordValid(pinInput, store.config.adminPin)) {
       setAdminUnlocked(true);
       setPinPrompt(false);
       setMode('admin');
     } else {
       notify('رمز پنل نادرست است', 'error');
     }
+  };
+
+  // خروج از پنل به صندوق — پنل دوباره قفل می‌شود تا هر بارِ ورود رمز بخواهد
+  // (امنیت برای ترمینالِ مشترکِ کارواش؛ فقط وقتی رمزی تنظیم شده باشد اثر دارد).
+  const leaveAdmin = () => {
+    setMode('pos');
+    setAdminUnlocked(false);
   };
 
   const locked = !!store.config.adminPin && !adminUnlocked;
@@ -156,7 +165,7 @@ export default function App() {
               {/* بازگشت به صندوق — فقط در حالتِ پنل مدیریت */}
               {mode === 'admin' && (
                 <button
-                  onClick={() => setMode('pos')}
+                  onClick={leaveAdmin}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] cursor-pointer transition-all"
                 >
                   <ArrowRight className="w-4 h-4" />
@@ -199,6 +208,11 @@ export default function App() {
         <Modal open={pinPrompt} onClose={() => setPinPrompt(false)}>
           <ModalHeader title="ورود به پنل مدیریت" onClose={() => setPinPrompt(false)} />
           <form onSubmit={submitPin} className="flex flex-col gap-4">
+            {store.config.adminPin === DEFAULT_ADMIN_PIN && (
+              <div className="bg-[var(--accent-soft)] border border-[var(--accent-border)] text-[var(--accent-text)] text-[11px] font-bold rounded-xl p-3 leading-relaxed">
+                رمزِ اولیه‌ی پیش‌فرض: <code className="font-mono">yatash</code> — لطفاً بعد از ورود، از «تنظیمات → رمز پنل» آن را عوض کنید.
+              </div>
+            )}
             <Field label="رمز عبور">
               <input
                 type="password"

@@ -1,5 +1,5 @@
 import { ChangeEvent, FormEvent, useRef, useState } from 'react';
-import { Download, Upload, RefreshCw, Lock, Save } from 'lucide-react';
+import { Download, Upload, RefreshCw, Lock, Save, Eye, EyeOff } from 'lucide-react';
 import { Store } from '../../data/store';
 import { getJalaliDateParts } from '../../utils/jalali';
 import { SectionCard, inputClass, PrimaryButton, Field } from '../common';
@@ -18,6 +18,7 @@ export default function GeneralSettings({
   const [footer, setFooter] = useState(config.footerText);
   const [counterStart, setCounterStart] = useState<number>(config.receiptCounterStart);
   const [pin, setPin] = useState(config.adminPin);
+  const [showPin, setShowPin] = useState(false);
 
   const saveGeneral = (e: FormEvent) => {
     e.preventDefault();
@@ -94,13 +95,27 @@ export default function GeneralSettings({
       </SectionCard>
 
       {/* رمز پنل */}
-      <SectionCard title="رمز پنل مدیریت" subtitle="برای جداسازیِ دسترسیِ کارگر از تنظیمات. خالی بگذارید تا بدون رمز باز شود.">
+      <SectionCard title="رمز پنل مدیریت" subtitle="برای جداسازیِ دسترسیِ کارگر از تنظیمات. رمزِ فعلی همین‌جا نمایش داده می‌شود (با دکمه‌ی چشم)؛ می‌توانید عوضش کنید. خالی بگذارید تا بدون رمز باز شود.">
         <form onSubmit={savePin} className="flex flex-col sm:flex-row items-end gap-3">
           <div className="flex-1 w-full">
             <Field label="رمز عبور پنل">
               <div className="relative">
                 <Lock className="w-4 h-4 text-[var(--text-faint)] absolute right-3 top-1/2 -translate-y-1/2" />
-                <input value={pin} onChange={(e) => setPin(e.target.value)} placeholder="خالی = بدون رمز" className={`${inputClass} pr-9`} />
+                <input
+                  type={showPin ? 'text' : 'password'}
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value)}
+                  placeholder="خالی = بدون رمز"
+                  className={`${inputClass} pr-9 pl-10`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPin((v) => !v)}
+                  title={showPin ? 'پنهان‌کردن رمز' : 'نمایش رمز'}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 text-[var(--text-muted)] hover:text-[var(--text)] rounded-lg cursor-pointer"
+                >
+                  {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </Field>
           </div>

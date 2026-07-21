@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DollarSign, Users, SlidersHorizontal, FileSpreadsheet, History as HistoryIcon, Wallet, Package, LucideIcon } from 'lucide-react';
+import { DollarSign, Users, SlidersHorizontal, FileSpreadsheet, History as HistoryIcon, Wallet, Package, KeyRound, LucideIcon } from 'lucide-react';
 import { Receipt, Sale } from '../../types';
 import { Store } from '../../data/store';
 import { PillTabs } from '../common';
@@ -10,8 +10,9 @@ import WorkersManager from './WorkersManager';
 import WorkerPayroll from './WorkerPayroll';
 import GeneralSettings from './GeneralSettings';
 import AccessoriesPanel from './AccessoriesPanel';
+import LicenseSettings from '../../license/LicenseSettings';
 
-type AdminTab = 'reports' | 'payroll' | 'history' | 'accessories' | 'pricing' | 'workers' | 'general';
+type AdminTab = 'reports' | 'payroll' | 'history' | 'accessories' | 'pricing' | 'workers' | 'general' | 'license';
 
 const TABS: { id: AdminTab; label: string; icon: LucideIcon }[] = [
   { id: 'reports', label: 'گزارش‌ها', icon: FileSpreadsheet },
@@ -20,6 +21,7 @@ const TABS: { id: AdminTab; label: string; icon: LucideIcon }[] = [
   { id: 'accessories', label: 'لوازم جانبی', icon: Package },
   { id: 'pricing', label: 'قیمت‌ها و تیپ‌ها', icon: DollarSign },
   { id: 'workers', label: 'کارگرها', icon: Users },
+  { id: 'license', label: 'لایسنس', icon: KeyRound },
   { id: 'general', label: 'تنظیمات و بکاپ', icon: SlidersHorizontal },
 ];
 
@@ -47,6 +49,7 @@ export default function AdminPanel({
       {tab === 'accessories' && <AccessoriesPanel store={store} notify={notify} onPrintSale={onPrintSale} />}
       {tab === 'pricing' && <PricingMatrix store={store} notify={notify} />}
       {tab === 'workers' && <WorkersManager store={store} notify={notify} />}
+      {tab === 'license' && <LicenseSettings />}
       {tab === 'general' && <GeneralSettings store={store} notify={notify} />}
     </div>
   );

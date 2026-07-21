@@ -28,7 +28,18 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false, // برای اجرای preload با require لازم است
+      // امنیت: در نسخه‌ی نصب‌شده DevTools خاموش است تا کاربر نتواند از کنسول
+      // به window.electronStore/داده‌ها دست بزند. در توسعه روشن می‌ماند.
+      devTools: !app.isPackaged,
     },
+  });
+
+  // امنیت: جلوی باز شدنِ پنجره‌ی جدید و رفتن به آدرس‌های بیرونی را بگیر
+  mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (!url.startsWith('http://localhost:3000') && !url.startsWith('file://')) {
+      event.preventDefault();
+    }
   });
 
   if (app.isPackaged) {
@@ -41,14 +52,21 @@ function createWindow() {
 }
 
 // ---- کانال‌های IPC برای ذخیره‌سازی ----
+// پلِ عمومیِ ذخیره‌سازی فقط برای داده‌ی برنامه است. کلیدهای «license:*» از این‌جا
+// قابلِ دست‌کاری نیستند تا کاربر نتواند تریال را ریست یا لایسنس را جعل کند؛
+// آن‌ها فقط از طریقِ مدیرِ لایسنس (با اعتبارسنجیِ امضا) قابلِ تغییرند.
+const isProtectedKey = (key) => typeof key !== 'string' || key.startsWith('license:');
+
 // get همگام است (sendSync) تا در لحظه‌ی راه‌اندازیِ React مقدارِ اولیه در دسترس باشد.
 ipcMain.on('storage:get', (event, key) => {
-  event.returnValue = store.get(key) ?? null;
+  event.returnValue = isProtectedKey(key) ? null : (store.get(key) ?? null);
 });
 ipcMain.on('storage:set', (_event, { key, value }) => {
+  if (isProtectedKey(key)) return;
   store.set(key, value);
 });
 ipcMain.on('storage:delete', (_event, key) => {
+  if (isProtectedKey(key)) return;
   store.delete(key);
 });
 

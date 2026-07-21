@@ -16,8 +16,8 @@ const REASON_TEXT: Record<string, string> = {
   clock: 'ساعتِ سیستم دستکاری شده است؛ آن را درست کنید.',
 };
 
-/** کارتِ فعال‌سازی: نمایشِ machineId + بارگذاریِ فایلِ لایسنس. مشترک بین قفل و بنرِ تریال. */
-function ActivationCard({
+/** کارتِ فعال‌سازی: نمایشِ machineId + بارگذاریِ فایلِ لایسنس. مشترک بین قفل، بنرِ تریال و تنظیماتِ ادمین. */
+export function ActivationCard({
   machineId,
   importLicense,
   onDone,

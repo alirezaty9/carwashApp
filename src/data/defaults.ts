@@ -1,4 +1,5 @@
 import { CarwashConfig, Product, Service, Tier, Worker } from '../types';
+import { DEFAULT_ADMIN_PIN } from '../auth';
 
 /**
  * داده‌های پیش‌فرضِ اولین اجرا.
@@ -65,5 +66,6 @@ export const DEFAULT_CONFIG: CarwashConfig = {
   footerText:
     'از انتخاب شما متشکریم! لطفاً اشیاء قیمتی خود را از خودرو خارج کنید. کارواش مسئولیتی در قبال مفقود شدن اشیاء گران‌قیمت ندارد.',
   receiptCounterStart: 1000,
-  adminPin: '',
+  // رمزِ اولیه برای همه؛ مشتری بعد از اولین ورود آن را عوض می‌کند.
+  adminPin: DEFAULT_ADMIN_PIN,
 };
