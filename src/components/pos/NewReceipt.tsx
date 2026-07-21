@@ -98,7 +98,11 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
 
     if (!receipt) return notify('خطا در صدور قبض؛ ورودی‌ها را بررسی کنید', 'error');
 
-    notify(`قبض شماره ${toPersianDigits(receipt.receiptNumber)} صادر و برای چاپ ارسال شد`, 'success');
+    const noPrint = store.config.printMode === 'off';
+    notify(
+      `قبض شماره ${toPersianDigits(receipt.receiptNumber)} ${noPrint ? 'ثبت شد (چاپ غیرفعال)' : 'صادر و برای چاپ ارسال شد'}`,
+      'success',
+    );
     resetForm();
     onPrint(receipt);
   };

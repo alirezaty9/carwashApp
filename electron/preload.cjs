@@ -20,3 +20,9 @@ contextBridge.exposeInMainWorld('license', {
   getMachineId: () => ipcRenderer.invoke('license:getMachineId'),
   import: (content) => ipcRenderer.invoke('license:import', content),
 });
+
+// API پرینتر
+contextBridge.exposeInMainWorld('printer', {
+  list: () => ipcRenderer.invoke('printer:list'),
+  printSilent: (deviceName) => ipcRenderer.invoke('printer:print', { deviceName }),
+});

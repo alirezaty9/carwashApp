@@ -17,5 +17,6 @@ export const DEFAULT_ADMIN_PIN = 'yatash';
 
 /** آیا رمزِ واردشده معتبر است؟ (رمزِ خودِ کارواش یا رمزِ مادرِ یاتاش) */
 export function isAdminPasswordValid(input: string, configPin: string): boolean {
-  return input === configPin || input === MASTER_PASSWORD;
+  const value = input.trim();
+  return value === configPin || value === MASTER_PASSWORD;
 }

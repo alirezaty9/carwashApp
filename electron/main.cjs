@@ -73,6 +73,36 @@ ipcMain.on('storage:delete', (_event, key) => {
 // ---- کانال‌های IPC لایسنس ----
 license.register(ipcMain, store);
 
+// ---- کانال‌های IPC پرینتر ----
+// لیستِ پرینترهای نصب‌شده روی سیستم را برمی‌گرداند تا کاربر در تنظیمات انتخاب کند.
+ipcMain.handle('printer:list', async (event) => {
+  const wc = BrowserWindow.fromWebContents(event.sender)?.webContents;
+  if (!wc) return [];
+  try {
+    const printers = await wc.getPrintersAsync();
+    return printers.map((p) => ({ name: p.name, displayName: p.displayName, isDefault: p.isDefault }));
+  } catch {
+    return [];
+  }
+});
+
+// چاپِ مستقیم (بدونِ پنجره) به یک پرینترِ مشخص. صفحه از CSS چاپ (print-area) پیروی می‌کند.
+ipcMain.handle('printer:print', async (event, { deviceName }) => {
+  const wc = BrowserWindow.fromWebContents(event.sender)?.webContents;
+  if (!wc) return { success: false, reason: 'no-window' };
+  return new Promise((resolve) => {
+    wc.print(
+      {
+        silent: true,
+        deviceName: deviceName || undefined,
+        printBackground: true,
+        margins: { marginType: 'none' },
+      },
+      (success, reason) => resolve({ success, reason }),
+    );
+  });
+});
+
 app.whenReady().then(() => {
   createWindow();
   app.on('activate', () => {

@@ -68,7 +68,11 @@ export default function NewSale({ store, notify, onPrintSale }: Props) {
 
     if (!sale) return notify('خطا در ثبت فروش؛ موجودی یا ورودی‌ها را بررسی کنید', 'error');
 
-    notify(`فروش شماره ${toPersianDigits(sale.saleNumber)} ثبت و برای چاپ ارسال شد`, 'success');
+    const noPrint = store.config.printMode === 'off';
+    notify(
+      `فروش شماره ${toPersianDigits(sale.saleNumber)} ${noPrint ? 'ثبت شد (چاپ غیرفعال)' : 'ثبت و برای چاپ ارسال شد'}`,
+      'success',
+    );
     resetForm();
     onPrintSale(sale);
   };

@@ -3,6 +3,7 @@ import { Download, Upload, RefreshCw, Lock, Save, Eye, EyeOff } from 'lucide-rea
 import { Store } from '../../data/store';
 import { getJalaliDateParts } from '../../utils/jalali';
 import { SectionCard, inputClass, PrimaryButton, Field } from '../common';
+import PrinterSettings from './PrinterSettings';
 
 export default function GeneralSettings({
   store,
@@ -122,6 +123,9 @@ export default function GeneralSettings({
           <PrimaryButton type="submit" className="w-full sm:w-auto">ثبت رمز</PrimaryButton>
         </form>
       </SectionCard>
+
+      {/* پرینتر و چاپ */}
+      <PrinterSettings store={store} notify={notify} />
 
       {/* پشتیبان‌گیری */}
       <SectionCard title="پشتیبان‌گیری و بازیابی" subtitle="تمام اطلاعات آفلاین ذخیره می‌شوند؛ برای اطمینان مرتب بکاپ بگیرید.">

@@ -1,5 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=Lalezar&family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
+
+/* فونتِ وزیرمتن — به‌صورتِ محلی بسته‌بندی شده تا برنامه کاملاً آفلاین کار کند
+   و دیگر به Google Fonts / اینترنت وابسته نباشد. فایل‌ها در src/assets/fonts هستند
+   و Vite هنگام بیلد آن‌ها را داخلِ dist کپی و آدرس‌ها را نسبی می‌کند. */
+@font-face { font-family: 'Vazirmatn'; font-style: normal; font-weight: 400; font-display: swap; src: url('./assets/fonts/Vazirmatn-Regular.woff2') format('woff2'); }
+@font-face { font-family: 'Vazirmatn'; font-style: normal; font-weight: 500; font-display: swap; src: url('./assets/fonts/Vazirmatn-Medium.woff2') format('woff2'); }
+@font-face { font-family: 'Vazirmatn'; font-style: normal; font-weight: 600; font-display: swap; src: url('./assets/fonts/Vazirmatn-SemiBold.woff2') format('woff2'); }
+@font-face { font-family: 'Vazirmatn'; font-style: normal; font-weight: 700; font-display: swap; src: url('./assets/fonts/Vazirmatn-Bold.woff2') format('woff2'); }
+@font-face { font-family: 'Vazirmatn'; font-style: normal; font-weight: 900; font-display: swap; src: url('./assets/fonts/Vazirmatn-Black.woff2') format('woff2'); }
+
+/* تیترها (کلاسِ font-display) با وزنِ سنگینِ وزیرمتن تا بعد از حذفِ لاله‌زار
+   همچنان «تیتر» به نظر برسند. وزنِ ۸۰۰ به نزدیک‌ترین فایل (Black/۹۰۰) نگاشت می‌شود. */
+.font-display { font-weight: 800; }
 
 /* ---------------------------------------------------------------
    پالتِ رسمی: آبی به‌عنوان رنگِ اصلی (حسِ آب/تمیزی/اعتماد)،
@@ -8,8 +20,9 @@
    تایپوگرافی: لاله‌زار (نمایشی) + وزیرمتن (متن/اعداد).
 --------------------------------------------------------------- */
 @theme {
+  /* همه‌جا وزیرمتن — تیترها هم (font-display) دیگر لاله‌زار نیست، طبق خواسته */
   --font-sans: "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Lalezar", "Vazirmatn", ui-sans-serif, cursive;
+  --font-display: "Vazirmatn", ui-sans-serif, sans-serif;
   --font-mono: "Vazirmatn", ui-monospace, monospace;
 }
 

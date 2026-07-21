@@ -60,17 +60,28 @@ function verifySignature(payload, signatureB64) {
   }
 }
 
-const daysLeftUntil = (ms) => Math.max(0, Math.ceil((ms - Date.now()) / DAY_MS));
+const daysLeftUntil = (ms, from) => Math.max(0, Math.ceil((ms - from) / DAY_MS));
 
 /** وضعیتِ فعلیِ لایسنس را محاسبه می‌کند (و تریال/زمان را در فایل به‌روز می‌کند). */
 function computeStatus(store) {
   const machineId = getMachineId();
   const now = Date.now();
 
-  // ضدِ دستکاریِ ساعت: اگر ساعت بیش از یک روز عقب‌تر از آخرین دیدار رفت → مشکوک.
-  const lastSeen = Number(store.get(KEYS.lastSeen) || 0);
-  const clockTampered = lastSeen > 0 && now < lastSeen - DAY_MS;
-  store.set(KEYS.lastSeen, Math.max(lastSeen, now));
+  // «ساعتِ سقفی» (monotonic): زمانِ مؤثر هیچ‌وقت از بیشترین زمانی که تا حالا دیده‌ایم
+  // عقب‌تر نمی‌رود. نتیجه:
+  //  - عقب‌کشیدنِ ساعت (هر مقدار: ۱ روز یا ۷۰ روز) هیچ سودی ندارد، چون تریال/لایسنس
+  //    با effectiveNow سنجیده می‌شود که همان سقف است؛ پس منقضی‌بودن باطل نمی‌شود.
+  //  - جلو‌کشیدنِ ساعت (مثلاً ۵ سال) → effectiveNow جلو می‌پرد → تریال/لایسنس منقضی و قفل.
+  // تنها استثناء: اگر ساعت خیلی زیاد (>۱۸۰ روز) عقب‌تر از سقف باشد، یعنی احتمالاً قبلاً
+  // اشتباهاً خیلی جلو تنظیم شده و حالا اصلاح شده؛ سقف را پایین می‌آوریم تا قفلِ دائمیِ
+  // اشتباهی رخ ندهد. (این آستانه‌ی بزرگ، حفره‌ی عقب‌کشیدنِ کوچک/متوسط را باز نمی‌کند.)
+  const HEAL_THRESHOLD = 180 * DAY_MS;
+  let lastSeen = Number(store.get(KEYS.lastSeen) || 0);
+  if (lastSeen > 0 && lastSeen - now > HEAL_THRESHOLD) {
+    lastSeen = now; // خطای بزرگِ ساعتِ گذشته → بازتنظیمِ سقف
+  }
+  const effectiveNow = Math.max(now, lastSeen);
+  store.set(KEYS.lastSeen, effectiveNow);
 
   // ۱) لایسنسِ سالانه (اگر واردشده باشد)
   const fileRaw = store.get(KEYS.file);
@@ -81,15 +92,14 @@ function computeStatus(store) {
       const okMachine = lic.payload.machineId === machineId;
       if (okSig && okMachine) {
         const exp = new Date(lic.payload.expiresAt).getTime();
-        if (clockTampered) return { state: 'invalid', machineId, reason: 'clock' };
-        if (now <= exp) {
+        if (effectiveNow <= exp) {
           return {
             state: 'licensed',
             type: lic.payload.type,
             customer: lic.payload.customer,
             machineId,
             expiresAt: lic.payload.expiresAt,
-            daysLeft: daysLeftUntil(exp),
+            daysLeft: daysLeftUntil(exp, effectiveNow),
           };
         }
         return { state: 'expired', type: lic.payload.type, machineId, expiresAt: lic.payload.expiresAt, daysLeft: 0 };
@@ -103,14 +113,14 @@ function computeStatus(store) {
   // ۲) تریالِ ۷روزه (خودکار در اولین اجرا)
   let firstRun = Number(store.get(KEYS.firstRun) || 0);
   if (!firstRun) {
-    firstRun = now;
+    firstRun = effectiveNow;
     store.set(KEYS.firstRun, firstRun);
   }
   const trialExp = firstRun + TRIAL_DAYS * DAY_MS;
-  if (!clockTampered && now <= trialExp) {
-    return { state: 'trial', machineId, expiresAt: new Date(trialExp).toISOString(), daysLeft: daysLeftUntil(trialExp) };
+  if (effectiveNow <= trialExp) {
+    return { state: 'trial', machineId, expiresAt: new Date(trialExp).toISOString(), daysLeft: daysLeftUntil(trialExp, effectiveNow) };
   }
-  return { state: 'expired', type: 'trial', machineId, daysLeft: 0, reason: clockTampered ? 'clock' : undefined };
+  return { state: 'expired', type: 'trial', machineId, daysLeft: 0 };
 }
 
 /** واردکردنِ فایلِ لایسنس (اعتبارسنجی، سپس ذخیره). */

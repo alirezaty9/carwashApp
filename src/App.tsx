@@ -53,15 +53,31 @@ export default function App() {
   // موقعِ چاپِ هرکدام، هدفِ دیگری را پاک می‌کنیم تا هر دو ناحیه با هم چاپ نشوند.
   const [printTarget, setPrintTarget] = useState<Receipt | null>(null);
   const [printSaleTarget, setPrintSaleTarget] = useState<Sale | null>(null);
+
+  // اجرای چاپ بر اساسِ حالتِ تنظیم‌شده:
+  // off → اصلاً چاپ نکن؛ silent → مستقیم به پرینتر؛ dialog → پنجره‌ی چاپ.
+  const runPrint = () => {
+    const { printMode, printerName } = store.config;
+    if (printMode === 'off') return;
+    window.setTimeout(() => {
+      const printer = (window as unknown as { printer?: { printSilent(n: string): void } }).printer;
+      if (printMode === 'silent' && printer) {
+        printer.printSilent(printerName);
+      } else {
+        window.print();
+      }
+    }, 250);
+  };
+
   const handlePrint = (r: Receipt) => {
     setPrintSaleTarget(null);
     setPrintTarget(r);
-    window.setTimeout(() => window.print(), 250);
+    runPrint();
   };
   const handlePrintSale = (s: Sale) => {
     setPrintTarget(null);
     setPrintSaleTarget(s);
-    window.setTimeout(() => window.print(), 250);
+    runPrint();
   };
 
   // ساعت زنده — هر ثانیه به‌روز می‌شود (ریل‌تایم)
