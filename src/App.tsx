@@ -4,23 +4,37 @@
  */
 
 import { FormEvent, useEffect, useState } from 'react';
-import { CarFront, Droplets, ShieldCheck, Lock, Sun, Moon, ArrowRight } from 'lucide-react';
-import { Receipt } from './types';
+import { CarFront, Droplets, ShieldCheck, Lock, Sun, Moon, ArrowRight, Package } from 'lucide-react';
+import { Receipt, Sale } from './types';
 import { useCarwashStore } from './data/store';
-import { getJalaliDateParts, JALALI_MONTH_NAMES, toPersianDigits } from './utils/jalali';
-import { NotificationBar, useNotification, Modal, ModalHeader, Field, inputClass, PrimaryButton, GhostButton } from './components/common';
+import { getJalaliDateParts, JALALI_MONTH_NAMES } from './utils/jalali';
+import { toPersianDigits } from './utils/format';
+import { NotificationBar, useNotification, Modal, ModalHeader, Field, inputClass, PrimaryButton, GhostButton, PillTabs } from './components/common';
 import NewReceipt from './components/pos/NewReceipt';
+import NewSale from './components/pos/NewSale';
 import AdminPanel from './components/admin/AdminPanel';
 import PrintReceipt from './components/print/PrintReceipt';
+import PrintSale from './components/print/PrintSale';
+import SplashScreen from './components/brand/SplashScreen';
+import BrandWatermark from './components/brand/BrandWatermark';
+import { YatashMark } from './components/brand/YatashLogo';
+import { BRAND } from './brand';
 
 type Mode = 'pos' | 'admin';
+type PosTab = 'wash' | 'sale';
 type Theme = 'dark' | 'light';
+
+const POS_TABS: { id: PosTab; label: string; icon: typeof Droplets }[] = [
+  { id: 'wash', label: 'قبض شست‌وشو', icon: Droplets },
+  { id: 'sale', label: 'فروش لوازم', icon: Package },
+];
 
 export default function App() {
   const store = useCarwashStore();
   const { notice, notify } = useNotification();
 
   const [mode, setMode] = useState<Mode>('pos');
+  const [posTab, setPosTab] = useState<PosTab>('wash');
 
   // تم روشن/تیره — روی <html data-theme> اعمال و در localStorage ذخیره می‌شود
   const [theme, setTheme] = useState<Theme>(
@@ -31,10 +45,18 @@ export default function App() {
     localStorage.setItem('cw2_theme', theme);
   }, [theme]);
 
-  // چاپ
+  // چاپ — دو نوع قبض جدا داریم (شست‌وشو / فروشِ لوازم).
+  // موقعِ چاپِ هرکدام، هدفِ دیگری را پاک می‌کنیم تا هر دو ناحیه با هم چاپ نشوند.
   const [printTarget, setPrintTarget] = useState<Receipt | null>(null);
+  const [printSaleTarget, setPrintSaleTarget] = useState<Sale | null>(null);
   const handlePrint = (r: Receipt) => {
+    setPrintSaleTarget(null);
     setPrintTarget(r);
+    window.setTimeout(() => window.print(), 250);
+  };
+  const handlePrintSale = (s: Sale) => {
+    setPrintTarget(null);
+    setPrintSaleTarget(s);
     window.setTimeout(() => window.print(), 250);
   };
 
@@ -80,6 +102,9 @@ export default function App() {
 
   return (
     <>
+      <SplashScreen />
+      <BrandWatermark />
+
       <div className="no-print min-h-screen flex flex-col antialiased">
         <NotificationBar notice={notice} />
 
@@ -141,14 +166,29 @@ export default function App() {
         {/* ===== محتوا ===== */}
         <main className="max-w-6xl mx-auto px-4 py-6 w-full flex-1 flex flex-col justify-center gap-6">
           {mode === 'pos' ? (
-            <NewReceipt store={store} notify={notify} onPrint={handlePrint} />
+            <div className="flex flex-col gap-6">
+              {/* انتخابِ نوعِ صندوق: قبضِ شست‌وشو یا فروشِ لوازم */}
+              <PillTabs tabs={POS_TABS} active={posTab} onChange={setPosTab} />
+              {posTab === 'wash' ? (
+                <NewReceipt store={store} notify={notify} onPrint={handlePrint} />
+              ) : (
+                <NewSale store={store} notify={notify} onPrintSale={handlePrintSale} />
+              )}
+            </div>
           ) : (
-            <AdminPanel store={store} notify={notify} onPrint={handlePrint} />
+            <AdminPanel store={store} notify={notify} onPrint={handlePrint} onPrintSale={handlePrintSale} />
           )}
         </main>
 
-        <footer className="text-center text-[10px] text-[var(--text-faint)] py-6 max-w-6xl mx-auto w-full border-t border-[var(--border)] font-semibold">
-          {store.config.shopName} • سیستم آفلاین صدور قبض • آماده‌ی انتقال به Electron
+        <footer className="py-6 max-w-6xl mx-auto w-full border-t border-[var(--border)]">
+          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[10px] text-[var(--text-faint)] font-semibold">
+            <span>{store.config.shopName} • سیستم آفلاین صدور قبض</span>
+            <span className="opacity-40">|</span>
+            <span className="inline-flex items-center gap-1.5 font-bold text-[var(--text-muted)]">
+              {BRAND.poweredByFa}
+              <YatashMark size={14} />
+            </span>
+          </div>
         </footer>
 
         {/* مودالِ رمز پنل */}
@@ -173,8 +213,9 @@ export default function App() {
         </Modal>
       </div>
 
-      {/* ناحیه‌ی چاپ (خواهرِ بخش اصلی تا در چاپ محو نشود) */}
+      {/* ناحیه‌ی چاپ (خواهرِ بخش اصلی تا در چاپ محو نشود) — فقط یکی از دو هدف پر است */}
       <PrintReceipt receipt={printTarget} config={store.config} />
+      <PrintSale sale={printSaleTarget} config={store.config} />
     </>
   );
 }

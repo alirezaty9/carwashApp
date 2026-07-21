@@ -2,7 +2,7 @@ import { FormEvent, useMemo, useState } from 'react';
 import { Printer, Edit3, XCircle, CheckCircle, Search, FileText } from 'lucide-react';
 import { Receipt } from '../../types';
 import { Store } from '../../data/store';
-import { formatCurrencyToman, toEnglishDigits, toPersianDigits } from '../../utils/jalali';
+import { formatCurrencyToman, rialToToman, toEnglishDigits, toPersianDigits, tomanToRial } from '../../utils/format';
 import { Field, GhostButton, inputClass, Modal, ModalHeader, PrimaryButton, SectionCard } from '../common';
 
 interface Props {
@@ -223,7 +223,12 @@ export default function History({ store, notify, onPrint }: Props) {
                 </select>
               </Field>
               <Field label="مبلغ (تومان)">
-                <input type="number" value={editing.price} onChange={(e) => setEditing({ ...editing, price: Number(e.target.value) })} className={`${inputClass} font-mono`} />
+                <input
+                  type="number"
+                  value={rialToToman(editing.price)}
+                  onChange={(e) => setEditing({ ...editing, price: tomanToRial(Number(e.target.value)) })}
+                  className={`${inputClass} font-mono`}
+                />
               </Field>
               <Field label="توضیحات">
                 <input value={editing.notes || ''} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} className={inputClass} />

@@ -1,5 +1,6 @@
 import { CarwashConfig, Receipt } from '../../types';
-import { formatCurrencyToman, toPersianDigits } from '../../utils/jalali';
+import { formatCurrencyToman, toPersianDigits } from '../../utils/format';
+import { BRAND } from '../../brand';
 
 /**
  * ناحیه‌ی چاپِ فیشِ حرارتی (۸۰mm).
@@ -75,6 +76,11 @@ export default function PrintReceipt({ receipt, config }: { receipt: Receipt | n
 
       <div className="text-center text-[9px] font-medium leading-relaxed pt-2 border-t-2 border-dashed border-black">
         <p>{config.footerText}</p>
+      </div>
+
+      {/* خطِ برندِ سازنده */}
+      <div className="text-center text-[8px] font-bold mt-2 tracking-wide">
+        {BRAND.poweredByFa} · {BRAND.nameEn}
       </div>
     </div>
   );

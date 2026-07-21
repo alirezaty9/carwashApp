@@ -15,7 +15,7 @@ export interface Tier {
 export interface Service {
   id: string;
   name: string;
-  /** نگاشتِ tierId → قیمت (تومان) برای آن تیپ */
+  /** نگاشتِ tierId → قیمت (ریال) برای آن تیپ؛ در UI به تومان نمایش/ویرایش می‌شود */
   prices: Record<string, number>;
   /** درصدِ پورسانتِ کارگر از این خدمت (۰ تا ۱۰۰)؛ نبودنش یعنی صفر */
   commissionPct?: number;
@@ -59,13 +59,63 @@ export interface Receipt {
   // خدمات و مبلغ
   services: ReceiptService[];
   price: number; // مبلغ قابل پرداخت = جمع خدمات منهای تخفیف
-  discount?: number; // مبلغِ تخفیفِ اعمال‌شده (تومان)؛ نبودنش یعنی صفر
+  discount?: number; // مبلغِ تخفیفِ اعمال‌شده (ریال)؛ نبودنش یعنی صفر
   workerCommission?: number; // پورسانتِ کارگرِ این قبض (اسنپ‌شات در لحظه‌ی صدور)
 
   // کارگر (اختیاری)
   workerId?: string;
   workerName?: string;
 
+  notes?: string;
+
+  // تاریخ
+  date: string; // ISO
+  jalaliDate: string;
+  jalaliYear: number;
+  jalaliMonth: number;
+  jalaliDay: number;
+
+  // وضعیت
+  status: 'active' | 'voided';
+  voidReason?: string;
+}
+
+/**
+ * کالای انبار (لوازم جانبی) — مثل شامپو، خوشبوکننده، برف‌پاک‌کن.
+ * جدا از «خدمات» است چون موجودی (تعداد) دارد و با هر فروش کم می‌شود.
+ */
+export interface Product {
+  id: string;
+  name: string;
+  /** قیمتِ فروش (ریال)؛ در UI به تومان نمایش/ویرایش می‌شود */
+  price: number;
+  /** موجودیِ فعلی (تعداد) */
+  stock: number;
+  /** کالای غیرفعال در صفحه‌ی فروش نمایش داده نمی‌شود */
+  active: boolean;
+}
+
+/** یک ردیفِ کالای فروخته‌شده روی قبضِ فروش (اسنپ‌شاتِ قیمت و تعداد در لحظه‌ی فروش) */
+export interface SaleItem {
+  productId: string;
+  name: string;
+  price: number; // قیمتِ واحد در لحظه‌ی فروش (ریال)
+  qty: number;
+}
+
+/**
+ * قبضِ فروشِ لوازم جانبی — کاملاً جدا از Receipt (قبضِ شست‌وشو).
+ * شمارنده، تاریخچه، چاپ و گزارشِ آن مستقل است.
+ */
+export interface Sale {
+  id: string;
+  saleNumber: number;
+
+  items: SaleItem[];
+  total: number; // مبلغ قابل پرداخت = جمعِ اقلام منهای تخفیف
+  discount?: number; // مبلغِ تخفیفِ اعمال‌شده (ریال)؛ نبودنش یعنی صفر
+
+  customerPhone?: string; // اختیاری
   notes?: string;
 
   // تاریخ
@@ -98,5 +148,7 @@ export interface BackupData {
   workers: Worker[];
   customers: Customer[];
   receipts: Receipt[];
+  products: Product[];
+  sales: Sale[];
   config: CarwashConfig;
 }

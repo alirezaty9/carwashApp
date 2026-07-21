@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Printer, UserCheck, History as HistoryIcon } from 'lucide-react';
 import { Receipt } from '../../types';
 import { Store } from '../../data/store';
-import { formatCurrencyToman, toEnglishDigits, toPersianDigits } from '../../utils/jalali';
+import { formatCurrencyToman, toEnglishDigits, toPersianDigits, tomanToRial } from '../../utils/format';
 import { Field, inputClass, PrimaryButton, SectionCard } from '../common';
 
 interface Props {
@@ -54,7 +54,7 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
   // کاربر تخفیف را به «تومان» وارد می‌کند؛ قیمت‌ها داخل سیستم به ریال ذخیره‌اند،
   // پس ×۱۰ می‌کنیم و بین صفر و جمعِ خدمات محدود می‌کنیم تا مبلغ منفی نشود.
   const discountToman = Math.max(0, Number(toEnglishDigits(discount).replace(/[^0-9]/g, '')) || 0);
-  const discountValue = Math.min(discountToman * 10, subtotal);
+  const discountValue = Math.min(tomanToRial(discountToman), subtotal);
   const total = subtotal - discountValue;
 
   // ورودیِ تخفیف را حینِ تایپ به «رقمِ فارسی + جداکننده‌ی سه‌رقمی» تبدیل می‌کنیم

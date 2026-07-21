@@ -1,5 +1,5 @@
 import { ButtonHTMLAttributes, ReactNode, useCallback, useState } from 'react';
-import { AlertCircle, CheckCircle, Info, X } from 'lucide-react';
+import { AlertCircle, CheckCircle, Info, X, LucideIcon } from 'lucide-react';
 
 /** نوع پیام اعلان */
 export type NoticeType = 'success' | 'error' | 'info';
@@ -154,6 +154,59 @@ export function GhostButton({
     >
       {children}
     </button>
+  );
+}
+
+/** نوارِ زبانه‌ی قرص‌شکل (pill) — برای زیرمنوها و انتخابِ بازه؛ آیکن اختیاری */
+export function PillTabs<T extends string>({
+  tabs,
+  active,
+  onChange,
+}: {
+  tabs: { id: T; label: string; icon?: LucideIcon }[];
+  active: T;
+  onChange: (id: T) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2 bg-[var(--surface)] p-2 rounded-2xl border border-[var(--border)]">
+      {tabs.map((t) => (
+        <button
+          key={t.id}
+          onClick={() => onChange(t.id)}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-all ${
+            active === t.id ? 'cw-primary' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
+          }`}
+        >
+          {t.icon && <t.icon className="w-4 h-4" />}
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** کارتِ آماریِ خلاصه (برچسب + مقدار + آیکنِ رنگی) */
+export function StatCard({
+  label,
+  value,
+  icon: Icon,
+  color,
+}: {
+  label: string;
+  value: string;
+  icon: LucideIcon;
+  color: string;
+}) {
+  return (
+    <div className="bg-[var(--surface)] p-4 rounded-2xl border border-[var(--border)] shadow-xl flex items-center justify-between gap-2">
+      <div className="min-w-0">
+        <span className="text-[11px] text-[var(--text-muted)] font-bold block mb-1">{label}</span>
+        <span className="text-base font-black text-[var(--text)] font-mono">{value}</span>
+      </div>
+      <div className={`p-2.5 rounded-xl border shrink-0 ${color}`}>
+        <Icon className="w-5 h-5" />
+      </div>
+    </div>
   );
 }
 

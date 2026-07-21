@@ -1,3 +1,9 @@
+/**
+ * تبدیلِ تاریخِ میلادی به جلالی (شمسی) و قالب‌بندیِ آن.
+ * فقط منطقِ تاریخ اینجاست؛ توابعِ ارقام/پول در `format.ts` هستند.
+ */
+import { toPersianDigits } from './format';
+
 export function gregorianToJalali(gy: number, gm: number, gd: number): [number, number, number] {
   const g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 335];
   let jy = gy <= 1600 ? 0 : gy - 1600;
@@ -34,29 +40,8 @@ export function gregorianToJalali(gy: number, gm: number, gd: number): [number, 
   return [jy, jm, jd];
 }
 
-export function toPersianDigits(n: number | string): string {
-  const farsiDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-  return n
-    .toString()
-    .replace(/[0-9]/g, (w) => farsiDigits[parseInt(w, 10)]);
-}
-
-export function toEnglishDigits(str: string): string {
-  const farsiDigits = [/۰/g, /۱/g, /۲/g, /۳/g, /۴/g, /۵/g, /۶/g, /۷/g, /۸/g, /۹/g];
-  const arabicDigits = [/٠/g, /١/g, /٢/g, /٣/g, /٤/g, /٥/g, /٦/g, /٧/g, /٨/g, /٩/g];
-  
-  let out = str;
-  for (let i = 0; i < 10; i++) {
-    out = out.replace(farsiDigits[i], i.toString()).replace(arabicDigits[i], i.toString());
-  }
-  return out;
-}
-
 export function getJalaliDateParts(date: Date): { year: number; month: number; day: number } {
-  const gy = date.getFullYear();
-  const gm = date.getMonth() + 1;
-  const gd = date.getDate();
-  const [year, month, day] = gregorianToJalali(gy, gm, gd);
+  const [year, month, day] = gregorianToJalali(date.getFullYear(), date.getMonth() + 1, date.getDate());
   return { year, month, day };
 }
 
@@ -72,34 +57,15 @@ export const JALALI_MONTH_NAMES = [
   'آذر',
   'دی',
   'بهمن',
-  'اسفند'
+  'اسفند',
 ];
 
 export function getFormattedJalali(date: Date, includeTime = true): string {
   const { year, month, day } = getJalaliDateParts(date);
-  const monthName = JALALI_MONTH_NAMES[month - 1];
-  
-  const paddedMonth = month.toString().padStart(2, '0');
-  const paddedDay = day.toString().padStart(2, '0');
-  
-  const dateStr = `${toPersianDigits(year)}/${toPersianDigits(paddedMonth)}/${toPersianDigits(paddedDay)}`;
-  
-  if (includeTime) {
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${dateStr} ساعت ${toPersianDigits(hours)}:${toPersianDigits(minutes)}`;
-  }
-  
-  return dateStr;
-}
+  const pad = (n: number) => toPersianDigits(n.toString().padStart(2, '0'));
 
-export function formatCurrency(amount: number): string {
-  const formatted = new Intl.NumberFormat('fa-IR').format(amount);
-  return `${formatted} ریال`;
-}
+  const dateStr = `${toPersianDigits(year)}/${pad(month)}/${pad(day)}`;
+  if (!includeTime) return dateStr;
 
-export function formatCurrencyToman(amount: number): string {
-  const toman = Math.floor(amount / 10);
-  const formatted = new Intl.NumberFormat('fa-IR').format(toman);
-  return `${formatted} تومان`;
+  return `${dateStr} ساعت ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }

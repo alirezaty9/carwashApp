@@ -3,19 +3,24 @@ import {
   BackupData,
   CarwashConfig,
   Customer,
+  Product,
   Receipt,
   ReceiptService,
+  Sale,
+  SaleItem,
   Service,
   Tier,
   Worker,
 } from '../types';
 import {
   DEFAULT_CONFIG,
+  DEFAULT_PRODUCTS,
   DEFAULT_SERVICES,
   DEFAULT_TIERS,
   DEFAULT_WORKERS,
 } from './defaults';
-import { getFormattedJalali, getJalaliDateParts, toEnglishDigits } from '../utils/jalali';
+import { getFormattedJalali, getJalaliDateParts } from '../utils/jalali';
+import { toEnglishDigits } from '../utils/format';
 
 /**
  * لایه‌ی داده‌ی برنامه. تمام state، ذخیره‌سازی و اکشن‌ها اینجا متمرکز است تا
@@ -32,6 +37,8 @@ const KEYS = {
   workers: 'cw2_workers',
   customers: 'cw2_customers',
   receipts: 'cw2_receipts',
+  products: 'cw2_products',
+  sales: 'cw2_sales',
   config: 'cw2_config',
 } as const;
 
@@ -69,7 +76,20 @@ export interface CreateReceiptInput {
   serviceIds: string[];
   workerId?: string;
   notes?: string;
-  discount?: number; // مبلغِ تخفیف (تومان)
+  discount?: number; // مبلغِ تخفیف (ریال)
+}
+
+/** یک ردیفِ ورودیِ فروشِ کالا (فقط شناسه و تعداد؛ قیمت از خودِ کالا خوانده می‌شود) */
+export interface CreateSaleItemInput {
+  productId: string;
+  qty: number;
+}
+
+export interface CreateSaleInput {
+  items: CreateSaleItemInput[];
+  customerPhone?: string;
+  notes?: string;
+  discount?: number; // مبلغِ تخفیف (ریال)
 }
 
 export function useCarwashStore() {
@@ -78,6 +98,8 @@ export function useCarwashStore() {
   const [workers, setWorkers] = useState<Worker[]>(() => load(KEYS.workers, DEFAULT_WORKERS));
   const [customers, setCustomers] = useState<Customer[]>(() => load(KEYS.customers, []));
   const [receipts, setReceipts] = useState<Receipt[]>(() => load(KEYS.receipts, []));
+  const [products, setProducts] = useState<Product[]>(() => load(KEYS.products, DEFAULT_PRODUCTS));
+  const [sales, setSales] = useState<Sale[]>(() => load(KEYS.sales, []));
   const [config, setConfig] = useState<CarwashConfig>(() => load(KEYS.config, DEFAULT_CONFIG));
 
   // --- ذخیره‌سازی خودکار ---
@@ -86,6 +108,8 @@ export function useCarwashStore() {
   useEffect(() => save(KEYS.workers, workers), [workers]);
   useEffect(() => save(KEYS.customers, customers), [customers]);
   useEffect(() => save(KEYS.receipts, receipts), [receipts]);
+  useEffect(() => save(KEYS.products, products), [products]);
+  useEffect(() => save(KEYS.sales, sales), [sales]);
   useEffect(() => save(KEYS.config, config), [config]);
 
   // ================= تیپ‌ها =================
@@ -276,6 +300,120 @@ export function useCarwashStore() {
     setReceipts((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
   }, []);
 
+  // ================= کالاها (انبار) =================
+  const addProduct = useCallback((name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setProducts((prev) => [...prev, { id: uid('prd'), name: trimmed, price: 0, stock: 0, active: true }]);
+  }, []);
+
+  const renameProduct = useCallback((id: string, name: string) => {
+    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, name } : p)));
+  }, []);
+
+  const setProductPrice = useCallback((id: string, price: number) => {
+    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, price: Math.max(0, Math.round(price)) } : p)));
+  }, []);
+
+  // تنظیمِ مستقیمِ موجودی (ویرایشِ دستی)
+  const setProductStock = useCallback((id: string, stock: number) => {
+    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, stock: Math.max(0, Math.round(stock)) } : p)));
+  }, []);
+
+  // افزایش/کاهشِ موجودی به‌اندازه‌ی delta (مثلاً +۱۰ هنگام خریدِ انبار)
+  const adjustStock = useCallback((id: string, delta: number) => {
+    setProducts((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, stock: Math.max(0, p.stock + Math.round(delta)) } : p)),
+    );
+  }, []);
+
+  const toggleProduct = useCallback((id: string) => {
+    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, active: !p.active } : p)));
+  }, []);
+
+  const removeProduct = useCallback((id: string) => {
+    setProducts((prev) => prev.filter((p) => p.id !== id));
+  }, []);
+
+  // ================= فروشِ کالا =================
+  const nextSaleNumber = useMemo(() => {
+    if (sales.length === 0) return 1;
+    return Math.max(...sales.map((s) => s.saleNumber || 0)) + 1;
+  }, [sales]);
+
+  const createSale = useCallback(
+    (input: CreateSaleInput): Sale | null => {
+      // فقط ردیف‌های معتبر (کالای موجود و تعدادِ مثبت)
+      const rows: SaleItem[] = [];
+      for (const row of input.items) {
+        const qty = Math.round(row.qty);
+        if (qty <= 0) continue;
+        const product = products.find((p) => p.id === row.productId);
+        if (!product) return null;
+        // موجودی نباید کفاف ندهد
+        if (qty > product.stock) return null;
+        rows.push({ productId: product.id, name: product.name, price: product.price, qty });
+      }
+      if (rows.length === 0) return null;
+
+      const subtotal = rows.reduce((sum, r) => sum + r.price * r.qty, 0);
+      const discount = Math.min(Math.max(0, Math.round(input.discount ?? 0)), subtotal);
+      const total = subtotal - discount;
+
+      const phone = input.customerPhone ? toEnglishDigits(input.customerPhone).trim() : undefined;
+
+      const now = new Date();
+      const { year, month, day } = getJalaliDateParts(now);
+
+      const sale: Sale = {
+        id: uid('sal'),
+        saleNumber: nextSaleNumber,
+        items: rows,
+        total,
+        discount: discount || undefined,
+        customerPhone: phone || undefined,
+        notes: input.notes?.trim() || undefined,
+        date: now.toISOString(),
+        jalaliDate: getFormattedJalali(now, true),
+        jalaliYear: year,
+        jalaliMonth: month,
+        jalaliDay: day,
+        status: 'active',
+      };
+
+      // کم‌کردنِ موجودیِ هر کالا به‌اندازه‌ی فروخته‌شده
+      setProducts((prev) =>
+        prev.map((p) => {
+          const sold = rows.find((r) => r.productId === p.id);
+          return sold ? { ...p, stock: Math.max(0, p.stock - sold.qty) } : p;
+        }),
+      );
+
+      setSales((prev) => [sale, ...prev]);
+      return sale;
+    },
+    [products, nextSaleNumber],
+  );
+
+  // ابطالِ فروش → موجودیِ کالاها به انبار برمی‌گردد
+  const voidSale = useCallback((id: string, reason: string) => {
+    setSales((prevSales) => {
+      const target = prevSales.find((s) => s.id === id);
+      // فقط فروشِ فعال را ابطال می‌کنیم تا موجودی دوباره برنگردد (ابطالِ تکراری)
+      if (target && target.status === 'active') {
+        setProducts((prevProducts) =>
+          prevProducts.map((p) => {
+            const returned = target.items.find((r) => r.productId === p.id);
+            return returned ? { ...p, stock: p.stock + returned.qty } : p;
+          }),
+        );
+      }
+      return prevSales.map((s) =>
+        s.id === id ? { ...s, status: 'voided' as const, voidReason: reason.trim() || 'بدون علت' } : s,
+      );
+    });
+  }, []);
+
   // ================= تنظیمات =================
   const updateConfig = useCallback((partial: Partial<CarwashConfig>) => {
     setConfig((prev) => ({ ...prev, ...partial }));
@@ -291,9 +429,11 @@ export function useCarwashStore() {
       workers,
       customers,
       receipts,
+      products,
+      sales,
       config,
     };
-  }, [tiers, services, workers, customers, receipts, config]);
+  }, [tiers, services, workers, customers, receipts, products, sales, config]);
 
   const importData = useCallback((data: Partial<BackupData>): boolean => {
     if (!data || !Array.isArray(data.tiers) || !Array.isArray(data.services) || !Array.isArray(data.receipts)) {
@@ -304,6 +444,8 @@ export function useCarwashStore() {
     setWorkers(Array.isArray(data.workers) ? data.workers : []);
     setCustomers(Array.isArray(data.customers) ? data.customers : []);
     setReceipts(data.receipts);
+    setProducts(Array.isArray(data.products) ? data.products : []);
+    setSales(Array.isArray(data.sales) ? data.sales : []);
     if (data.config) setConfig({ ...DEFAULT_CONFIG, ...data.config });
     return true;
   }, []);
@@ -314,6 +456,8 @@ export function useCarwashStore() {
     setWorkers(DEFAULT_WORKERS);
     setCustomers([]);
     setReceipts([]);
+    setProducts(DEFAULT_PRODUCTS);
+    setSales([]);
     setConfig(DEFAULT_CONFIG);
   }, []);
 
@@ -324,8 +468,11 @@ export function useCarwashStore() {
     workers,
     customers,
     receipts,
+    products,
+    sales,
     config,
     nextReceiptNumber,
+    nextSaleNumber,
     // tiers
     addTier,
     renameTier,
@@ -348,6 +495,17 @@ export function useCarwashStore() {
     createReceipt,
     voidReceipt,
     updateReceipt,
+    // products
+    addProduct,
+    renameProduct,
+    setProductPrice,
+    setProductStock,
+    adjustStock,
+    toggleProduct,
+    removeProduct,
+    // sales
+    createSale,
+    voidSale,
     // config
     updateConfig,
     // data

@@ -1,4 +1,4 @@
-import { CarwashConfig, Service, Tier, Worker } from '../types';
+import { CarwashConfig, Product, Service, Tier, Worker } from '../types';
 
 /**
  * داده‌های پیش‌فرضِ اولین اجرا.
@@ -42,6 +42,17 @@ export const DEFAULT_SERVICES: Service[] = [
     prices: { 'tier-sedan': 2000000, 'tier-suv': 3000000, 'tier-heavy': 4000000 },
     commissionPct: 30,
   },
+];
+
+/**
+ * کالاهای پیش‌فرضِ انبار (لوازم جانبی).
+ * قیمت‌ها به ریال‌اند (در UI به تومان دیده می‌شوند). موجودیِ اولیه نمونه است.
+ */
+export const DEFAULT_PRODUCTS: Product[] = [
+  { id: 'prd-shampoo', name: 'شامپو بدنه خودرو', price: 850000, stock: 12, active: true },
+  { id: 'prd-freshener', name: 'خوشبوکننده', price: 250000, stock: 30, active: true },
+  { id: 'prd-wiper', name: 'تیغه برف‌پاک‌کن', price: 1200000, stock: 8, active: true },
+  { id: 'prd-towel', name: 'دستمال میکروفایبر', price: 350000, stock: 25, active: true },
 ];
 
 export const DEFAULT_WORKERS: Worker[] = [

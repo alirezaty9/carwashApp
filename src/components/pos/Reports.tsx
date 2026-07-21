@@ -1,28 +1,32 @@
 import { useMemo } from 'react';
-import { DollarSign, FileText, TrendingUp } from 'lucide-react';
+import { DollarSign, FileText, TrendingUp, ShoppingCart, Package } from 'lucide-react';
 import { Store } from '../../data/store';
-import {
-  formatCurrencyToman,
-  getJalaliDateParts,
-  JALALI_MONTH_NAMES,
-  toPersianDigits,
-} from '../../utils/jalali';
-import { SectionCard } from '../common';
+import { formatCurrencyToman, toPersianDigits } from '../../utils/format';
+import { getJalaliDateParts, JALALI_MONTH_NAMES } from '../../utils/jalali';
+import { activeReceipts, isOnJalaliDay, jalaliToday, sumRevenue } from '../../utils/receipts';
+import { SectionCard, StatCard } from '../common';
 
 export default function Reports({ store }: { store: Store }) {
-  const { receipts } = store;
-  const today = useMemo(() => getJalaliDateParts(new Date()), []);
+  const { receipts, sales } = store;
+  const today = useMemo(() => jalaliToday(), []);
 
-  const active = useMemo(() => receipts.filter((r) => r.status === 'active'), [receipts]);
+  const active = useMemo(() => activeReceipts(receipts), [receipts]);
   const voided = useMemo(() => receipts.filter((r) => r.status === 'voided'), [receipts]);
 
-  const todayRevenue = active
-    .filter((r) => r.jalaliYear === today.year && r.jalaliMonth === today.month && r.jalaliDay === today.day)
-    .reduce((s, r) => s + r.price, 0);
+  const todayRevenue = sumRevenue(active.filter((r) => isOnJalaliDay(r, today)));
 
-  const monthRevenue = active
-    .filter((r) => r.jalaliYear === today.year && r.jalaliMonth === today.month)
-    .reduce((s, r) => s + r.price, 0);
+  const monthRevenue = sumRevenue(
+    active.filter((r) => r.jalaliYear === today.year && r.jalaliMonth === today.month),
+  );
+
+  // درآمدِ فروشِ لوازم جانبی (جدا از شست‌وشو) — فقط فروش‌های فعال
+  const activeSales = useMemo(() => sales.filter((s) => s.status === 'active'), [sales]);
+  const salesTodayRevenue = activeSales
+    .filter((s) => s.jalaliYear === today.year && s.jalaliMonth === today.month && s.jalaliDay === today.day)
+    .reduce((sum, s) => sum + s.total, 0);
+  const salesMonthRevenue = activeSales
+    .filter((s) => s.jalaliYear === today.year && s.jalaliMonth === today.month)
+    .reduce((sum, s) => sum + s.total, 0);
 
   // درآمد ۷ روز اخیر
   const daily = useMemo(() => {
@@ -31,9 +35,7 @@ export default function Reports({ store }: { store: Store }) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const p = getJalaliDateParts(d);
-      const value = active
-        .filter((r) => r.jalaliYear === p.year && r.jalaliMonth === p.month && r.jalaliDay === p.day)
-        .reduce((s, r) => s + r.price, 0);
+      const value = sumRevenue(active.filter((r) => isOnJalaliDay(r, p)));
       out.push({ dayName: d.toLocaleDateString('fa-IR', { weekday: 'long' }), day: p.day, month: p.month, value });
     }
     return out;
@@ -43,9 +45,7 @@ export default function Reports({ store }: { store: Store }) {
     () =>
       JALALI_MONTH_NAMES.map((name, i) => ({
         name,
-        value: active
-          .filter((r) => r.jalaliYear === today.year && r.jalaliMonth === i + 1)
-          .reduce((s, r) => s + r.price, 0),
+        value: sumRevenue(active.filter((r) => r.jalaliYear === today.year && r.jalaliMonth === i + 1)),
       })),
     [active, today.year],
   );
@@ -61,20 +61,36 @@ export default function Reports({ store }: { store: Store }) {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* کارت‌های خلاصه */}
+      {/* کارت‌های خلاصه — درآمدِ شست‌وشو */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         {stats.map((s) => (
-          <div key={s.label} className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-xl flex items-center justify-between">
-            <div>
-              <span className="text-[11px] text-[var(--text-muted)] font-bold block mb-1">{s.label}</span>
-              <span className="text-lg font-black text-[var(--text)] font-mono">{s.value}</span>
-            </div>
-            <div className={`p-3 rounded-xl border ${s.color}`}>
-              <s.icon className="w-6 h-6" />
-            </div>
-          </div>
+          <StatCard key={s.label} label={s.label} value={s.value} icon={s.icon} color={s.color} />
         ))}
       </div>
+
+      {/* درآمدِ فروشِ لوازم جانبی (جدا از شست‌وشو) */}
+      <SectionCard title="فروش لوازم جانبی">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <StatCard
+            label="فروش امروز"
+            value={formatCurrencyToman(salesTodayRevenue)}
+            icon={ShoppingCart}
+            color="text-[var(--price)] bg-[var(--price-soft)] border-[var(--price-border)]"
+          />
+          <StatCard
+            label="فروش ماه جاری"
+            value={formatCurrencyToman(salesMonthRevenue)}
+            icon={TrendingUp}
+            color="text-[var(--price)] bg-[var(--price-soft)] border-[var(--price-border)]"
+          />
+          <StatCard
+            label="تعداد فاکتورهای فعال"
+            value={`${toPersianDigits(activeSales.length)} فاکتور`}
+            icon={Package}
+            color="text-[var(--text-muted)] bg-[var(--surface-2)] border-[var(--border)]"
+          />
+        </div>
+      </SectionCard>
 
       {/* نمودار ۷ روز اخیر */}
       <SectionCard title="درآمد روزانه (۷ روز اخیر)">

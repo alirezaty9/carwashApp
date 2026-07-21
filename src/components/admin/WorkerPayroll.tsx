@@ -1,18 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Users, Wallet, ReceiptText, PiggyBank, CircleDollarSign } from 'lucide-react';
 import { Store } from '../../data/store';
-import { formatCurrencyToman, getJalaliDateParts, toPersianDigits } from '../../utils/jalali';
-import { SectionCard } from '../common';
-
-/** بازه‌ی زمانیِ گزارش */
-type Period = 'today' | 'week' | 'month' | 'all';
-
-const PERIODS: { id: Period; label: string }[] = [
-  { id: 'today', label: 'امروز' },
-  { id: 'week', label: '۷ روز اخیر' },
-  { id: 'month', label: 'این ماه' },
-  { id: 'all', label: 'کل' },
-];
+import { formatCurrencyToman, toPersianDigits } from '../../utils/format';
+import { filterReceiptsByPeriod, jalaliToday, Period, PERIODS, sumRevenue } from '../../utils/receipts';
+import { PillTabs, SectionCard, StatCard } from '../common';
 
 /**
  * دستمزد و کارکردِ کارگرها.
@@ -22,24 +13,13 @@ const PERIODS: { id: Period; label: string }[] = [
 export default function WorkerPayroll({ store }: { store: Store }) {
   const { receipts } = store;
   const [period, setPeriod] = useState<Period>('today');
-  const today = useMemo(() => getJalaliDateParts(new Date()), []);
+  const today = useMemo(() => jalaliToday(), []);
 
   // قبض‌های فعالِ داخلِ بازه‌ی انتخابی
-  const filtered = useMemo(() => {
-    const active = receipts.filter((r) => r.status === 'active');
-    if (period === 'all') return active;
-    if (period === 'month')
-      return active.filter((r) => r.jalaliYear === today.year && r.jalaliMonth === today.month);
-    if (period === 'today')
-      return active.filter(
-        (r) => r.jalaliYear === today.year && r.jalaliMonth === today.month && r.jalaliDay === today.day,
-      );
-    // ۷ روز اخیر (بر اساس تاریخِ میلادیِ ذخیره‌شده)
-    const since = new Date();
-    since.setHours(0, 0, 0, 0);
-    since.setDate(since.getDate() - 6);
-    return active.filter((r) => new Date(r.date) >= since);
-  }, [receipts, period, today]);
+  const filtered = useMemo(
+    () => filterReceiptsByPeriod(receipts, period, today),
+    [receipts, period, today],
+  );
 
   // تجمیعِ کارکرد بر اساسِ کارگر
   const rows = useMemo(() => {
@@ -59,8 +39,7 @@ export default function WorkerPayroll({ store }: { store: Store }) {
   const totals = useMemo(
     () => ({
       count: filtered.length,
-      revenue: filtered.reduce((s, r) => s + r.price, 0),
-      discount: filtered.reduce((s, r) => s + (r.discount ?? 0), 0),
+      revenue: sumRevenue(filtered),
       commission: filtered.reduce((s, r) => s + (r.workerCommission ?? 0), 0),
     }),
     [filtered],
@@ -77,32 +56,12 @@ export default function WorkerPayroll({ store }: { store: Store }) {
   return (
     <div className="flex flex-col gap-6">
       {/* انتخابِ بازه */}
-      <div className="flex flex-wrap gap-2 bg-[var(--surface)] p-2 rounded-2xl border border-[var(--border)]">
-        {PERIODS.map((p) => (
-          <button
-            key={p.id}
-            onClick={() => setPeriod(p.id)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all ${
-              period === p.id ? 'cw-primary' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
-            }`}
-          >
-            {p.label}
-          </button>
-        ))}
-      </div>
+      <PillTabs tabs={PERIODS} active={period} onChange={setPeriod} />
 
       {/* کارت‌های خلاصه */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {summary.map((s) => (
-          <div key={s.label} className="bg-[var(--surface)] p-4 rounded-2xl border border-[var(--border)] shadow-xl flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <span className="text-[11px] text-[var(--text-muted)] font-bold block mb-1">{s.label}</span>
-              <span className="text-sm font-black text-[var(--text)] font-mono">{s.value}</span>
-            </div>
-            <div className={`p-2.5 rounded-xl border shrink-0 ${s.color}`}>
-              <s.icon className="w-5 h-5" />
-            </div>
-          </div>
+          <StatCard key={s.label} label={s.label} value={s.value} icon={s.icon} color={s.color} />
         ))}
       </div>
 
