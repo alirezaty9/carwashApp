@@ -18,9 +18,11 @@ export default function SplashScreen() {
 
   return (
     <div
-      className="cw-splash no-print fixed inset-0 z-[100] flex flex-col items-center justify-center gap-5"
+      className="cw-splash no-print fixed inset-0 z-[100] flex flex-col items-center justify-center gap-5 backdrop-blur-2xl"
       style={{
-        background: `radial-gradient(circle at 50% 40%, ${BRAND.gradientFrom}22, var(--bg) 70%)`,
+        // درخششِ فیروزه‌ایِ ملایم روی یک لایه‌ی تقریباً مات؛ همراه با backdrop-blur
+        // باعث می‌شود پس‌زمینه‌ی برنامه بسیار کم‌پیدا و محو باشد.
+        background: `radial-gradient(120% 90% at 50% 36%, ${BRAND.gradientFrom}30, transparent 62%), color-mix(in srgb, var(--bg) 94%, transparent)`,
       }}
     >
       <div className="cw-splash-logo flex flex-col items-center gap-4">

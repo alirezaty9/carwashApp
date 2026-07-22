@@ -1,5 +1,5 @@
 import { FormEvent, useMemo, useState } from 'react';
-import { Minus, Plus, Package, ShoppingCart } from 'lucide-react';
+import { Minus, Plus, Package, ShoppingCart, Check } from 'lucide-react';
 import { Sale } from '../../types';
 import { Store } from '../../data/store';
 import { formatCurrencyToman, toEnglishDigits, toPersianDigits, tomanToRial } from '../../utils/format';
@@ -29,6 +29,12 @@ export default function NewSale({ store, notify, onPrintSale }: Props) {
   const setQtyFor = (id: string, next: number, max: number) => {
     const clamped = Math.min(Math.max(0, next), max);
     setQty((prev) => ({ ...prev, [id]: clamped }));
+  };
+
+  // کلیک روی کارت: انتخاب/لغوِ کالا. با انتخاب، تعدادِ پیش‌فرض ۱ می‌شود.
+  const toggleProduct = (id: string, stock: number) => {
+    if (stock <= 0) return;
+    setQty((prev) => ({ ...prev, [id]: (prev[id] ?? 0) > 0 ? 0 : 1 }));
   };
 
   // اقلامِ انتخاب‌شده (تعدادِ بیشتر از صفر)
@@ -92,57 +98,88 @@ export default function NewSale({ store, notify, onPrintSale }: Props) {
       ) : (
         <form onSubmit={handleSubmit} className="flex flex-col gap-7">
           {/* ===== لیستِ کالاها ===== */}
-          <Field label="۱) انتخاب کالا و تعداد" required>
+          <Field label="۱) انتخاب کالا" required hint="(روی کالا بزنید تا انتخاب شود؛ تعداد پیش‌فرض ۱)">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {activeProducts.map((p) => {
                 const q = qty[p.id] ?? 0;
+                const selected = q > 0;
                 const out = p.stock <= 0;
                 return (
                   <div
                     key={p.id}
-                    className={`flex items-center justify-between gap-2 p-3 rounded-xl border transition-all ${
-                      q > 0
-                        ? 'border-[var(--money-border)] bg-[var(--field-bg)]'
-                        : 'border-[var(--border)] bg-[var(--field-bg)]'
-                    } ${out ? 'opacity-60' : ''}`}
+                    role="button"
+                    tabIndex={out ? -1 : 0}
+                    onClick={() => toggleProduct(p.id, p.stock)}
+                    onKeyDown={(e) => {
+                      if ((e.key === 'Enter' || e.key === ' ') && !out) {
+                        e.preventDefault();
+                        toggleProduct(p.id, p.stock);
+                      }
+                    }}
+                    className={`flex items-center justify-between gap-2 p-3.5 rounded-xl border-2 transition-all outline-none ${
+                      out
+                        ? 'opacity-60 cursor-not-allowed border-[var(--border)] bg-[var(--field-bg)]'
+                        : selected
+                          ? 'cursor-pointer border-[var(--money-border)] bg-[var(--field-bg)] shadow-sm'
+                          : 'cursor-pointer border-[var(--border)] bg-[var(--field-bg)] hover:border-[var(--field-hover-border)] hover:bg-[var(--field-hover-bg)] focus-visible:border-[var(--accent-strong)]'
+                    }`}
                   >
-                    <div className="min-w-0">
-                      <div className="text-xs font-bold text-[var(--field-text)] truncate">{p.name}</div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[11px] font-extrabold text-[var(--price)] font-mono px-2 py-0.5 rounded-md bg-[var(--price-soft)]">
-                          {formatCurrencyToman(p.price)}
-                        </span>
-                        <span className={`text-[10px] font-bold ${out ? 'text-[var(--danger-text)]' : 'text-[var(--text-muted)]'}`}>
-                          {out ? 'ناموجود' : `موجودی: ${toPersianDigits(p.stock)}`}
-                        </span>
+                    {/* تیکِ انتخاب + مشخصات */}
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span
+                        className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border-2 transition-all ${
+                          selected
+                            ? 'bg-[var(--money-strong)] border-[var(--money-strong)] text-white'
+                            : 'border-[var(--border)] text-transparent'
+                        }`}
+                      >
+                        <Check className="w-3.5 h-3.5" strokeWidth={3} />
+                      </span>
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-[var(--field-text)] truncate">{p.name}</div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[11px] font-extrabold text-[var(--price)] font-mono px-2 py-0.5 rounded-md bg-[var(--price-soft)]">
+                            {formatCurrencyToman(p.price)}
+                          </span>
+                          <span className={`text-[10px] font-bold ${out ? 'text-[var(--danger-text)]' : 'text-[var(--text-muted)]'}`}>
+                            {out ? 'ناموجود' : `موجودی: ${toPersianDigits(p.stock)}`}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* شمارنده‌ی تعداد */}
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        type="button"
-                        disabled={out}
-                        onClick={() => setQtyFor(p.id, q - 1, p.stock)}
-                        className="p-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    {/* شمارنده‌ی تعداد — فقط وقتی انتخاب شده؛ کلیکش کارت را لغو نکند */}
+                    {selected && (
+                      <div
+                        className="flex items-center gap-1 shrink-0"
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
                       >
-                        <Minus className="w-4 h-4" />
-                      </button>
-                      <input
-                        inputMode="numeric"
-                        value={toPersianDigits(q)}
-                        onChange={(e) => setQtyFor(p.id, Number(toEnglishDigits(e.target.value).replace(/[^0-9]/g, '')) || 0, p.stock)}
-                        className="w-12 text-center bg-[var(--bg)] border border-[var(--border)] rounded-lg px-1 py-1.5 text-xs font-mono font-bold text-[var(--text)] outline-none focus:border-[var(--accent-strong)]"
-                      />
-                      <button
-                        type="button"
-                        disabled={out || q >= p.stock}
-                        onClick={() => setQtyFor(p.id, q + 1, p.stock)}
-                        className="p-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
-                    </div>
+                        <button
+                          type="button"
+                          onClick={() => setQtyFor(p.id, q - 1, p.stock)}
+                          title="کمتر"
+                          className="p-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] cursor-pointer"
+                        >
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        <input
+                          inputMode="numeric"
+                          value={toPersianDigits(q)}
+                          onChange={(e) => setQtyFor(p.id, Number(toEnglishDigits(e.target.value).replace(/[^0-9]/g, '')) || 0, p.stock)}
+                          className="w-11 text-center bg-[var(--bg)] border border-[var(--border)] rounded-lg px-1 py-1.5 text-xs font-mono font-bold text-[var(--text)] outline-none focus:border-[var(--accent-strong)]"
+                        />
+                        <button
+                          type="button"
+                          disabled={q >= p.stock}
+                          onClick={() => setQtyFor(p.id, q + 1, p.stock)}
+                          title="بیشتر"
+                          className="p-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}

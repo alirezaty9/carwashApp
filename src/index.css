@@ -23,7 +23,9 @@
   /* همه‌جا وزیرمتن — تیترها هم (font-display) دیگر لاله‌زار نیست، طبق خواسته */
   --font-sans: "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Vazirmatn", ui-sans-serif, sans-serif;
-  --font-mono: "Vazirmatn", ui-monospace, monospace;
+  /* اعداد هم وزیرمتن‌اند (وزیر مونواسپیس نیست)؛ فالبک هم «سنس» است نه Courier
+     تا اگر وزیر لود نشد، عددها زشتِ مونواسپیس نشوند و با متن یکدست بمانند. */
+  --font-mono: "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
 }
 
 /* ===== تمِ تیره — «جوهرِ نفتیِ آبی» با اکسنتِ فیروزه‌ای (حسِ آب/براقی) ===== */

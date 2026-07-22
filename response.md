@@ -1,10 +1,8 @@
 <div dir="rtl" align="right">
 
-# 🎨 ری‌دیزاینِ بصری — هویتِ «آب و فولاد» (Aqua & Ink)
+# 🧾 ابطالِ فاکتورِ لوازم + 🔢 اصلاحِ فونتِ اعداد + 🌫️ بلورِ اسپلش
 
-> ساختار، صفحات و عملکرد **دست‌نخورده** ماند؛ فقط **رنگ‌ها، شکل‌ها، کارت‌ها و اجزای پایه** عوض شدند. چون کلِ استایلِ اپ روی «توکن‌های CSS» و «کامپوننت‌های مشترک» بنا شده، با ویرایشِ همان لایه، **کلِ برنامه یکدست** ارتقا یافت — بدون دست‌زدن به تک‌تکِ صفحه‌ها.
-
-<div style="background:#fff4e6;border-right:4px solid #f08c00;color:#7c3f00;padding:8px 12px;border-radius:6px">⚠️ چون Node در محیطِ من نیست، نتوانستم زنده رندرش کنم. پالت و تغییرات را پایین دقیق آوردم تا از قبل بدانی چه می‌بینی؛ بعد از <code>npm run dev</code> اگر جایی را خواستی تنظیم کنیم، بگو.</div>
+> یک راهنما و دو اصلاح: **(۱)** جای ابطالِ فاکتورِ فروشِ لوازم را نشانت می‌دهم. **(۲)** چرا اعداد «یه جوری» بودند و چطور درستش کردم. **(۳)** پس‌زمینه‌ی اسپلشِ یاتاش را محوتر و بلورتر کردم.
 
 <br>
 
@@ -12,63 +10,87 @@
 
 <br>
 
-## ۱) 🧭 چرا این جهت؟ (فکرِ پشتِ طراحی)
+## ۱) 🧾 چطور فاکتورِ فروشِ لوازم را ابطال کنم؟
 
-<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">ℹ️ طراحیِ قبلی یک «آبیِ اداریِ عمومی» بود که می‌توانست مالِ هر داشبوردی باشد. برای «خاص» شدن، هویت را از دنیای <b>خودِ کارواش</b> گرفتم: <b>آب، کف، براقیِ ماشینِ تازه‌شسته</b>. رنگِ امضا شد <b>فیروزه‌ایِ آب‌گونه</b> (همان که در لوگوی یاتاش بود) روی زمینه‌ی <b>جوهرِ نفتیِ آرام</b>. حالا برند و کلِ UI یک زبانِ رنگی دارند.</div>
-
-<br>
-
-**اصلِ کار:** بولدی را فقط در **یک جا** خرج کردم (اکسنتِ فیروزه‌ای روی دکمه/تب/مبلغ/لوگو) و بقیه را آرام و منضبط نگه داشتم — تا شلوغ و «هوش‌مصنوعی‌وار» نشود.
-
-<br>
-
----
-
-<br>
-
-## ۲) 🎨 پالت: قبل → بعد
+فاکتورِ فروشِ لوازم جدا از قبضِ شست‌وشوست، پس جای ابطالش هم جداست. مسیرِ دقیق:
 
 <table dir="rtl" style="border-collapse:collapse;width:100%;font-size:14px">
   <thead>
     <tr>
-      <th style="border:1px solid #999;padding:10px;text-align:right">نقش</th>
+      <th style="border:1px solid #999;padding:10px;text-align:right">گام</th>
+      <th style="border:1px solid #999;padding:10px;text-align:right">کار</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">۱</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">روی <b>لوگو</b> بزن → واردِ پنل مدیریت شو (رمز: <code>yatash</code>)</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">۲</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">تبِ <b>«لوازم جانبی»</b> را بزن</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">۳</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">زیرتبِ <b>«فروش‌ها»</b> را انتخاب کن (کنارِ «انبار و کالاها»)</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">۴</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">روی ردیفِ فاکتور، دکمه‌ی <b>✕ قرمز</b> («ابطال») را بزن</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">۵</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">علتِ ابطال را بنویس و «تایید ابطال» را بزن</td>
+    </tr>
+  </tbody>
+</table>
+
+<br>
+
+<div style="background:#ebfbee;border-right:4px solid #2f9e44;color:#14532d;padding:8px 12px;border-radius:6px">✅ نکته‌ی مهم: با ابطالِ فاکتور، <b>موجودیِ کالاها دوباره به انبار برمی‌گردد</b> (مثلاً اگر ۲ خوشبوکننده فروخته بودی، ۲ عدد به موجودی اضافه می‌شود). فاکتورِ باطل‌شده با خطِ قرمز و برچسبِ «باطل» می‌ماند (پاک نمی‌شود، برای سابقه).</div>
+
+<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">ℹ️ همان‌جا در «فروش‌ها» می‌توانی جستجو کنی (شماره فاکتور، نامِ کالا، تلفن) و فاکتور را دوباره <b>چاپ</b> کنی.</div>
+
+<br>
+
+---
+
+<br>
+
+## ۲) 🔢 چرا اعداد «یه جوری» بودند؟ (و اصلاحش)
+
+<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">ℹ️ <b>ریشه‌ی مشکل:</b> اعداد کلاسِ <code>font-mono</code> داشتند و در تنظیماتِ فونت، «فالبکِ» آن روی <b>مونواسپیس</b> بود. مونواسپیس یعنی فونتِ تایپ‌رایتری/کدنویسی (شبیهِ Courier) که همه‌ی کاراکترها هم‌عرض‌اند. اگر به هر دلیلی وزیرمتن برای اعداد لود نمی‌شد، عددها به آن فونتِ زشتِ مونواسپیس می‌افتادند — و «یه جوری» دیده می‌شدند.</div>
+
+<br>
+
+<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">ℹ️ <b>نکته:</b> وزیرمتن اصلاً فونتِ مونواسپیس نیست؛ یک فونتِ «سنس» (معمولی) است. پس گذاشتنِ فالبکِ مونواسپیس از اول اشتباه بود.</div>
+
+<br>
+
+**چه کردم:** فالبکِ فونتِ اعداد را از مونواسپیس به **سنس** تغییر دادم:
+
+<table dir="rtl" style="border-collapse:collapse;width:100%;font-size:14px">
+  <thead>
+    <tr>
       <th style="border:1px solid #999;padding:10px;text-align:right">قبل</th>
       <th style="border:1px solid #999;padding:10px;text-align:right">بعد</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">اکسنتِ اصلی</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">آبی <code>#3B82F6 / #2563EB</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">فیروزه‌ای <code>#0D9488 / #2DD4BF</code></td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">زمینه‌ی تیره</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">اسلیت <code>#0F172A</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">جوهرِ نفتی <code>#0B1A1F</code></td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">زمینه‌ی روشن</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">خاکستریِ سرد <code>#F8FAFC</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">آبِ زلال <code>#EDF6F5</code></td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">متنِ اصلی (روشن)</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">اسلیت <code>#0F172A</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">جوهرِ فیروزه‌ای <code>#0A2529</code></td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">درآمد/موفقیت</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">سبز <code>#22C55E</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">زمردی <code>#10B981 / #059669</code></td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">خطر/ابطال</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">قرمز <code>#EF4444</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">رُز <code>#F43F5E / #E11D48</code></td>
+      <td style="border:1px solid #999;padding:10px;text-align:right"><code>"Vazirmatn", ui-monospace, monospace</code></td>
+      <td style="border:1px solid #999;padding:10px;text-align:right"><code>"Vazirmatn", ui-sans-serif, system-ui, sans-serif</code></td>
     </tr>
   </tbody>
 </table>
+
+<br>
+
+<div style="background:#ebfbee;border-right:4px solid #2f9e44;color:#14532d;padding:8px 12px;border-radius:6px">✅ نتیجه: اعداد <b>همیشه وزیرمتن</b> هستند؛ و اگر یک‌بار وزیر لود نشد، به‌جای Courierِ زشت، یک فونتِ سنسِ تمیز (هم‌شکلِ متن) می‌آید. هم‌ترازیِ ستون‌های عددی در جدول‌ها هم حفظ شد (<code>tabular-nums</code> دست‌نخورده ماند).</div>
+
+<br>
+
+<div style="background:#fff4e6;border-right:4px solid #f08c00;color:#7c3f00;padding:8px 12px;border-radius:6px">⚠️ اگر بعد از این باز هم اعداد فرق داشتند، یعنی احتمالاً فایل‌های فونتِ وزیر روی سیستمِ تو لود نمی‌شوند. برای مطمئن‌شدن، در برنامه <code>Ctrl+Shift+R</code> بزن (ری‌فرشِ کامل) و اگر باز هم بود بگو تا مسیرِ لودِ فونت را با هم بررسی کنیم.</div>
 
 <br>
 
@@ -76,54 +98,13 @@
 
 <br>
 
-## ۳) 🔷 شکل‌ها و اجزا: چه بهتر شد
+## ۳) 🌫️ اسپلشِ یاتاش — بلورتر و کم‌پیداتر
 
-<table dir="rtl" style="border-collapse:collapse;width:100%;font-size:14px">
-  <thead>
-    <tr>
-      <th style="border:1px solid #999;padding:10px;text-align:right">جزء</th>
-      <th style="border:1px solid #999;padding:10px;text-align:right">تغییر</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">کارت‌ها (<code>cw-card</code>)</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">گوشه‌های گردتر (۱ → ۱٫۲۵rem)، سایه‌ی لایه‌ایِ نرم‌تر، و یک <b>جلای ظریفِ لبه‌ی بالا</b> برای حسِ «سطحِ براقِ خیس»</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">دکمه‌ی اصلی</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">از آبیِ تخت به <b>گرادیانِ فیروزه‌ای</b> با درخششِ ملایم و گوشه‌ی گردتر؛ همان امضای برند</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">کارت‌های آماری (StatCard)</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">عددِ بزرگ‌تر و درشت‌تر، آیکونِ چیپیِ گردتر، و <b>بالا‌آمدنِ ملایم هنگام هاور</b></td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">چیپِ مبلغِ کل</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">پنلِ فیروزه‌ایِ ملایم با جلای درونی — قهرمانِ صفحه‌ی قبض</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">تب‌های فعال (Pill)</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">تبِ فعال حالا همان گرادیانِ فیروزه‌ای را می‌گیرد (هماهنگ با دکمه)</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">اینپوت‌ها</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">حلقه‌ی فوکوسِ فیروزه‌ایِ واضح‌تر (ring پهن‌تر)</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">تیترها</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">وزنِ سنگین‌تر + تراکینگِ کمی تنگ‌تر تا «تیتر»وار و قاطع باشند</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">لوگوی یاتاش</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">گرادیانش با هویتِ نو هماهنگ شد (فیروزه‌ای → آبی‌دریایی)</td>
-    </tr>
-  </tbody>
-</table>
+<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">ℹ️ به صفحه‌ی بازشدنِ برنامه دو چیز اضافه کردم: یک <b>backdrop-blur</b> (بلورِ پشت) و یک لایه‌ی <b>تقریباً مات</b> (۹۴٪) روی پس‌زمینه. حالا موقعِ باز شدن، لوگوی یاتاش روی یک زمینه‌ی محو و بلورِ فیروزه‌ای می‌نشیند و برنامه‌ی پشتش تقریباً پیدا نیست.</div>
 
 <br>
 
-<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">ℹ️ <b>دسترس‌پذیری:</b> انتهای گرادیانِ دکمه را کمی تیره‌تر کردم (<code>#0F766E</code>) تا متنِ سفید رویش خوانا و کنتراستش کافی بماند. حلقه‌ی فوکوس هم واضح است تا با کیبورد قابلِ استفاده باشد.</div>
+<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">ℹ️ <b><code>backdrop-blur</code> چیست؟</b> 🌍 مثلِ شیشه‌ی مات/بخارگرفته‌ی حمام — چیزی که پشتش است را محو و نرم نشان می‌دهد. 💻 اینجا باعث می‌شود UIِ پشتِ اسپلش تار و کم‌جزئیات دیده شود.</div>
 
 <br>
 
@@ -131,7 +112,7 @@
 
 <br>
 
-## ۴) 📦 فایل‌های تغییرکرده (فقط لایه‌ی طراحی)
+## ۴) 📦 فایل‌های تغییرکرده
 
 <table dir="rtl" style="border-collapse:collapse;width:100%;font-size:14px">
   <thead>
@@ -143,22 +124,16 @@
   <tbody>
     <tr>
       <td style="border:1px solid #999;padding:10px;text-align:right"><code>src/index.css</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">پالتِ هر دو تم، تیترها، اسکرول‌بار، و کلاس‌های <code>cw-card / cw-primary / cw-badge / cw-total</code></td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">فالبکِ فونتِ اعداد از مونواسپیس به سنس</td>
     </tr>
     <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right"><code>src/components/common.tsx</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">بازطراحیِ <code>StatCard</code>، گوشه‌های گردترِ دکمه‌ها، و حلقه‌ی فوکوسِ اینپوت</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right"><code>src/brand.ts</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">رنگِ گرادیانِ لوگو هماهنگ با هویتِ نو</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right"><code>src/components/brand/SplashScreen.tsx</code></td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">بلورِ پشت + لایه‌ی مات برای کم‌پیداییِ پس‌زمینه</td>
     </tr>
   </tbody>
 </table>
 
-<br>
-
-<div style="background:#ebfbee;border-right:4px solid #2f9e44;color:#14532d;padding:8px 12px;border-radius:6px">✅ نکته‌ی مهندسی: چون همه‌جای اپ از <code>var(--token)</code> و کامپوننت‌های مشترک استفاده می‌کند، این چند فایل کلِ صفحات (قبض، فروش، گزارش، لایسنس، تنظیمات، صفحه‌ی قفل...) را یک‌جا نو کرد. صفحه‌ی چاپِ قبض چون رنگِ ثابتِ سیاه‌وسفید دارد، دست‌نخورده و درست ماند.</div>
+<div style="background:#ebfbee;border-right:4px solid #2f9e44;color:#14532d;padding:8px 12px;border-radius:6px">✅ ابطالِ فاکتور نیازی به تغییرِ کد نداشت؛ از قبل ساخته شده بود، فقط جایش را نشانت دادم.</div>
 
 <br>
 
@@ -166,22 +141,12 @@
 
 <br>
 
-## ۵) 👀 چطور ببینی
+## ۵) 👀 امتحان
 
 ```bash
 npm run dev
 ```
-> دکمه‌ی تم (☀️/🌙) را هم بزن تا هر دو حالتِ تیره و روشن را ببینی. اگر خواستی رنگ پررنگ‌تر/کم‌رنگ‌تر یا گوشه‌ها گردتر/تیزتر شود، فقط بگو — چون همه‌چیز توکن‌محور است، تنظیمش سریع است.
-
-<br>
-
----
-
-<br>
-
-## ۶) 📌 قدمِ بعدی
-
-<div style="background:#ebfbee;border-right:4px solid #2f9e44;color:#14532d;padding:8px 12px;border-radius:6px">✅ ببینش و بگو کدام قسمت را دوست داری/نداری. اگر لوگوی واقعیِ یاتاش را بدهی، رنگِ برند را دقیق رویش تنظیم می‌کنم. موردهای اختیاریِ دیگر (آیکونِ اپ، فاز ۵) هم سرِ جایشان هستند.</div>
+> اسپلش را موقعِ باز شدن ببین (بلورتر شده)، و به اعداد در گزارش‌ها/قبض نگاه کن (باید تمیزتر و هم‌شکلِ متن باشند).
 
 <br>
 
@@ -190,9 +155,9 @@ npm run dev
 <br>
 
 ```bash
-git add -A && git commit -m "style: redesign UI with Aqua & Ink identity (teal accent, softer cards)"
+git add -A && git commit -m "fix(ui): use sans fallback for numeric font and strengthen splash blur"
 ```
 
-<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">ℹ️ <b>چرا <code>style</code>؟</b> این کامیت فقط <b>ظاهر</b> را عوض کرد (رنگ/شکل/سایه) و هیچ منطق یا رفتاری تغییر نکرد — دقیقاً تعریفِ <code>style</code>. اگر رفتار/قابلیت عوض می‌شد <code>feat</code> می‌شد، و اگر ساختارِ کد بدون تغییرِ ظاهر بازآرایی می‌شد <code>refactor</code>.</div>
+<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">ℹ️ <b>چرا <code>fix</code>؟</b> بخشِ اصلی، <b>رفعِ یک عیبِ ظاهری</b> است (افتادنِ اعداد به فونتِ مونواسپیسِ نامناسب)، پس <code>fix</code> درست است نه <code>style</code> (که برای تغییرِ سلیقه‌ایِ ظاهر است، نه رفعِ خرابی). <code>scope</code> برابرِ <code>ui</code> چون تغییر در لایه‌ی رابط کاربری است.</div>
 
 </div>
