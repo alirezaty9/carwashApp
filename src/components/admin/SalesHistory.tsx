@@ -1,9 +1,11 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Printer, XCircle, CheckCircle, Search, ShoppingCart } from 'lucide-react';
 import { Sale } from '../../types';
 import { Store } from '../../data/store';
 import { formatCurrencyToman, toEnglishDigits, toPersianDigits } from '../../utils/format';
-import { Field, GhostButton, inputClass, Modal, ModalHeader, SectionCard } from '../common';
+import { Field, GhostButton, inputClass, Modal, ModalHeader, Pagination, SectionCard } from '../common';
+
+const PAGE_SIZE = 15;
 
 interface Props {
   store: Store;
@@ -33,6 +35,11 @@ export default function SalesHistory({ store, notify, onPrintSale }: Props) {
       return matchesSearch && matchesStatus;
     });
   }, [sales, query, statusFilter]);
+
+  const [page, setPage] = useState(1);
+  useEffect(() => setPage(1), [query, statusFilter]);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const submitVoid = (e: FormEvent) => {
     e.preventDefault();
@@ -91,7 +98,7 @@ export default function SalesHistory({ store, notify, onPrintSale }: Props) {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)] font-semibold text-[var(--text-muted)]">
-              {filtered.map((s) => {
+              {pageItems.map((s) => {
                 const voided = s.status === 'voided';
                 return (
                   <tr key={s.id} className={`hover:bg-[var(--surface-2)] transition-all ${voided ? 'bg-[var(--danger-soft)] text-[var(--text-faint)]' : ''}`}>
@@ -142,6 +149,8 @@ export default function SalesHistory({ store, notify, onPrintSale }: Props) {
           </table>
         </div>
       )}
+
+      <Pagination page={page} pageCount={pageCount} onPage={setPage} />
 
       {/* مودالِ ابطال */}
       <Modal open={!!voiding} onClose={() => setVoiding(null)}>

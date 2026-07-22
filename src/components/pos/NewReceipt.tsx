@@ -151,8 +151,8 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
               مشتریِ قدیمی: {existingCustomer.name} — {toPersianDigits(history.length)} قبض پیشین
             </div>
             {history.length > 0 && (
-              <ul className="divide-y divide-[var(--accent-border)] text-[11px] font-semibold text-[var(--text-muted)]">
-                {history.slice(0, 4).map((r) => (
+              <ul className="divide-y divide-[var(--accent-border)] text-[11px] font-semibold text-[var(--text-muted)] max-h-56 overflow-y-auto">
+                {history.slice(0, 10).map((r) => (
                   <li key={r.id} className="py-1.5 flex items-center justify-between gap-2">
                     <span className="flex items-center gap-2">
                       <HistoryIcon className="w-3 h-3 text-[var(--text-faint)]" />

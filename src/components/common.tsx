@@ -1,5 +1,6 @@
 import { ButtonHTMLAttributes, ReactNode, useCallback, useState } from 'react';
-import { AlertCircle, CheckCircle, Info, X, LucideIcon } from 'lucide-react';
+import { AlertCircle, CheckCircle, Info, X, ChevronLeft, ChevronRight, LucideIcon } from 'lucide-react';
+import { toPersianDigits } from '../utils/format';
 
 /** نوع پیام اعلان */
 export type NoticeType = 'success' | 'error' | 'info';
@@ -206,6 +207,37 @@ export function StatCard({
       <div className={`p-3 rounded-2xl border shrink-0 transition-transform duration-200 group-hover:scale-105 ${color}`}>
         <Icon className="w-5 h-5" />
       </div>
+    </div>
+  );
+}
+
+/**
+ * نوارِ صفحه‌بندی — برای لیست‌های بلند تا یک‌جا هزاران ردیف رندر نشود.
+ * والد فقط ردیف‌های همان صفحه را می‌بُرد؛ این کامپوننت دکمه‌های قبلی/بعدی را می‌سازد.
+ */
+export function Pagination({
+  page,
+  pageCount,
+  onPage,
+}: {
+  page: number;
+  pageCount: number;
+  onPage: (p: number) => void;
+}) {
+  if (pageCount <= 1) return null;
+  const btn =
+    'px-3 py-1.5 rounded-lg text-xs font-bold border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition-all';
+  return (
+    <div className="flex items-center justify-center gap-3 pt-1">
+      <button type="button" className={btn} disabled={page <= 1} onClick={() => onPage(page - 1)}>
+        <ChevronRight className="w-4 h-4" /> قبلی
+      </button>
+      <span className="text-xs font-bold text-[var(--text-muted)] font-mono">
+        صفحه {toPersianDigits(page)} از {toPersianDigits(pageCount)}
+      </span>
+      <button type="button" className={btn} disabled={page >= pageCount} onClick={() => onPage(page + 1)}>
+        بعدی <ChevronLeft className="w-4 h-4" />
+      </button>
     </div>
   );
 }
