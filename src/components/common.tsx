@@ -123,7 +123,7 @@ export function Field({
 
 /** کلاس‌های مشترک ورودی‌ها برای یکدستی و DRY */
 export const inputClass =
-  'w-full bg-[var(--field-bg)] text-[var(--field-text)] border border-[var(--border)] placeholder-[var(--text-faint)] placeholder:font-normal placeholder:text-xs rounded-xl px-3.5 py-2.5 text-sm font-semibold hover:bg-[var(--field-hover-bg)] focus:bg-[var(--field-bg)] focus:ring-2 focus:ring-[var(--accent-soft)] focus:border-[var(--accent-strong)] outline-none transition-all';
+  'w-full bg-[var(--field-bg)] text-[var(--field-text)] border border-[var(--border)] placeholder-[var(--text-faint)] placeholder:font-normal placeholder:text-xs rounded-xl px-3.5 py-2.5 text-sm font-semibold hover:bg-[var(--field-hover-bg)] focus:bg-[var(--field-bg)] focus:ring-4 focus:ring-[var(--accent-soft)] focus:border-[var(--accent-strong)] outline-none transition-all';
 
 /** دکمه‌ی اصلی */
 export function PrimaryButton({
@@ -133,7 +133,7 @@ export function PrimaryButton({
 }: ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
-      className={`cw-primary text-sm px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 cursor-pointer ${className}`}
+      className={`cw-primary text-sm px-5 py-2.5 rounded-2xl flex items-center justify-center gap-2 cursor-pointer font-bold ${className}`}
       {...rest}
     >
       {children}
@@ -149,7 +149,7 @@ export function GhostButton({
 }: ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
-      className={`text-[var(--text-muted)] hover:bg-[var(--surface-2)] border border-[var(--border)] font-bold text-sm px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all ${className}`}
+      className={`text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] border border-[var(--border)] font-bold text-sm px-4 py-2.5 rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition-all ${className}`}
       {...rest}
     >
       {children}
@@ -198,12 +198,12 @@ export function StatCard({
   color: string;
 }) {
   return (
-    <div className="bg-[var(--surface)] p-4 rounded-2xl border border-[var(--border)] shadow-xl flex items-center justify-between gap-2">
+    <div className="group bg-[var(--surface)] p-4 rounded-2xl border border-[var(--border)] shadow-[var(--card-shadow)] flex items-center justify-between gap-3 transition-transform duration-200 hover:-translate-y-0.5">
       <div className="min-w-0">
-        <span className="text-[11px] text-[var(--text-muted)] font-bold block mb-1">{label}</span>
-        <span className="text-base font-black text-[var(--text)] font-mono">{value}</span>
+        <span className="text-[11px] text-[var(--text-muted)] font-bold block mb-1.5 tracking-wide">{label}</span>
+        <span className="text-lg font-black text-[var(--text)] font-mono tabular-nums leading-none">{value}</span>
       </div>
-      <div className={`p-2.5 rounded-xl border shrink-0 ${color}`}>
+      <div className={`p-3 rounded-2xl border shrink-0 transition-transform duration-200 group-hover:scale-105 ${color}`}>
         <Icon className="w-5 h-5" />
       </div>
     </div>

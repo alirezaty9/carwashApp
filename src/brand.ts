@@ -15,6 +15,6 @@ export const BRAND = {
   poweredByEn: 'Powered by Yatash',
 
   /** رنگ‌های گرادیانِ لوگو (فیروزه‌ای، هماهنگ با اکسنتِ برنامه) */
-  gradientFrom: '#22D3EE',
-  gradientTo: '#0891B2',
+  gradientFrom: '#2DD4BF',
+  gradientTo: '#0D9488',
 } as const;

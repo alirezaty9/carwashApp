@@ -26,108 +26,106 @@
   --font-mono: "Vazirmatn", ui-monospace, monospace;
 }
 
-/* ===== تمِ تیره ===== */
+/* ===== تمِ تیره — «جوهرِ نفتیِ آبی» با اکسنتِ فیروزه‌ای (حسِ آب/براقی) ===== */
 :root, :root[data-theme="dark"] {
-  --primary: #3B82F6;
-  --primary-hover: #60A5FA;
+  --primary: #0D9488;
+  --primary-hover: #14B8A6;
 
-  --bg: #0F172A;
-  --surface: #1E293B;
-  --surface-2: #334155;
-  --border: #334155;
-  --border-strong: rgba(59, 130, 246, 0.45);
-  --overlay: rgba(15, 23, 42, 0.7);
+  --bg: #0B1A1F;
+  --surface: #122A31;
+  --surface-2: #1C3A43;
+  --border: #21424C;
+  --border-strong: rgba(45, 212, 191, 0.45);
+  --overlay: rgba(6, 18, 22, 0.72);
 
-  --text: #F8FAFC;
-  --text-muted: #CBD5E1;
-  --text-faint: #64748B;
+  --text: #F1FBFB;
+  --text-muted: #AFCBD1;
+  --text-faint: #6B8A92;
 
-  --accent-text: #60A5FA;
-  --accent-strong: #3B82F6;
-  --accent-soft: rgba(59, 130, 246, 0.14);
-  --accent-border: rgba(59, 130, 246, 0.32);
+  --accent-text: #2DD4BF;
+  --accent-strong: #14B8A6;
+  --accent-soft: rgba(45, 212, 191, 0.14);
+  --accent-border: rgba(45, 212, 191, 0.30);
 
-  --money-text: #22C55E;
-  --money-strong: #22C55E;
-  --money-soft: rgba(34, 197, 94, 0.14);
-  --money-border: rgba(34, 197, 94, 0.32);
+  --money-text: #34D399;
+  --money-strong: #10B981;
+  --money-soft: rgba(52, 211, 153, 0.14);
+  --money-border: rgba(52, 211, 153, 0.30);
 
-  /* رنگِ متنِ قیمت‌ها = همرنگِ متنِ اصلی (مشکی در روشن، سفید در تیره)؛
-     ته‌رنگِ فیروزه‌ای فقط برای پس‌زمینه/حاشیه‌ی چیپِ مبلغ باقی می‌ماند */
+  /* رنگِ متنِ قیمت‌ها = همرنگِ متنِ اصلی؛ ته‌رنگِ فیروزه‌ای فقط برای چیپِ مبلغ */
   --price: var(--text);
   --price-strong: var(--text);
-  --price-soft: rgba(34, 211, 238, 0.14);
-  --price-border: rgba(34, 211, 238, 0.32);
+  --price-soft: rgba(45, 212, 191, 0.15);
+  --price-border: rgba(45, 212, 191, 0.32);
 
-  --danger-text: #F87171;
-  --danger-strong: #EF4444;
-  --danger-soft: rgba(239, 68, 68, 0.14);
-  --danger-border: rgba(239, 68, 68, 0.32);
+  --danger-text: #FB7185;
+  --danger-strong: #F43F5E;
+  --danger-soft: rgba(244, 63, 94, 0.14);
+  --danger-border: rgba(244, 63, 94, 0.30);
 
-  --card-bg: #1E293B;
-  --card-border: #334155;
-  --card-shadow: 0 16px 38px -22px rgba(0, 0, 0, 0.5);
-  --header-bg: rgba(30, 41, 59, 0.85);
+  --card-bg: #122A31;
+  --card-border: #21424C;
+  --card-shadow: 0 22px 48px -26px rgba(0, 0, 0, 0.7);
+  --header-bg: rgba(18, 42, 49, 0.82);
 
   /* کنترل‌ها (اینپوت‌ها، دکمه‌های تیپ و کارت‌های خدمات) — تمِ تیره */
-  --field-bg: #3C4353;
-  --field-text: #F8FAFC;
-  --field-muted: #CBD5E1;
-  --field-hover-bg: rgba(59, 130, 246, 0.16);
-  --field-hover-border: rgba(96, 165, 250, 0.55);
-  --field-active-border: #60A5FA;
+  --field-bg: #17323A;
+  --field-text: #F1FBFB;
+  --field-muted: #AFCBD1;
+  --field-hover-bg: rgba(45, 212, 191, 0.12);
+  --field-hover-border: rgba(45, 212, 191, 0.50);
+  --field-active-border: #2DD4BF;
 }
 
-/* ===== تمِ روشن ===== */
+/* ===== تمِ روشن — «آبِ زلال روی سفید»، اکسنتِ فیروزه‌ای ===== */
 :root[data-theme="light"] {
-  --primary: #2563EB;
-  --primary-hover: #1D4ED8;
+  --primary: #0D9488;
+  --primary-hover: #0F766E;
 
-  --bg: #F8FAFC;
+  --bg: #EDF6F5;
   --surface: #FFFFFF;
-  --surface-2: #E2E8F0;
-  --border: #E2E8F0;
-  --border-strong: rgba(37, 99, 235, 0.35);
-  --overlay: rgba(15, 23, 42, 0.4);
+  --surface-2: #DEEDEB;
+  --border: #D7E7E5;
+  --border-strong: rgba(13, 148, 136, 0.35);
+  --overlay: rgba(6, 40, 40, 0.40);
 
-  --text: #0F172A;
-  --text-muted: #64748B;
-  --text-faint: #64748B;
+  --text: #0A2529;
+  --text-muted: #4C6A70;
+  --text-faint: #85A0A5;
 
-  --accent-text: #2563EB;
-  --accent-strong: #2563EB;
-  --accent-soft: rgba(37, 99, 235, 0.08);
-  --accent-border: rgba(37, 99, 235, 0.28);
+  --accent-text: #0D9488;
+  --accent-strong: #0D9488;
+  --accent-soft: rgba(13, 148, 136, 0.09);
+  --accent-border: rgba(13, 148, 136, 0.26);
 
-  --money-text: #22C55E;
-  --money-strong: #22C55E;
-  --money-soft: rgba(34, 197, 94, 0.10);
-  --money-border: rgba(34, 197, 94, 0.30);
+  --money-text: #059669;
+  --money-strong: #059669;
+  --money-soft: rgba(5, 150, 105, 0.10);
+  --money-border: rgba(5, 150, 105, 0.28);
 
-  /* رنگِ متنِ قیمت‌ها = همرنگِ متنِ اصلی (مشکی)؛
-     ته‌رنگِ فیروزه‌ای فقط برای پس‌زمینه/حاشیه‌ی چیپِ مبلغ باقی می‌ماند */
+  /* رنگِ متنِ قیمت‌ها = همرنگِ متنِ اصلی؛ ته‌رنگِ فیروزه‌ای فقط برای چیپِ مبلغ */
   --price: var(--text);
   --price-strong: var(--text);
-  --price-soft: rgba(6, 182, 212, 0.10);
-  --price-border: rgba(6, 182, 212, 0.30);
+  --price-soft: rgba(13, 148, 136, 0.10);
+  --price-border: rgba(13, 148, 136, 0.28);
 
-  --danger-text: #EF4444;
-  --danger-strong: #EF4444;
-  --danger-soft: rgba(239, 68, 68, 0.09);
-  --danger-border: rgba(239, 68, 68, 0.28);
+  --danger-text: #E11D48;
+  --danger-strong: #E11D48;
+  --danger-soft: rgba(225, 29, 72, 0.08);
+  --danger-border: rgba(225, 29, 72, 0.26);
 
   --card-bg: #FFFFFF;
-  --card-border: #E2E8F0;
-  --card-shadow: 0 16px 38px -26px rgba(15, 23, 42, 0.14);
-  --header-bg: rgba(255, 255, 255, 0.85);
+  --card-border: #DCEBE9;
+  --card-shadow: 0 20px 44px -28px rgba(6, 60, 58, 0.18);
+  --header-bg: rgba(255, 255, 255, 0.82);
 
-  /* کنترل‌ها — تمِ روشن (سفیدِ تمیز؛ همان چیزی که پسندیده شد) */
+  /* کنترل‌ها — تمِ روشن (سفیدِ تمیز با هاورِ فیروزه‌ایِ ملایم) */
   --field-bg: #FFFFFF;
-  --field-text: #0F172A;
-  --field-muted: #334155;
-  --field-hover-bg: #EFF6FF;   /* blue-50 */
-  --field-hover-border: #BFDBFE; /* blue-200 */
-  --field-active-border: #60A5FA; /* blue-400 */
+  --field-text: #0A2529;
+  --field-muted: #35555B;
+  --field-hover-bg: #E6F5F2;
+  --field-hover-border: #99E0D5;
+  --field-active-border: #14B8A6;
 }
 
 @layer base {
@@ -142,14 +140,15 @@
     transition: background-color .2s ease, color .2s ease;
   }
 
-  h1, h2, h3 { font-family: var(--font-display); font-weight: 400; letter-spacing: .2px; }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 800; letter-spacing: -.015em; }
   .font-mono { font-variant-numeric: tabular-nums; }
 }
 
 /* --- اسکرول‌بارِ ظریف --- */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--surface-2); border-radius: 8px; }
+::-webkit-scrollbar-thumb { background: var(--surface-2); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-strong); background-clip: padding-box; }
 
 /* --- انیمیشنِ ورودِ ملایم --- */
 @keyframes cw-fade-in {
@@ -171,33 +170,36 @@
 .cw-splash-logo { animation: cw-splash-in .5s cubic-bezier(0.22, 1, 0.36, 1); }
 
 /* ---------------------------------------------------------------
-   اجزای پایه — تخت و مینیمال (بدونِ گرادیانِ شلوغ)
+   اجزای پایه — «آب و فولاد»: کارت‌های نرم با سایه‌ی لایه‌ای،
+   اکسنتِ فیروزه‌ای فقط روی نقاطِ کلیدی (دکمه/تب/مبلغ/لوگو).
 --------------------------------------------------------------- */
 .cw-card {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: 1rem;
+  border-radius: 1.25rem;
   box-shadow: var(--card-shadow);
+  /* جلای ظریفِ لبه‌ی بالا — حسِ «سطحِ براقِ خیس» بدونِ شلوغی */
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 42%);
 }
 
-/* دکمه‌ی اصلی: آبیِ توپُر، هاورِ کمی تیره/روشن‌تر، متنِ سفید */
+/* دکمه‌ی اصلی: گرادیانِ فیروزه‌ای (امضای برند)، با درخششِ ملایم */
 .cw-primary {
-  background: var(--primary);
+  background: linear-gradient(135deg, #14B8A6 0%, #0F766E 100%);
   color: #ffffff;
   border: 1px solid transparent;
-  box-shadow: 0 6px 16px -10px rgba(37, 99, 235, 0.6);
-  transition: background-color .16s ease, transform .05s ease;
+  box-shadow: 0 10px 22px -12px rgba(13, 148, 136, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transition: filter .16s ease, transform .05s ease, box-shadow .16s ease;
 }
-.cw-primary:hover { background: var(--primary-hover); }
+.cw-primary:hover { filter: brightness(1.08); box-shadow: 0 14px 28px -12px rgba(20, 184, 166, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.22); }
 .cw-primary:active { transform: translateY(1px); }
-.cw-primary:disabled { opacity: .5; }
+.cw-primary:disabled { opacity: .5; filter: none; }
 
-/* نشانِ لوگو: تنها جایی که اکسنتِ فیروزه‌ای→آبی دیده می‌شود */
+/* نشانِ لوگو: قلبِ اکسنتِ فیروزه‌ای→آبی‌دریایی */
 .cw-badge {
   position: relative;
-  background: linear-gradient(145deg, #22D3EE 0%, #3B82F6 55%, #2563EB 100%);
+  background: linear-gradient(145deg, #5EEAD4 0%, #14B8A6 52%, #0D9488 100%);
   color: #ffffff;
-  box-shadow: 0 10px 22px -10px rgba(37, 99, 235, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  box-shadow: 0 12px 24px -10px rgba(13, 148, 136, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 /* جلای شیشه‌ایِ بالای بَج */
 .cw-badge::after {
@@ -209,10 +211,11 @@
   pointer-events: none;
 }
 
-/* چیپِ مبلغِ کل */
+/* چیپِ مبلغِ کل — پنلِ فیروزه‌ایِ ملایم با جلای درونی */
 .cw-total {
   background: var(--price-soft);
   border: 1px solid var(--price-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
 @media (prefers-reduced-motion: reduce) {
