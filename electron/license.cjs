@@ -8,7 +8,7 @@ const os = require('os');
 // کلیدِ خصوصی هرگز اینجا/در گیت نمی‌آید؛ فقط پیشِ یاتاش می‌ماند.
 // تا وقتی جایگزین نشود، لایسنسِ سالانه تأیید نمی‌شود ولی تریالِ ۷روزه کار می‌کند.
 const PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
-MCowBQYDK2VwAyEAeTuQ0MEuVFH6KfD1vfIdaie7uj+lBKwRgatsG0SQWOw=
+MCowBQYDK2VwAyEAEkY/9yCJ8Hvyp5BYyOnNECGOYCnOoXPCb7WpOq3DUlg=
 -----END PUBLIC KEY-----`;
 
 const TRIAL_DAYS = 7;

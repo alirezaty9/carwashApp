@@ -13,7 +13,9 @@
     "clean": "rm -rf dist server.js release",
     "lint": "tsc --noEmit",
     "electron:start": "electron .",
-    "electron:build": "vite build && electron-builder --win"
+    "electron:build": "vite build && electron-builder --win",
+    "license:keygen": "node tools/license-gen.cjs keygen",
+    "license:issue": "node tools/license-gen.cjs issue"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",
