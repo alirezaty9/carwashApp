@@ -1,8 +1,8 @@
 <div dir="rtl" align="right">
 
-# 🧾 ابطالِ فاکتورِ لوازم + 🔢 اصلاحِ فونتِ اعداد + 🌫️ بلورِ اسپلش
+# 🔓 «مرا به‌خاطر بسپار» + 🗂️ یکی‌شدنِ ابطالِ لوازم با تاریخچه
 
-> یک راهنما و دو اصلاح: **(۱)** جای ابطالِ فاکتورِ فروشِ لوازم را نشانت می‌دهم. **(۲)** چرا اعداد «یه جوری» بودند و چطور درستش کردم. **(۳)** پس‌زمینه‌ی اسپلشِ یاتاش را محوتر و بلورتر کردم.
+> دو کار: **(۱)** یک گزینه در تنظیمات که مشخص کند رمزِ پنل هر بار پرسیده شود یا تا چند دقیقه دوباره نپرسد. **(۲)** ابطالِ فاکتورِ لوازم به تبِ «تاریخچه و ابطال» منتقل شد، با تفکیکِ تمیزِ «قبض‌های شست‌وشو» از «فروش لوازم».
 
 <br>
 
@@ -10,46 +10,50 @@
 
 <br>
 
-## ۱) 🧾 چطور فاکتورِ فروشِ لوازم را ابطال کنم؟
+## بخش ۱ — 🔓 «مرا به‌خاطر بسپار» (قفلِ خودکارِ پنل)
 
-فاکتورِ فروشِ لوازم جدا از قبضِ شست‌وشوست، پس جای ابطالش هم جداست. مسیرِ دقیق:
+### چه اضافه شد
+
+در **تنظیمات و بکاپ → رمز پنل مدیریت**، یک بخشِ جدید به‌نامِ «پرسیدنِ رمز» با دو حالت:
 
 <table dir="rtl" style="border-collapse:collapse;width:100%;font-size:14px">
   <thead>
     <tr>
-      <th style="border:1px solid #999;padding:10px;text-align:right">گام</th>
-      <th style="border:1px solid #999;padding:10px;text-align:right">کار</th>
+      <th style="border:1px solid #999;padding:10px;text-align:right">حالت</th>
+      <th style="border:1px solid #999;padding:10px;text-align:right">رفتار</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">۱</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">روی <b>لوگو</b> بزن → واردِ پنل مدیریت شو (رمز: <code>yatash</code>)</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right"><b>هر بار بپرس</b> (پیش‌فرض)</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">هر بار که واردِ پنل می‌شوی رمز می‌خواهد — امن‌ترین</td>
     </tr>
     <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">۲</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">تبِ <b>«لوازم جانبی»</b> را بزن</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">۳</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">زیرتبِ <b>«فروش‌ها»</b> را انتخاب کن (کنارِ «انبار و کالاها»)</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">۴</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">روی ردیفِ فاکتور، دکمه‌ی <b>✕ قرمز</b> («ابطال») را بزن</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">۵</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">علتِ ابطال را بنویس و «تایید ابطال» را بزن</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right"><b>مرا به‌خاطر بسپار</b></td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">یک عددِ <b>دقیقه</b> می‌گیرد؛ تا آن مدت بعد از ورودِ موفق، دوباره رمز نمی‌پرسد</td>
     </tr>
   </tbody>
 </table>
 
 <br>
 
-<div style="background:#ebfbee;border-right:4px solid #2f9e44;color:#14532d;padding:8px 12px;border-radius:6px">✅ نکته‌ی مهم: با ابطالِ فاکتور، <b>موجودیِ کالاها دوباره به انبار برمی‌گردد</b> (مثلاً اگر ۲ خوشبوکننده فروخته بودی، ۲ عدد به موجودی اضافه می‌شود). فاکتورِ باطل‌شده با خطِ قرمز و برچسبِ «باطل» می‌ماند (پاک نمی‌شود، برای سابقه).</div>
+<div style="background:#ebfbee;border-right:4px solid #2f9e44;color:#14532d;padding:8px 12px;border-radius:6px">✅ طبق خواسته‌ات <b>واحد «دقیقه»</b> است نه ساعت؛ خودت عدد را وارد می‌کنی (مثلاً ۱۰ دقیقه). اگر «هر بار بپرس» را بزنی، همیشه می‌پرسد.</div>
 
-<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">ℹ️ همان‌جا در «فروش‌ها» می‌توانی جستجو کنی (شماره فاکتور، نامِ کالا، تلفن) و فاکتور را دوباره <b>چاپ</b> کنی.</div>
+<br>
+
+### چطور کار می‌کند (مثالِ عینی)
+
+> فرض کن «مرا به‌خاطر بسپار → ۱۰ دقیقه» را زدی.  
+> ساعت ۱۰:۰۰ رمز می‌زنی و واردِ پنل می‌شوی → برمی‌گردی صندوق → ساعت ۱۰:۰۵ دوباره می‌روی پنل: **رمز نمی‌پرسد** (هنوز داخلِ ۱۰ دقیقه‌ای).  
+> ساعت ۱۰:۱۲ دوباره می‌روی: **رمز می‌پرسد** (۱۰ دقیقه گذشته).
+
+<br>
+
+<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">ℹ️ آیکونِ قفل/سپر در کنارِ لوگو هم زنده است: وقتی بازه تمام شود، دوباره به «قفل» تغییر می‌کند تا بدانی دفعه‌ی بعد رمز می‌خواهد.</div>
+
+<br>
+
+<div style="background:#fff4e6;border-right:4px solid #f08c00;color:#7c3f00;padding:8px 12px;border-radius:6px">⚠️ برای امنیتِ ترمینالِ مشترکِ کارواش، این «به‌خاطرسپاری» با <b>بستن و باز کردنِ دوباره‌ی برنامه</b> پاک می‌شود؛ یعنی بعد از هر ری‌استارت، حداقل یک بار رمز لازم است. این عمدی است تا اگر برنامه شب بسته شد، صبح دوباره امن باز شود.</div>
 
 <br>
 
@@ -57,54 +61,47 @@
 
 <br>
 
-## ۲) 🔢 چرا اعداد «یه جوری» بودند؟ (و اصلاحش)
+## بخش ۲ — 🗂️ ابطالِ لوازم داخلِ «تاریخچه و ابطال»
 
-<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">ℹ️ <b>ریشه‌ی مشکل:</b> اعداد کلاسِ <code>font-mono</code> داشتند و در تنظیماتِ فونت، «فالبکِ» آن روی <b>مونواسپیس</b> بود. مونواسپیس یعنی فونتِ تایپ‌رایتری/کدنویسی (شبیهِ Courier) که همه‌ی کاراکترها هم‌عرض‌اند. اگر به هر دلیلی وزیرمتن برای اعداد لود نمی‌شد، عددها به آن فونتِ زشتِ مونواسپیس می‌افتادند — و «یه جوری» دیده می‌شدند.</div>
-
-<br>
-
-<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">ℹ️ <b>نکته:</b> وزیرمتن اصلاً فونتِ مونواسپیس نیست؛ یک فونتِ «سنس» (معمولی) است. پس گذاشتنِ فالبکِ مونواسپیس از اول اشتباه بود.</div>
-
-<br>
-
-**چه کردم:** فالبکِ فونتِ اعداد را از مونواسپیس به **سنس** تغییر دادم:
+### قبل و بعد
 
 <table dir="rtl" style="border-collapse:collapse;width:100%;font-size:14px">
   <thead>
     <tr>
+      <th style="border:1px solid #999;padding:10px;text-align:right">مورد</th>
       <th style="border:1px solid #999;padding:10px;text-align:right">قبل</th>
       <th style="border:1px solid #999;padding:10px;text-align:right">بعد</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right"><code>"Vazirmatn", ui-monospace, monospace</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right"><code>"Vazirmatn", ui-sans-serif, system-ui, sans-serif</code></td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">ابطالِ فاکتورِ لوازم</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">داخلِ تبِ «لوازم جانبی» → زیرتبِ «فروش‌ها»</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">داخلِ تبِ «تاریخچه و ابطال» → زیرتبِ «فروش لوازم»</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">تبِ «انبار لوازم»</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">هم انبار، هم فروش‌ها</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">فقط انبار و کالاها (تمیزتر)</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">تاریخچه</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">فقط قبض‌های شست‌وشو</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">دو زیرتبِ جدا: «قبض‌های شست‌وشو» / «فروش لوازم»</td>
     </tr>
   </tbody>
 </table>
 
 <br>
 
-<div style="background:#ebfbee;border-right:4px solid #2f9e44;color:#14532d;padding:8px 12px;border-radius:6px">✅ نتیجه: اعداد <b>همیشه وزیرمتن</b> هستند؛ و اگر یک‌بار وزیر لود نشد، به‌جای Courierِ زشت، یک فونتِ سنسِ تمیز (هم‌شکلِ متن) می‌آید. هم‌ترازیِ ستون‌های عددی در جدول‌ها هم حفظ شد (<code>tabular-nums</code> دست‌نخورده ماند).</div>
+<div style="background:#ebfbee;border-right:4px solid #2f9e44;color:#14532d;padding:8px 12px;border-radius:6px">✅ حالا همه‌ی ابطال‌ها یک‌جا هستند (تبِ «تاریخچه و ابطال»)، ولی قبض‌ها و لوازم با دو زیرتب <b>از هم جدا</b> ماندند تا قاطی نشوند — دقیقاً همان چیزی که خواستی.</div>
 
 <br>
 
-<div style="background:#fff4e6;border-right:4px solid #f08c00;color:#7c3f00;padding:8px 12px;border-radius:6px">⚠️ اگر بعد از این باز هم اعداد فرق داشتند، یعنی احتمالاً فایل‌های فونتِ وزیر روی سیستمِ تو لود نمی‌شوند. برای مطمئن‌شدن، در برنامه <code>Ctrl+Shift+R</code> بزن (ری‌فرشِ کامل) و اگر باز هم بود بگو تا مسیرِ لودِ فونت را با هم بررسی کنیم.</div>
+### مسیرِ جدیدِ ابطالِ فاکتورِ لوازم
 
-<br>
-
----
-
-<br>
-
-## ۳) 🌫️ اسپلشِ یاتاش — بلورتر و کم‌پیداتر
-
-<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">ℹ️ به صفحه‌ی بازشدنِ برنامه دو چیز اضافه کردم: یک <b>backdrop-blur</b> (بلورِ پشت) و یک لایه‌ی <b>تقریباً مات</b> (۹۴٪) روی پس‌زمینه. حالا موقعِ باز شدن، لوگوی یاتاش روی یک زمینه‌ی محو و بلورِ فیروزه‌ای می‌نشیند و برنامه‌ی پشتش تقریباً پیدا نیست.</div>
-
-<br>
-
-<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">ℹ️ <b><code>backdrop-blur</code> چیست؟</b> 🌍 مثلِ شیشه‌ی مات/بخارگرفته‌ی حمام — چیزی که پشتش است را محو و نرم نشان می‌دهد. 💻 اینجا باعث می‌شود UIِ پشتِ اسپلش تار و کم‌جزئیات دیده شود.</div>
+پنل مدیریت → **تاریخچه و ابطال** → زیرتبِ **«فروش لوازم»** → دکمه‌ی **✕ قرمز** روی ردیف → علت → تایید.  
+> (ابطال همچنان موجودی را به انبار برمی‌گرداند، مثلِ قبل.)
 
 <br>
 
@@ -112,7 +109,7 @@
 
 <br>
 
-## ۴) 📦 فایل‌های تغییرکرده
+## بخش ۳ — 📦 فایل‌های تغییرکرده
 
 <table dir="rtl" style="border-collapse:collapse;width:100%;font-size:14px">
   <thead>
@@ -123,17 +120,35 @@
   </thead>
   <tbody>
     <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right"><code>src/index.css</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">فالبکِ فونتِ اعداد از مونواسپیس به سنس</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right"><code>types.ts</code> · <code>data/defaults.ts</code></td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">فیلدِ <code>adminUnlockMinutes</code> (پیش‌فرض ۰ = هر بار بپرس)</td>
     </tr>
     <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right"><code>src/components/brand/SplashScreen.tsx</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">بلورِ پشت + لایه‌ی مات برای کم‌پیداییِ پس‌زمینه</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right"><code>src/App.tsx</code></td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">منطقِ به‌خاطرسپاریِ زمان‌دار (به‌جای قفلِ همیشگیِ خروج)</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right"><code>admin/GeneralSettings.tsx</code></td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">بخشِ «پرسیدنِ رمز» با انتخابِ دقیقه</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right"><code>pos/History.tsx</code></td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">دو زیرتبِ «قبض‌های شست‌وشو» / «فروش لوازم»</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right"><code>admin/AdminPanel.tsx</code></td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">تبِ لوازم فقط انبار شد؛ <code>onPrintSale</code> به History رفت</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right"><code>admin/AccessoriesPanel.tsx</code></td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">🗑️ حذف شد (نقشش تقسیم شد بین انبار و تاریخچه)</td>
     </tr>
   </tbody>
 </table>
 
-<div style="background:#ebfbee;border-right:4px solid #2f9e44;color:#14532d;padding:8px 12px;border-radius:6px">✅ ابطالِ فاکتور نیازی به تغییرِ کد نداشت؛ از قبل ساخته شده بود، فقط جایش را نشانت دادم.</div>
+<br>
+
+<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">ℹ️ شفافیت: فایلِ <code>AccessoriesPanel.tsx</code> را <b>حذف کردم</b> چون دیگر کاری نداشت — بخشِ انبارش رفت داخلِ تبِ «انبار لوازم» و بخشِ فروش‌هایش رفت داخلِ تاریخچه. کدِ مرده باقی نگذاشتم.</div>
 
 <br>
 
@@ -141,12 +156,13 @@
 
 <br>
 
-## ۵) 👀 امتحان
+## بخش ۴ — 👀 امتحان
 
 ```bash
 npm run dev
 ```
-> اسپلش را موقعِ باز شدن ببین (بلورتر شده)، و به اعداد در گزارش‌ها/قبض نگاه کن (باید تمیزتر و هم‌شکلِ متن باشند).
+> **تستِ به‌خاطرسپاری:** تنظیمات → رمز پنل → «مرا به‌خاطر بسپار» → ۲ دقیقه. برگرد صندوق و دوباره برو پنل (نباید رمز بخواهد). ۲ دقیقه صبر کن و دوباره برو (باید بخواهد).  
+> **تستِ ابطالِ لوازم:** تاریخچه و ابطال → «فروش لوازم» → یک فاکتور را باطل کن (موجودی باید برگردد).
 
 <br>
 
@@ -155,9 +171,9 @@ npm run dev
 <br>
 
 ```bash
-git add -A && git commit -m "fix(ui): use sans fallback for numeric font and strengthen splash blur"
+git add -A && git commit -m "feat(admin): add remember-me unlock timer and unify sales voiding under history"
 ```
 
-<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">ℹ️ <b>چرا <code>fix</code>؟</b> بخشِ اصلی، <b>رفعِ یک عیبِ ظاهری</b> است (افتادنِ اعداد به فونتِ مونواسپیسِ نامناسب)، پس <code>fix</code> درست است نه <code>style</code> (که برای تغییرِ سلیقه‌ایِ ظاهر است، نه رفعِ خرابی). <code>scope</code> برابرِ <code>ui</code> چون تغییر در لایه‌ی رابط کاربری است.</div>
+<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">ℹ️ <b>چرا <code>feat</code>؟</b> دو قابلیتِ جدیدِ کاربردی اضافه شد (به‌خاطرسپاریِ رمز + یکی‌شدنِ ابطال‌ها). چون رفتار و امکاناتِ تازه به کاربر می‌دهد، <code>feat</code> درست است — نه <code>refactor</code> (که فقط جابه‌جاییِ کد بدونِ تغییرِ رفتار است). <code>scope</code> برابرِ <code>admin</code> چون هر دو در پنلِ مدیریت‌اند.</div>
 
 </div>

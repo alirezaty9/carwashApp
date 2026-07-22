@@ -9,7 +9,7 @@ import PricingMatrix from './PricingMatrix';
 import WorkersManager from './WorkersManager';
 import WorkerPayroll from './WorkerPayroll';
 import GeneralSettings from './GeneralSettings';
-import AccessoriesPanel from './AccessoriesPanel';
+import ProductsManager from './ProductsManager';
 import LicenseSettings from '../../license/LicenseSettings';
 
 type AdminTab = 'reports' | 'payroll' | 'history' | 'accessories' | 'pricing' | 'workers' | 'general' | 'license';
@@ -18,7 +18,7 @@ const TABS: { id: AdminTab; label: string; icon: LucideIcon }[] = [
   { id: 'reports', label: 'گزارش‌ها', icon: FileSpreadsheet },
   { id: 'payroll', label: 'دستمزد کارگرها', icon: Wallet },
   { id: 'history', label: 'تاریخچه و ابطال', icon: HistoryIcon },
-  { id: 'accessories', label: 'لوازم جانبی', icon: Package },
+  { id: 'accessories', label: 'انبار لوازم', icon: Package },
   { id: 'pricing', label: 'قیمت‌ها و تیپ‌ها', icon: DollarSign },
   { id: 'workers', label: 'کارگرها', icon: Users },
   { id: 'license', label: 'لایسنس', icon: KeyRound },
@@ -45,8 +45,8 @@ export default function AdminPanel({
 
       {tab === 'reports' && <Reports store={store} />}
       {tab === 'payroll' && <WorkerPayroll store={store} />}
-      {tab === 'history' && <History store={store} notify={notify} onPrint={onPrint} />}
-      {tab === 'accessories' && <AccessoriesPanel store={store} notify={notify} onPrintSale={onPrintSale} />}
+      {tab === 'history' && <History store={store} notify={notify} onPrint={onPrint} onPrintSale={onPrintSale} />}
+      {tab === 'accessories' && <ProductsManager store={store} notify={notify} />}
       {tab === 'pricing' && <PricingMatrix store={store} notify={notify} />}
       {tab === 'workers' && <WorkersManager store={store} notify={notify} />}
       {tab === 'license' && <LicenseSettings />}

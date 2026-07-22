@@ -109,8 +109,7 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
 
   return (
     <SectionCard
-      title="صدور قبض جدید"
-      subtitle="شماره‌ی مشتری را بزنید، خدمات را انتخاب کنید و فیش را چاپ کنید."
+
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-7">
         {/* ===== سکشن ۱: مشتری و خودرو (گام‌های ۱، ۲، ۳) ===== */}

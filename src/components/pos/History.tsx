@@ -1,18 +1,28 @@
 import { FormEvent, useMemo, useState } from 'react';
-import { Printer, Edit3, XCircle, CheckCircle, Search, FileText } from 'lucide-react';
-import { Receipt } from '../../types';
+import { Printer, Edit3, XCircle, CheckCircle, Search, FileText, Droplets, ShoppingCart, LucideIcon } from 'lucide-react';
+import { Receipt, Sale } from '../../types';
 import { Store } from '../../data/store';
 import { formatCurrencyToman, rialToToman, toEnglishDigits, toPersianDigits, tomanToRial } from '../../utils/format';
-import { Field, GhostButton, inputClass, Modal, ModalHeader, PrimaryButton, SectionCard } from '../common';
+import { Field, GhostButton, inputClass, Modal, ModalHeader, PillTabs, PrimaryButton, SectionCard } from '../common';
+import SalesHistory from '../admin/SalesHistory';
 
 interface Props {
   store: Store;
   notify: (message: string, type?: 'success' | 'error' | 'info') => void;
   onPrint: (receipt: Receipt) => void;
+  onPrintSale: (sale: Sale) => void;
 }
 
-export default function History({ store, notify, onPrint }: Props) {
+type Kind = 'receipts' | 'sales';
+const KIND_TABS: { id: Kind; label: string; icon: LucideIcon }[] = [
+  { id: 'receipts', label: 'قبض‌های شست‌وشو', icon: Droplets },
+  { id: 'sales', label: 'فروش لوازم', icon: ShoppingCart },
+];
+
+export default function History({ store, notify, onPrint, onPrintSale }: Props) {
   const { receipts, tiers, workers, voidReceipt, updateReceipt } = store;
+
+  const [kind, setKind] = useState<Kind>('receipts');
 
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'voided'>('all');
@@ -56,9 +66,21 @@ export default function History({ store, notify, onPrint }: Props) {
     notify('مشخصات قبض ویرایش شد', 'success');
   };
 
+  // زیرتبِ «فروش لوازم» → کامپوننتِ مستقلِ تاریخچه‌ی فروش (با ابطالِ خودش)
+  if (kind === 'sales') {
+    return (
+      <div className="flex flex-col gap-6">
+        <PillTabs tabs={KIND_TABS} active={kind} onChange={setKind} />
+        <SalesHistory store={store} notify={notify} onPrintSale={onPrintSale} />
+      </div>
+    );
+  }
+
   return (
+    <div className="flex flex-col gap-6">
+      <PillTabs tabs={KIND_TABS} active={kind} onChange={setKind} />
     <SectionCard
-      title="تاریخچه‌ی قبوض"
+      title="تاریخچه‌ی قبوض شست‌وشو"
       subtitle="جستجو، چاپ مجدد، ویرایش و ابطال قبض‌های صادرشده."
       action={
         <span className="bg-[var(--surface-2)] text-[var(--text)] text-xs px-3.5 py-1.5 rounded-lg font-bold border border-[var(--border)]">
@@ -242,5 +264,6 @@ export default function History({ store, notify, onPrint }: Props) {
         )}
       </Modal>
     </SectionCard>
+    </div>
   );
 }
