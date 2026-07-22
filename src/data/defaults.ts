@@ -68,6 +68,7 @@ export const DEFAULT_CONFIG: CarwashConfig = {
   receiptCounterStart: 1000,
   // رمزِ اولیه برای همه؛ مشتری بعد از اولین ورود آن را عوض می‌کند.
   adminPin: DEFAULT_ADMIN_PIN,
+  adminUnlockMinutes: 0, // پیش‌فرض: هر بار رمز بپرس
   printMode: 'dialog',
   printerName: '',
 };

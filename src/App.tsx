@@ -93,13 +93,24 @@ export default function App() {
   const pad2 = (n: number) => toPersianDigits(n.toString().padStart(2, '0'));
   const timeLabel = `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
 
-  // ورود به پنل مدیریت (با رمز اختیاری)
-  const [adminUnlocked, setAdminUnlocked] = useState(false);
+  // ورود به پنل مدیریت (با رمز اختیاری + به‌خاطرسپاریِ زمان‌دار)
+  const [adminUnlockedAt, setAdminUnlockedAt] = useState<number | null>(null);
   const [pinPrompt, setPinPrompt] = useState(false);
   const [pinInput, setPinInput] = useState('');
 
+  // آیا پنل الان بدونِ رمز باز است؟
+  // - بدونِ رمز → همیشه باز.
+  // - «هر بار بپرس» (۰ دقیقه) → فقط اگر همین حالا واردِ پنل باشیم اعتبار دارد؛ نه.
+  // - «به‌خاطر بسپار N دقیقه» → تا N دقیقه بعد از آخرین ورود، معتبر.
+  const adminSessionValid = () => {
+    if (!store.config.adminPin) return true;
+    const mins = store.config.adminUnlockMinutes;
+    if (mins <= 0 || adminUnlockedAt == null) return false;
+    return now.getTime() - adminUnlockedAt < mins * 60_000;
+  };
+
   const goAdmin = () => {
-    if (!store.config.adminPin || adminUnlocked) {
+    if (adminSessionValid()) {
       setMode('admin');
     } else {
       setPinInput('');
@@ -111,7 +122,7 @@ export default function App() {
     e.preventDefault();
     // رمزِ خودِ کارواش یا رمزِ مادرِ یاتاش هر دو پذیرفته می‌شوند
     if (isAdminPasswordValid(pinInput, store.config.adminPin)) {
-      setAdminUnlocked(true);
+      setAdminUnlockedAt(Date.now());
       setPinPrompt(false);
       setMode('admin');
     } else {
@@ -119,14 +130,11 @@ export default function App() {
     }
   };
 
-  // خروج از پنل به صندوق — پنل دوباره قفل می‌شود تا هر بارِ ورود رمز بخواهد
-  // (امنیت برای ترمینالِ مشترکِ کارواش؛ فقط وقتی رمزی تنظیم شده باشد اثر دارد).
-  const leaveAdmin = () => {
-    setMode('pos');
-    setAdminUnlocked(false);
-  };
+  // خروج از پنل به صندوق. تایمرِ به‌خاطرسپاری را پاک نمی‌کنیم تا اگر کاربر «به‌خاطر
+  // بسپار» را روشن کرده باشد، در بازه‌ی مجاز دوباره رمز پرسیده نشود.
+  const leaveAdmin = () => setMode('pos');
 
-  const locked = !!store.config.adminPin && !adminUnlocked;
+  const locked = !!store.config.adminPin && !adminSessionValid();
 
   return (
     <>
