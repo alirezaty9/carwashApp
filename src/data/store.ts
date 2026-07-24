@@ -156,7 +156,7 @@ export function useCarwashStore() {
 
   // درصدِ پورسانتِ کارگر برای یک خدمت (بین ۰ و ۱۰۰ محدود می‌شود)
   const setServiceCommission = useCallback((serviceId: string, pct: number) => {
-    const clamped = Math.min(100, Math.max(0, Math.round(pct)));
+    const clamped = Math.min(100, Math.max(0, Math.round(Number.isFinite(pct) ? pct : 0)));
     setServices((prev) =>
       prev.map((s) => (s.id === serviceId ? { ...s, commissionPct: clamped } : s)),
     );
@@ -201,9 +201,11 @@ export function useCarwashStore() {
   );
 
   // ================= قبض‌ها =================
+  // شماره‌ی قبضِ بعدی: هیچ‌وقت از «شروعِ شماره‌ی قبض» عقب‌تر نمی‌رود (تا اگر ادمین
+  // شمارنده را جلو ببرد اثر کند) و هیچ‌وقت شماره‌ی تکراری نمی‌سازد (بزرگ‌ترین موجود +۱).
   const nextReceiptNumber = useMemo(() => {
-    if (receipts.length === 0) return config.receiptCounterStart;
-    return Math.max(...receipts.map((r) => r.receiptNumber || 0)) + 1;
+    const maxExisting = receipts.length === 0 ? 0 : Math.max(...receipts.map((r) => r.receiptNumber || 0));
+    return Math.max(config.receiptCounterStart, maxExisting + 1);
   }, [receipts, config.receiptCounterStart]);
 
   const createReceipt = useCallback(
@@ -309,12 +311,14 @@ export function useCarwashStore() {
   }, []);
 
   const setProductPrice = useCallback((id: string, price: number) => {
-    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, price: Math.max(0, Math.round(price)) } : p)));
+    const safe = Math.max(0, Math.round(Number.isFinite(price) ? price : 0));
+    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, price: safe } : p)));
   }, []);
 
   // تنظیمِ مستقیمِ موجودی (ویرایشِ دستی)
   const setProductStock = useCallback((id: string, stock: number) => {
-    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, stock: Math.max(0, Math.round(stock)) } : p)));
+    const safe = Math.max(0, Math.round(Number.isFinite(stock) ? stock : 0));
+    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, stock: safe } : p)));
   }, []);
 
   // افزایش/کاهشِ موجودی به‌اندازه‌ی delta (مثلاً +۱۰ هنگام خریدِ انبار)
@@ -436,13 +440,32 @@ export function useCarwashStore() {
     if (!data || !Array.isArray(data.tiers) || !Array.isArray(data.services) || !Array.isArray(data.receipts)) {
       return false;
     }
+    // اعتبارسنجیِ شکلِ رکوردها: یک بکاپِ خراب/قدیمی نباید کلِ داده را آلوده کند.
+    // اگر حتی یک قبض/فروش ساختارِ درست نداشته باشد، کلِ واردسازی رد می‌شود تا
+    // محاسباتِ مالی (که به price/status عددی و معتبر تکیه دارند) نشکنند.
+    const validReceipt = (r: unknown): boolean =>
+      !!r && typeof r === 'object' &&
+      typeof (r as Receipt).id === 'string' &&
+      typeof (r as Receipt).receiptNumber === 'number' &&
+      Number.isFinite((r as Receipt).price) &&
+      Array.isArray((r as Receipt).services);
+    const validSale = (s: unknown): boolean =>
+      !!s && typeof s === 'object' &&
+      typeof (s as Sale).id === 'string' &&
+      Number.isFinite((s as Sale).total) &&
+      Array.isArray((s as Sale).items);
+
+    if (!data.receipts.every(validReceipt)) return false;
+    const sales = Array.isArray(data.sales) ? data.sales : [];
+    if (!sales.every(validSale)) return false;
+
     setTiers(data.tiers);
     setServices(data.services);
     setWorkers(Array.isArray(data.workers) ? data.workers : []);
     setCustomers(Array.isArray(data.customers) ? data.customers : []);
     setReceipts(data.receipts);
     setProducts(Array.isArray(data.products) ? data.products : []);
-    setSales(Array.isArray(data.sales) ? data.sales : []);
+    setSales(sales);
     if (data.config) setConfig({ ...DEFAULT_CONFIG, ...data.config });
     return true;
   }, []);

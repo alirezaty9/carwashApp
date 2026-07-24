@@ -23,16 +23,18 @@ const KEYS = {
 /** اثرِ انگشتِ دستگاه: ترکیبِ مشخصاتِ نسبتاً ثابت، سپس hash (SHA-256، ۳۲ کاراکتر). */
 function getMachineId() {
   const nets = os.networkInterfaces();
-  let mac = '';
+  // همه‌ی MACهای فیزیکی را جمع می‌کنیم، سپس یکتا و مرتب می‌کنیم و کوچک‌ترین را برمی‌داریم.
+  // چرا؟ ترتیبِ کلیدهای networkInterfaces تضمین‌شده نیست و با اضافه/کم‌شدنِ آداپتور
+  // (VPN، USB‌وای‌فای، مجازی‌ساز) عوض می‌شود؛ اگر «اولین» MAC را بگیریم، ممکن است
+  // machineId بی‌دلیل تغییر کند و لایسنسِ مشتری ناگهان «نامعتبر» شود. مرتب‌سازی این
+  // ناپایداری را کم می‌کند (تا وقتی همان آداپتور باقی است، شناسه ثابت می‌ماند).
+  const macs = [];
   for (const name of Object.keys(nets)) {
     for (const ni of nets[name] || []) {
-      if (!ni.internal && ni.mac && ni.mac !== '00:00:00:00:00:00') {
-        mac = ni.mac;
-        break;
-      }
+      if (!ni.internal && ni.mac && ni.mac !== '00:00:00:00:00:00') macs.push(ni.mac);
     }
-    if (mac) break;
   }
+  const mac = Array.from(new Set(macs)).sort()[0] || '';
   const raw = [os.hostname(), os.platform(), os.arch(), mac].join('|');
   return crypto.createHash('sha256').update(raw).digest('hex').slice(0, 32);
 }

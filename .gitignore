@@ -12,3 +12,6 @@ coverage/
 *.pem
 license.dat
 yatash-private*
+
+# فایلِ داده‌ی نمونه (تست)
+seed-backup.json

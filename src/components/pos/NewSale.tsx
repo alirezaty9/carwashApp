@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useMemo, useRef, useState } from 'react';
 import { Minus, Plus, Package, ShoppingCart, Check } from 'lucide-react';
 import { Sale } from '../../types';
 import { Store } from '../../data/store';
@@ -61,8 +61,12 @@ export default function NewSale({ store, notify, onPrintSale }: Props) {
     setDiscount('');
   };
 
+  // قفلِ ضدِ دوبار-کلیک (مثلِ صدورِ قبض): جلوی ثبتِ دوبارهٔ اتفاقیِ فروش را می‌گیرد.
+  const submittingRef = useRef(false);
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    if (submittingRef.current) return;
     if (chosen.length === 0) return notify('حداقل یک کالا را انتخاب کنید', 'error');
 
     const sale = createSale({
@@ -73,6 +77,11 @@ export default function NewSale({ store, notify, onPrintSale }: Props) {
     });
 
     if (!sale) return notify('خطا در ثبت فروش؛ موجودی یا ورودی‌ها را بررسی کنید', 'error');
+
+    submittingRef.current = true;
+    window.setTimeout(() => {
+      submittingRef.current = false;
+    }, 700);
 
     const noPrint = store.config.printMode === 'off';
     notify(

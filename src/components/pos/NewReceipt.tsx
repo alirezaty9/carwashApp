@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { Printer, UserCheck, History as HistoryIcon } from 'lucide-react';
 import { Receipt } from '../../types';
 import { Store } from '../../data/store';
@@ -78,8 +78,13 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
     setDiscount('');
   };
 
+  // قفلِ ضدِ دوبار-کلیک: بدونِ آن، دو کلیکِ سریع می‌تواند دو قبض با شماره‌ی یکسان بسازد
+  // (چون شماره‌ی بعدی از state خوانده می‌شود که هنوز به‌روز نشده).
+  const submittingRef = useRef(false);
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    if (submittingRef.current) return;
     if (!phone.trim()) return notify('شماره‌ی مشتری را وارد کنید', 'error');
     if (!name.trim()) return notify('نام مشتری را وارد کنید', 'error');
     if (!tierId) return notify('تیپ خودرو را انتخاب کنید', 'error');
@@ -97,6 +102,12 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
     });
 
     if (!receipt) return notify('خطا در صدور قبض؛ ورودی‌ها را بررسی کنید', 'error');
+
+    // قفل را کوتاه فعال کن تا کلیکِ دومِ اتفاقی نادیده گرفته شود
+    submittingRef.current = true;
+    window.setTimeout(() => {
+      submittingRef.current = false;
+    }, 700);
 
     const noPrint = store.config.printMode === 'off';
     notify(

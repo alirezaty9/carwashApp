@@ -3,6 +3,7 @@
 // پسوندِ .cjs یعنی CommonJS (چون package.json روی "type":"module" است و باید require کار کند).
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const Store = require('electron-store');
 const license = require('./license.cjs');
 
@@ -42,12 +43,25 @@ function createWindow() {
     }
   });
 
+  const distIndex = path.join(__dirname, '..', 'dist', 'index.html');
+
   if (app.isPackaged) {
     // حالتِ نصب‌شده: فایل‌های بیلدشده‌ی Vite را از دیسک بارگذاری کن
-    mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
+    mainWindow.loadFile(distIndex);
   } else {
-    // حالتِ توسعه: به سرورِ زنده‌ی Vite وصل شو (HMR فعال)
-    mainWindow.loadURL('http://localhost:3000');
+    // حالتِ توسعه: اول به سرورِ زنده‌ی Vite وصل شو (HMR فعال).
+    // اگر سرورِ توسعه بالا نبود (مثلاً «electron .» بدونِ «npm run dev» اجرا شد)،
+    // به‌جای پنجره‌ی خطای ERR_CONNECTION_REFUSED، بیلدِ ساخته‌شده‌ی dist/ را نشان بده.
+    mainWindow.loadURL('http://localhost:3000').catch(() => {
+      if (fs.existsSync(distIndex)) {
+        mainWindow.loadFile(distIndex);
+      } else {
+        console.error(
+          '[Yatash] سرورِ توسعه بالا نیست و بیلدی هم در dist/ نیست.\n' +
+            'برای اجرا در حالتِ توسعه: «npm run dev»  |  برای دیدنِ بیلد: اول «npm run build».',
+        );
+      }
+    });
   }
 }
 

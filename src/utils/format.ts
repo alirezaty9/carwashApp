@@ -20,11 +20,14 @@ export function toEnglishDigits(str: string): string {
     .replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
 }
 
-/** ریال → تومان (برای نمایش/ویرایش) */
-export const rialToToman = (rial: number): number => Math.floor(rial / 10);
+/** فقط عددِ محدود (نه NaN/Infinity) را قبول کن؛ در غیرِ این‌صورت صفر. */
+const safeNumber = (n: number): number => (Number.isFinite(n) ? n : 0);
 
-/** تومان → ریال (برای ذخیره‌سازیِ ورودیِ کاربر) */
-export const tomanToRial = (toman: number): number => Math.round(toman) * 10;
+/** ریال → تومان (برای نمایش/ویرایش). ورودیِ نامعتبر → ۰ */
+export const rialToToman = (rial: number): number => Math.floor(safeNumber(rial) / 10);
+
+/** تومان → ریال (برای ذخیره‌سازیِ ورودیِ کاربر). ورودیِ نامعتبر → ۰ */
+export const tomanToRial = (toman: number): number => Math.round(safeNumber(toman)) * 10;
 
 /** قالب‌بندیِ مبلغِ ذخیره‌شده (ریال) به‌صورتِ «… تومان» با ارقامِ فارسی */
 export function formatCurrencyToman(rial: number): string {

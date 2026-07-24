@@ -14,8 +14,12 @@
     "lint": "tsc --noEmit",
     "electron:start": "electron .",
     "electron:build": "vite build && electron-builder --win",
+    "electron:build:win": "vite build && electron-builder --win",
+    "electron:build:linux": "vite build && electron-builder --linux",
+    "electron:build:all": "vite build && electron-builder --win --linux",
     "license:keygen": "node tools/license-gen.cjs keygen",
-    "license:issue": "node tools/license-gen.cjs issue"
+    "license:issue": "node tools/license-gen.cjs issue",
+    "seed": "node tools/seed.cjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",
@@ -60,6 +64,20 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "shortcutName": "Yatash Carwash"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        },
+        {
+          "target": "deb",
+          "arch": ["x64"]
+        }
+      ],
+      "category": "Office",
+      "maintainer": "Yatash"
     }
   }
 }
