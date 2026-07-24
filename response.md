@@ -1,32 +1,10 @@
 <div dir="rtl" align="right">
 
-# 🔒 جلوگیری از ریست‌کردنِ تریالِ ۷روزه با حذف و نصبِ دوباره
+# ✅ تستِ لایسنس موفق بود — چراغ سبزِ تحویل
 
 <br>
 
-سؤالِ خیلی خوبی بود — و بله، این یک **ضعفِ واقعی** بود که الان رفعش کردم. مشتری دیگر نمی‌تواند با حذف/نصبِ دوباره‌ی اپ، ۷ روزِ تریال را از نو بگیرد.
-
-<br>
-
----
-
-<br>
-
-## ۱) 🧭 چرا این ضعف وجود داشت؟
-
-<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">
-ℹ️ <b>تریال چطور کار می‌کرد؟</b> اپ زمانِ «اولین اجرا» را ذخیره می‌کند و هر بار چک می‌کند «آیا کمتر از ۷ روز از آن گذشته؟». مشکل: این زمان فقط در یک فایل داخلِ <b>پوشه‌ی دیتای اپ</b> ذخیره می‌شد.
-</div>
-
-<br>
-
-<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">
-ℹ️ <b>«پوشه‌ی دیتای اپ» کجاست؟</b> در ویندوز مسیرِ <code>C:\Users\&lt;نام&gt;\AppData\Roaming\Yatash Carwash</code> است. کتابخانه‌ی <code>electron-store</code> داده را آن‌جا در یک فایلِ JSON نگه می‌دارد. بدیِ ماجرا: اگر کاربر اپ را حذف کند یا این پوشه را پاک کند، آن فایل — و زمانِ اولین‌اجرا — <b>می‌رود</b> و تریال از صفر شروع می‌شود.
-</div>
-
-<br>
-
-**مثالِ واقعی:** مشتری ۷ روز رایگان کار می‌کند → اپ منقضی می‌شود → اپ را حذف و دوباره نصب می‌کند → چون فایلِ زمان رفته، اپ فکر می‌کند «این تازه‌واردِ اولین‌بار است» و باز ۷ روز می‌دهد. حلقه‌ی بی‌پایانِ رایگان.
+آفرین 👏 اینکه تریال ۷روزه بود و بعد از واردکردنِ فایلِ لایسنس **یک‌ساله** شد، یعنی کلِ زنجیره درست کار می‌کند. این مهم‌ترین موردِ باقی‌مانده بود و حالا **تأیید شد**.
 
 <br>
 
@@ -34,44 +12,39 @@
 
 <br>
 
-## ۲) ✅ راه‌حل: «لنگرِ تریال» (Trial Anchor)
+## ۱) 🧭 این تستِ موفق دقیقاً چه چیزی را ثابت کرد؟
 
-ایده ساده است: زمانِ اولین‌اجرا را **فقط** در پوشه‌ی دیتای اپ نگه ندار؛ در **چند جای پایدارِ دیگرِ سیستم** هم بنویس که با حذفِ اپ **پاک نمی‌شوند**. موقعِ خواندن، **قدیمی‌ترین** زمانِ ثبت‌شده را از بینِ همه بگیر.
-
-<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">
-ℹ️ <b>ProgramData چیست؟</b> پوشه‌ای در ویندوز (<code>C:\ProgramData</code>) که مخصوصِ داده‌های <b>مشترکِ همه‌ی کاربرانِ دستگاه</b> است و — برخلافِ پوشه‌ی دیتای اپ — با حذفِ معمولیِ برنامه پاک نمی‌شود. در لینوکس معادلش را در <code>~/.config</code> گذاشتم.
-</div>
-
-<br>
-
-**دو لنگری که اپ می‌نویسد:**
+وقتی تریال به یک‌ساله تبدیل شد، یعنی همه‌ی این مراحل **بی‌عیب** اجرا شدند:
 
 <table dir="rtl" style="border-collapse:collapse;width:100%;font-size:14px">
   <thead>
     <tr>
-      <th style="border:1px solid #999;padding:10px;text-align:right">سیستم‌عامل</th>
-      <th style="border:1px solid #999;padding:10px;text-align:right">لنگرِ ۱ (ماشین‌محور)</th>
-      <th style="border:1px solid #999;padding:10px;text-align:right">لنگرِ ۲ (خانه)</th>
+      <th style="border:1px solid #999;padding:10px;text-align:right">مرحله</th>
+      <th style="border:1px solid #999;padding:10px;text-align:right">چه چیزی تأیید شد</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">ویندوز</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right"><code>C:\ProgramData\Yatash\.ytc</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right"><code>C:\Users\&lt;نام&gt;\.yatash-ytc</code></td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">جفت‌بودنِ کلیدها</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">کلیدِ عمومیِ داخلِ اپ با کلیدِ خصوصیِ <code>yatash-private.pem</code> جفت است — وگرنه امضا رد می‌شد.</td>
     </tr>
     <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">لینوکس</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right"><code>~/.config/Yatash/.ytc</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right"><code>~/.yatash-ytc</code></td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">تأییدِ امضا (Ed25519)</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">امضای فایلِ لایسنس معتبر شناخته شد.</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">گرهِ دستگاه</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">شناسه‌ی دستگاهِ داخلِ فایل با machineIdِ همین سیستم خواند.</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">سوییچِ وضعیت</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">اپ از حالتِ <code>trial</code> به <code>licensed</code> رفت و تاریخِ انقضا یک‌ساله شد.</td>
     </tr>
   </tbody>
 </table>
-
-<br>
 
 <div style="background:#ebfbee;border-right:4px solid #2f9e44;color:#14532d;padding:8px 12px;border-radius:6px">
-✅ <b>خوددرمانی (Self-healing):</b> اگر کاربر یکی از این‌ها را هم پیدا و پاک کند، بقیه سالم می‌مانند و اپ در اجرای بعدی <b>از منبعِ سالم، پاک‌شده را دوباره می‌سازد</b>. یعنی باید هم‌زمان همه را پیدا و پاک کند تا موفق شود.
+✅ <b>یعنی آخرین موردِ بحرانی هم بسته شد.</b> دیگر ریسکی که «لایسنسِ همه‌ی مشتری‌ها رد شود» وجود ندارد.
 </div>
 
 <br>
@@ -80,124 +53,89 @@
 
 <br>
 
-## ۳) 🔐 چطور جلوی دستکاریِ تاریخ را می‌گیرم؟
+## ۲) 📋 وضعیتِ کلی — همه‌ی کارهای این چند نوبت
 
-اگر فقط تاریخ را در یک فایل بنویسیم، کاربرِ زرنگ می‌تواند فایل را باز کند و تاریخ را عوض کند. برای همین هر لنگر را **امضا** می‌کنم.
+<table dir="rtl" style="border-collapse:collapse;width:100%;font-size:14px">
+  <thead>
+    <tr>
+      <th style="border:1px solid #999;padding:10px;text-align:right">مورد</th>
+      <th style="border:1px solid #999;padding:10px;text-align:right">وضعیت</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">باگِ «NaN تومان» در ورودی‌های عددی</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">🟢 رفع</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">قبض/فروشِ تکراری با دوبار-کلیک</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">🟢 رفع</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">«شروع شماره‌ی قبض» بی‌اثر</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">🟢 رفع</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">آلودگیِ داده با بکاپِ خراب</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">🟢 رفع</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">قفل‌شدنِ لایسنس با تغییرِ کارت‌شبکه</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">🟢 پایدارتر</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">خطای بارگذاری وقتی سرورِ توسعه بالا نیست</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">🟢 محافظ اضافه شد</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">ریستِ تریال با حذف/نصبِ دوباره</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">🟢 لنگرِ پایدار</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">درستیِ کلیدِ لایسنس</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">🟢 تست شد و اوکی بود</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999;padding:10px;text-align:right">بیلدِ ویندوز + لینوکس</td>
+      <td style="border:1px solid #999;padding:10px;text-align:right">🟢 تنظیم شد</td>
+    </tr>
+  </tbody>
+</table>
+
+<br>
+
+---
+
+<br>
+
+## ۳) 🚀 چک‌لیستِ نهاییِ قبل از دادن به مشتری
 
 <div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">
-ℹ️ <b>HMAC چیست؟</b> یک «مُهرِ امنیتی» روی داده. با یک کلیدِ مخفیِ داخلِ اپ (+ شناسه‌ی دستگاه) از روی تاریخ یک رشته‌ی امضا می‌سازد. 🌍 <b>مثالِ روزمره:</b> مثلِ مُهرِ برجسته‌ی روی سند رسمی — اگر کسی متن را عوض کند، مُهر دیگر نمی‌خواند و تقلب لو می‌رود. 💻 اینجا: اگر کاربر تاریخِ داخلِ فایل را دست بزند، امضا نمی‌خواند و اپ آن لنگر را <b>نادیده</b> می‌گیرد.
+ℹ️ گردشِ کارِ فروش به هر مشتری، این چند قدمِ ساده است:
 </div>
 
 <br>
 
-<div style="background:#fff4e6;border-right:4px solid #f08c00;color:#7c3f00;padding:8px 12px;border-radius:6px">
-⚠️ <b>صادقانه بگویم — این ۱۰۰٪ نفوذناپذیر نیست:</b> چون اپ آفلاین است، کلیدِ مخفی هم داخلِ خودِ برنامه است. کاربرِ خیلی حرفه‌ای که هم برنامه را باز کند و هم هر دو لنگر را پیدا و پاک کند، باز هم می‌تواند ریست کند. <b>تنها راهِ صددرصدی، «فعال‌سازیِ آنلاین» است</b> (اپ موقعِ اجرا از سرورِ تو بپرسد) — که با ماهیتِ آفلاینِ فعلی نمی‌خواند. ولی این راه‌حل، <b>۹۹٪ مشتری‌های عادی</b> را که فقط «حذف و نصبِ دوباره» بلدند، متوقف می‌کند.
-</div>
-
-<br>
-
----
-
-<br>
-
-## ۴) 🔧 تغییرات در کد (فایل: `electron/license.cjs`)
-
-<table dir="rtl" style="border-collapse:collapse;width:100%;font-size:14px">
-  <thead>
-    <tr>
-      <th style="border:1px solid #999;padding:10px;text-align:right">تابع</th>
-      <th style="border:1px solid #999;padding:10px;text-align:right">کارش</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right"><code>anchorPaths()</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">مسیرهای پایدارِ لنگر را برای هر سیستم‌عامل برمی‌گرداند.</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right"><code>anchorSig()</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">امضای HMAC-SHA256 برای تشخیصِ دستکاری.</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right"><code>readAnchor()</code> / <code>writeAnchor()</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">خواندن/نوشتنِ یک فایلِ لنگرِ امضاشده (base64). فایلِ خراب/دستکاری‌شده نادیده گرفته می‌شود.</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right"><code>collectTrial()</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">از همه‌ی منابع (دیتای اپ + لنگرها) <b>قدیمی‌ترین</b> اولین‌اجرا و <b>تازه‌ترین</b> آخرین‌دیده‌شده را جمع می‌کند.</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right"><code>persistTrial()</code></td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">مقدارِ آشتی‌داده‌شده را در <b>همه‌ی</b> منابع می‌نویسد (خوددرمانی).</td>
-    </tr>
-  </tbody>
-</table>
-
-<br>
-
-**قلبِ منطق در `computeStatus` — قبل و بعد:**
-
-```js
-// قبل: فقط از دیتای اپ می‌خواند → با حذفِ اپ ریست می‌شد
-let firstRun = Number(store.get(KEYS.firstRun) || 0);
-if (!firstRun) { firstRun = effectiveNow; store.set(KEYS.firstRun, firstRun); }
-
-// بعد: از همه‌ی منابع «قدیمی‌ترین» را می‌گیرد و در همه می‌نویسد
-let { firstRun, lastSeen } = collectTrial(store, machineId);   // دیتای اپ + لنگرها
-const effectiveNow = Math.max(now, lastSeen);
-if (!firstRun) firstRun = effectiveNow;                        // واقعاً اولین اجرا
-persistTrial(store, machineId, firstRun, effectiveNow);        // در همه بنویس
-```
-
-<br>
-
-**سناریوی واقعی حالا:**
-
-<table dir="rtl" style="border-collapse:collapse;width:100%;font-size:14px">
-  <thead>
-    <tr>
-      <th style="border:1px solid #999;padding:10px;text-align:right">اتفاق</th>
-      <th style="border:1px solid #999;padding:10px;text-align:right">نتیجه</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">اولین نصب</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">زمان در دیتای اپ + دو لنگر نوشته می‌شود. تریال شروع.</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">حذف + نصبِ دوباره</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">دیتای اپ خالی است، ولی لنگرها زمانِ اصلی را دارند → تریال <b>ادامه‌ی همان قبلی</b>، نه از صفر. ✅</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">پاک‌کردنِ یکی از لنگرها</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">از لنگرِ دیگر خوانده و پاک‌شده را می‌سازد. ✅</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">دستکاریِ تاریخِ فایل</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">امضا نمی‌خواند → نادیده گرفته می‌شود. ✅</td>
-    </tr>
-  </tbody>
-</table>
-
-<br>
-
----
-
-<br>
-
-## ۵) 🧪 چطور خودت تست کنی؟
+**۱) بیلد بگیر** (هر سیستم روی خودش):
 
 ```bash
-npm run dev
+npm install
+npm run electron:build:win      # روی ویندوز → release/Yatash Carwash Setup x.x.x.exe
+npm run electron:build:linux    # روی لینوکس → release/*.AppImage و *.deb
 ```
-۱. اپ را باز کن؛ باید تریال شروع شود.
-۲. اپ را ببند. حالا شبیه‌سازیِ «نصبِ دوباره»: پوشه‌ی دیتای اپ را پاک کن (مسیر بالا در بخش ۱).
-۳. دوباره `npm run dev`. باید تریال **از همان‌جای قبل** ادامه دهد، نه از ۷ روزِ کامل.
-۴. برای دیدنِ لنگرها: در ویندوز به `C:\ProgramData\Yatash\` برو (پوشه‌ی مخفی است؛ نمایشِ فایل‌های مخفی را روشن کن).
 
-<div style="background:#fff4e6;border-right:4px solid #f08c00;color:#7c3f00;padding:8px 12px;border-radius:6px">
-⚠️ نکته‌ی مهمِ تست: چون لنگرها بعد از اجرای <b>همین نسخه‌ی جدید</b> ساخته می‌شوند، برای تستِ درست باید <b>یک بار پاکِ کامل</b> بکنی: هم پوشه‌ی دیتای اپ، هم <code>ProgramData\Yatash</code>، هم <code>.yatash-ytc</code> در پوشه‌ی خانه — بعد اجرای اول را «اولین‌بارِ واقعی» فرض کن.
+**۲) نصب روی سیستمِ مشتری** → اپ با **تریالِ ۷روزه** باز می‌شود.
+
+**۳) شناسه‌ی دستگاه را از مشتری بگیر** (اپ در صفحه‌ی لایسنس نشانش می‌دهد).
+
+**۴) لایسنسِ سالانه صادر کن** و فایلش را بده مشتری تا وارد کند:
+
+```bash
+npm run license:issue    # machineIdِ مشتری و نامش را می‌پرسد → license.dat
+```
+
+<div style="background:#ebfbee;border-right:4px solid #2f9e44;color:#14532d;padding:8px 12px;border-radius:6px">
+✅ همین. مشتری فایل را وارد می‌کند و — دقیقاً مثلِ تستی که تو کردی — اپ یک‌ساله می‌شود.
 </div>
 
 <br>
@@ -206,13 +144,21 @@ npm run dev
 
 <br>
 
-## 🗂️ فایلِ تغییرکرده
+## ۴) 📌 یادآوری‌های کوچک (نه بلاکر)
 
-- `electron/license.cjs` — افزودنِ سیستمِ «لنگرِ تریال» (۶ تابعِ کمکی + بازنویسیِ بخشِ تریال در `computeStatus`) و `require` برای `fs`/`path`.
+- 🔵 <b>یک آیکونِ برند</b> (`build/icon.png` ۵۱۲×۵۱۲ و `build/icon.ico`) بگذار تا نصب‌کننده ظاهرِ حرفه‌ای بگیرد.
+- 🔵 <b>کلیدِ خصوصی (`yatash-private.pem`) را جای امن نگه دار</b> و از آن بکاپ بگیر — اگر گم شود، دیگر نمی‌توانی برای مشتری‌های فعلی لایسنسِ تمدید صادر کنی. (در بیلد و گیت نمی‌رود؛ چک شده.)
+- 🔵 دو موردِ کوچک برای «نسخه‌ی بعد»: هشدارِ خطای ذخیره‌سازی وقتی دیسک پر است، و بازحسابِ ریزِ فیش هنگام ویرایشِ دستیِ مبلغ.
 
-<div style="background:#ffe3e3;border-right:4px solid #e03131;color:#7a1f1f;padding:8px 12px;border-radius:6px">
-🔴 <b>یادآوریِ مهمِ لایسنس:</b> این تغییرات روی «شناسه‌ی دستگاه» اثری ندارند، ولی هنوز باید <b>درستیِ کلیدِ عمومیِ لایسنس</b> را قبل از تحویل تست کنی (بخش‌های قبلی). بدونِ آن، لایسنسِ سالانه‌ی مشتری‌ها رد می‌شود.
-</div>
+<br>
+
+---
+
+<br>
+
+## 🗂️ تغییرِ کد در این نوبت
+
+هیچ تغییرِ کدی لازم نبود — فقط نتیجه‌ی تستِ موفقِ تو ثبت شد. (حافظه‌ی پروژه هم به‌روز شد تا در نوبت‌های بعد بدانم کلیدِ لایسنس تست‌شده و اوکی است.)
 
 <br>
 
@@ -223,12 +169,11 @@ npm run dev
 ### 💾 دستورِ Git پیشنهادی
 
 ```bash
-git add -A && git commit -m "feat(license): resist trial reset via signed persistent anchors outside app data"
+git add -A && git commit -m "docs: confirm license verification passed; finalize pre-ship notes"
 ```
 
-**چرا `feat(license)`؟**
-- `feat` چون یک **قابلیتِ جدید** به سیستمِ لایسنس اضافه شد (مقاومت در برابرِ ریستِ تریال) — نه رفعِ یک باگِ خرابیِ موجود، بلکه توانمندیِ تازه.
-- `scope`ِ `license` می‌گوید این قابلیت در لایه‌ی لایسنس است.
-- اگر فقط یک نشتِ موجود را می‌بستم `fix` می‌شد؛ ولی چون سازوکارِ کاملاً تازه‌ای (لنگرهای پایدارِ امضاشده) اضافه شد، `feat` دقیق‌تر است.
+**چرا `docs`؟**
+- چون در این نوبت **هیچ کدی عوض نشد**؛ فقط مستندات/گزارش (`response.md`) به‌روز شد. برای تغییری که فقط متن/مستندات است، `docs` درست‌ترین پیشوند است — نه `feat` (قابلیتِ جدید نیست) و نه `fix` (باگی رفع نشد).
+- اگر بخواهی همه‌ی تغییرهای کدِ نوبت‌های قبل را هم در همین کامیت جمع کنی، بهتر است جدا کامیت کنی؛ ولی اگر همه با هم مانده‌اند، پیشوندِ غالب همان کدِ لایسنس/باگ‌فیکس‌هاست و آن‌وقت `feat`/`fix` مناسب‌تر است.
 
 </div>
