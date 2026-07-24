@@ -2,6 +2,8 @@
 // مشخصاتِ سخت‌افزار و فایلِ ذخیره‌سازی دسترسی دارد. UI فقط از طریقِ IPC می‌پرسد.
 const crypto = require('crypto');
 const os = require('os');
+const fs = require('fs');
+const path = require('path');
 
 // ⚠️ کلیدِ عمومیِ یاتاش.
 // این مقدار را با خروجیِ دستورِ `node tools/license-gen.cjs keygen` جایگزین کن.
@@ -64,6 +66,100 @@ function verifySignature(payload, signatureB64) {
 
 const daysLeftUntil = (ms, from) => Math.max(0, Math.ceil((ms - from) / DAY_MS));
 
+// ============================================================================
+// «لنگرِ تریال» (Trial Anchor) — ضدِ ریست‌کردنِ تریال با حذف/نصبِ دوباره‌ی اپ.
+//
+// مشکل: زمانِ اولین اجرا (مبنای ۷ روز) فقط در پوشه‌ی دیتای اپ ذخیره می‌شد؛ با
+// حذف/نصبِ دوباره یا پاک‌کردنِ آن پوشه، تریال از صفر شروع می‌شد.
+//
+// راه‌حل: همان زمان را در چند مسیرِ «پایدارِ» سیستم‌عامل هم می‌نویسیم که با حذفِ اپ
+// پاک نمی‌شوند (در ویندوز ProgramData، و یک فایلِ مخفی در پوشه‌ی خانه). موقعِ خواندن،
+// «قدیمی‌ترین» زمانِ اولین‌اجرا را از بینِ همه‌ی منابع می‌گیریم؛ پس حتی اگر کاربر یکی
+// را پاک کند، بقیه تریال را حفظ می‌کنند و منبعِ سالم دوباره همه را می‌سازد (خوددرمان).
+//
+// امنیت: هر فایل با HMAC-SHA256 (کلیدِ داخلِ اپ + machineId) امضا می‌شود تا کاربر
+// نتواند تاریخ را دستکاری کند؛ اگر امضا نخورد، آن فایل نادیده گرفته می‌شود.
+// ⚠️ محدودیت: کاربرِ خیلی حرفه‌ای که همه‌ی این مسیرها را پیدا و پاک کند باز می‌تواند
+// ریست کند. تنها راهِ ۱۰۰٪ ضدِ ریست، «فعال‌سازیِ آنلاین» است (که اپ آفلاین است).
+// ============================================================================
+
+const ANCHOR_SECRET = 'Yatash-Trial-Anchor-#7Kq2!ZxR';
+
+/** مسیرهای پایدار برای نوشتنِ لنگر (مستقل از پوشه‌ی دیتای اپ). */
+function anchorPaths() {
+  const list = [];
+  // ۱) مسیرِ ماشین‌محور که با حذفِ اپ پاک نمی‌شود
+  const machineDir =
+    process.platform === 'win32'
+      ? process.env.PROGRAMDATA || process.env.ALLUSERSPROFILE || os.homedir()
+      : path.join(os.homedir(), '.config');
+  list.push(path.join(machineDir, 'Yatash', '.ytc'));
+  // ۲) فایلِ مخفی در پوشه‌ی خانه (منبعِ دومِ افزونگی)
+  list.push(path.join(os.homedir(), '.yatash-ytc'));
+  return list;
+}
+
+/** امضای HMAC برای تشخیصِ دستکاریِ فایلِ لنگر. */
+function anchorSig(firstRun, lastSeen, machineId) {
+  return crypto
+    .createHmac('sha256', ANCHOR_SECRET)
+    .update(`${firstRun}|${lastSeen}|${machineId}`)
+    .digest('hex');
+}
+
+/** خواندنِ یک فایلِ لنگر؛ اگر نبود/خراب/دستکاری‌شده بود → null. */
+function readAnchor(file, machineId) {
+  try {
+    const decoded = Buffer.from(fs.readFileSync(file, 'utf8'), 'base64').toString('utf8');
+    const obj = JSON.parse(decoded);
+    const firstRun = Number(obj.f) || 0;
+    const lastSeen = Number(obj.l) || 0;
+    if (obj.s === anchorSig(firstRun, lastSeen, machineId)) return { firstRun, lastSeen };
+  } catch {
+    /* فایل نبود یا خراب بود */
+  }
+  return null;
+}
+
+/** نوشتنِ یک فایلِ لنگرِ امضاشده (اگر نشد بی‌صدا رد می‌شویم). */
+function writeAnchor(file, firstRun, lastSeen, machineId) {
+  try {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    const obj = { f: firstRun, l: lastSeen, s: anchorSig(firstRun, lastSeen, machineId) };
+    fs.writeFileSync(file, Buffer.from(JSON.stringify(obj), 'utf8').toString('base64'));
+  } catch {
+    /* دسترسیِ نوشتن نبود */
+  }
+}
+
+/**
+ * جمع‌آوریِ وضعیتِ تریال از همه‌ی منابع (electron-store + لنگرها).
+ * firstRun = قدیمی‌ترین (کوچک‌ترینِ ناصفر)، lastSeen = تازه‌ترین (بزرگ‌ترین).
+ */
+function collectTrial(store, machineId) {
+  const sources = [
+    { firstRun: Number(store.get(KEYS.firstRun) || 0), lastSeen: Number(store.get(KEYS.lastSeen) || 0) },
+  ];
+  for (const p of anchorPaths()) {
+    const a = readAnchor(p, machineId);
+    if (a) sources.push(a);
+  }
+  let firstRun = 0;
+  let lastSeen = 0;
+  for (const s of sources) {
+    if (s.firstRun > 0 && (firstRun === 0 || s.firstRun < firstRun)) firstRun = s.firstRun;
+    if (s.lastSeen > lastSeen) lastSeen = s.lastSeen;
+  }
+  return { firstRun, lastSeen };
+}
+
+/** نوشتنِ وضعیتِ تریالِ آشتی‌داده‌شده در همه‌ی منابع (خوددرمانی). */
+function persistTrial(store, machineId, firstRun, lastSeen) {
+  store.set(KEYS.firstRun, firstRun);
+  store.set(KEYS.lastSeen, lastSeen);
+  for (const p of anchorPaths()) writeAnchor(p, firstRun, lastSeen, machineId);
+}
+
 /** وضعیتِ فعلیِ لایسنس را محاسبه می‌کند (و تریال/زمان را در فایل به‌روز می‌کند). */
 function computeStatus(store) {
   const machineId = getMachineId();
@@ -78,12 +174,17 @@ function computeStatus(store) {
   // اشتباهاً خیلی جلو تنظیم شده و حالا اصلاح شده؛ سقف را پایین می‌آوریم تا قفلِ دائمیِ
   // اشتباهی رخ ندهد. (این آستانه‌ی بزرگ، حفره‌ی عقب‌کشیدنِ کوچک/متوسط را باز نمی‌کند.)
   const HEAL_THRESHOLD = 180 * DAY_MS;
-  let lastSeen = Number(store.get(KEYS.lastSeen) || 0);
+  // زمانِ اولین‌اجرا و آخرین‌دیده‌شده را از همه‌ی منابع (دیتای اپ + لنگرهای پایدار) می‌خوانیم
+  // تا حذف/نصبِ دوباره‌ی اپ نتواند تریال را ریست کند.
+  let { firstRun, lastSeen } = collectTrial(store, machineId);
   if (lastSeen > 0 && lastSeen - now > HEAL_THRESHOLD) {
     lastSeen = now; // خطای بزرگِ ساعتِ گذشته → بازتنظیمِ سقف
   }
   const effectiveNow = Math.max(now, lastSeen);
-  store.set(KEYS.lastSeen, effectiveNow);
+  // اگر هیچ منبعی زمانِ اولین‌اجرا نداشت، یعنی واقعاً اولین اجراست → همین حالا را ثبت کن.
+  if (!firstRun) firstRun = effectiveNow;
+  // در همه‌ی منابع بنویس (خوددرمانی: منبعِ پاک‌شده دوباره ساخته می‌شود).
+  persistTrial(store, machineId, firstRun, effectiveNow);
 
   // ۱) لایسنسِ سالانه (اگر واردشده باشد)
   const fileRaw = store.get(KEYS.file);
@@ -112,12 +213,7 @@ function computeStatus(store) {
     }
   }
 
-  // ۲) تریالِ ۷روزه (خودکار در اولین اجرا)
-  let firstRun = Number(store.get(KEYS.firstRun) || 0);
-  if (!firstRun) {
-    firstRun = effectiveNow;
-    store.set(KEYS.firstRun, firstRun);
-  }
+  // ۲) تریالِ ۷روزه (firstRun بالاتر از همه‌ی منابع آشتی داده و ذخیره شده)
   const trialExp = firstRun + TRIAL_DAYS * DAY_MS;
   if (effectiveNow <= trialExp) {
     return { state: 'trial', machineId, expiresAt: new Date(trialExp).toISOString(), daysLeft: daysLeftUntil(trialExp, effectiveNow) };
