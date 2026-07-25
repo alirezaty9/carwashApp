@@ -28,6 +28,22 @@ export interface Worker {
   active: boolean;
 }
 
+/** نقشِ کاربر: ادمین (دسترسیِ کامل) یا صندوقدار (فقط صندوق) */
+export type UserRole = 'admin' | 'cashier';
+
+/**
+ * کاربرِ سیستم که با آن وارد می‌شود. هنگام ورود، کاربر نامش را از فهرست انتخاب
+ * می‌کند و رمزش را می‌زند (یوزرنیم تایپ نمی‌شود). نقش، دسترسی را تعیین می‌کند.
+ */
+export interface User {
+  id: string;
+  name: string;
+  role: UserRole;
+  /** رمزِ ورود (متن ساده — اپ آفلاین است، مثلِ بقیه‌ی تنظیمات) */
+  password: string;
+  active: boolean;
+}
+
 /** مشتری؛ کلیدِ اصلی شماره‌ی اوست */
 export interface Customer {
   phone: string;
@@ -84,6 +100,8 @@ export interface Receipt {
   // وضعیت
   status: 'active' | 'voided';
   voidReason?: string;
+  /** نامِ کاربری که این قبض را باطل کرده (برای رهگیری) */
+  voidedBy?: string;
 }
 
 /**
@@ -134,6 +152,8 @@ export interface Sale {
   // وضعیت
   status: 'active' | 'voided';
   voidReason?: string;
+  /** نامِ کاربری که این فروش را باطل کرده (برای رهگیری) */
+  voidedBy?: string;
 }
 
 /** تنظیماتِ کلیِ برنامه */
@@ -171,4 +191,5 @@ export interface BackupData {
   products: Product[];
   sales: Sale[];
   config: CarwashConfig;
+  users?: User[];
 }

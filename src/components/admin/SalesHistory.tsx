@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Printer, XCircle, CheckCircle, Search, ShoppingCart } from 'lucide-react';
-import { Sale } from '../../types';
+import { Sale, User } from '../../types';
 import { Store } from '../../data/store';
 import { formatCurrencyToman, toEnglishDigits, toPersianDigits } from '../../utils/format';
 import { Field, GhostButton, inputClass, Modal, ModalHeader, Pagination, SectionCard } from '../common';
@@ -11,10 +11,11 @@ interface Props {
   store: Store;
   notify: (message: string, type?: 'success' | 'error' | 'info') => void;
   onPrintSale: (sale: Sale) => void;
+  currentUser: User;
 }
 
 /** تاریخچه‌ی فروشِ لوازم: جستجو، چاپ مجدد و ابطال (که موجودی را برمی‌گرداند). */
-export default function SalesHistory({ store, notify, onPrintSale }: Props) {
+export default function SalesHistory({ store, notify, onPrintSale, currentUser }: Props) {
   const { sales, voidSale } = store;
 
   const [query, setQuery] = useState('');
@@ -44,7 +45,7 @@ export default function SalesHistory({ store, notify, onPrintSale }: Props) {
   const submitVoid = (e: FormEvent) => {
     e.preventDefault();
     if (!voiding) return;
-    voidSale(voiding.id, voidReason);
+    voidSale(voiding.id, voidReason, currentUser.name);
     setVoiding(null);
     setVoidReason('');
     notify('فروش باطل شد و موجودی به انبار بازگشت', 'success');
@@ -121,9 +122,14 @@ export default function SalesHistory({ store, notify, onPrintSale }: Props) {
                     <td className="px-3 py-3 text-[var(--text-muted)] text-[11px]">{s.jalaliDate}</td>
                     <td className="px-3 py-3">
                       {voided ? (
-                        <span className="inline-flex items-center gap-1 text-[var(--danger-text)] bg-[var(--danger-soft)] border border-[var(--danger-border)] px-2 py-0.5 rounded-full text-[10px] font-bold">
-                          <XCircle className="w-3 h-3" /> باطل
-                        </span>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="inline-flex items-center gap-1 text-[var(--danger-text)] bg-[var(--danger-soft)] border border-[var(--danger-border)] px-2 py-0.5 rounded-full text-[10px] font-bold w-fit">
+                            <XCircle className="w-3 h-3" /> باطل
+                          </span>
+                          {s.voidedBy && (
+                            <span className="text-[9px] font-bold text-[var(--text-muted)]">توسط {s.voidedBy}</span>
+                          )}
+                        </div>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-[var(--money-text)] bg-[var(--money-soft)] border border-[var(--money-border)] px-2 py-0.5 rounded-full text-[10px] font-bold">
                           <CheckCircle className="w-3 h-3" /> فعال

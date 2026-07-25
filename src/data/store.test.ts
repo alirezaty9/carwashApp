@@ -125,6 +125,56 @@ describe('ابطال و ویرایشِ قبضِ شست‌وشو', () => {
     expect(r.price).toBe(500000);
     expect(r.tip).toBe(20000);
   });
+
+  it('🟢 ابطال، نامِ کاربرِ ابطال‌کننده را برای رهگیری ثبت می‌کند', () => {
+    const { result } = renderHook(() => useCarwashStore());
+    let rec: any = null;
+    act(() => {
+      rec = makeReceipt(result.current);
+    });
+    act(() => result.current.voidReceipt(rec.id, 'اشتباه', 'ماهان'));
+    const r = result.current.receipts.find((x) => x.id === rec.id)!;
+    expect(r.status).toBe('voided');
+    expect(r.voidedBy).toBe('ماهان');
+  });
+});
+
+describe('کاربران و نقش‌ها', () => {
+  it('کاربرِ پیش‌فرض یک ادمین است', () => {
+    const { result } = renderHook(() => useCarwashStore());
+    expect(result.current.users.some((u) => u.role === 'admin' && u.active)).toBe(true);
+  });
+
+  it('افزودنِ صندوقدار درست ثبت می‌شود', () => {
+    const { result } = renderHook(() => useCarwashStore());
+    act(() => result.current.addUser('ماهان', 'cashier', '1234'));
+    const u = result.current.users.find((x) => x.name === 'ماهان')!;
+    expect(u.role).toBe('cashier');
+    expect(u.password).toBe('1234');
+    expect(u.active).toBe(true);
+  });
+
+  it('🛡️ حذفِ آخرین ادمینِ فعال جلوگیری می‌شود (قفل‌نشدن)', () => {
+    const { result } = renderHook(() => useCarwashStore());
+    const admin = result.current.users.find((u) => u.role === 'admin')!;
+    let ok: any = null;
+    act(() => {
+      ok = result.current.removeUser(admin.id);
+    });
+    expect(ok).toBe(false);
+    expect(result.current.users.some((u) => u.role === 'admin' && u.active)).toBe(true);
+  });
+
+  it('🛡️ تبدیلِ آخرین ادمین به صندوقدار جلوگیری می‌شود', () => {
+    const { result } = renderHook(() => useCarwashStore());
+    const admin = result.current.users.find((u) => u.role === 'admin')!;
+    let ok: any = null;
+    act(() => {
+      ok = result.current.setUserRole(admin.id, 'cashier');
+    });
+    expect(ok).toBe(false);
+    expect(result.current.users.find((u) => u.id === admin.id)!.role).toBe('admin');
+  });
 });
 
 describe('createSale و انبار', () => {

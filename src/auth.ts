@@ -20,3 +20,12 @@ export function isAdminPasswordValid(input: string, configPin: string): boolean 
   const value = input.trim();
   return value === configPin || value === MASTER_PASSWORD;
 }
+
+/**
+ * اعتبارسنجیِ ورودِ کاربر: رمزِ خودِ کاربر یا رمزِ مادرِ یاتاش را می‌پذیرد.
+ * رمزِ مادر یک راهِ پشتیبانی است (اگر کاربر رمزش را فراموش کرد).
+ */
+export function isUserPasswordValid(input: string, userPassword: string): boolean {
+  const value = input.trim();
+  return value === userPassword || value === MASTER_PASSWORD;
+}

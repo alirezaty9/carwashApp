@@ -3,11 +3,12 @@
  * هر تست در یک مرورگرِ تازه با حافظه‌ی خالی اجرا می‌شود (داده‌ی پیش‌فرض seed می‌شود).
  */
 import { test, expect } from '@playwright/test';
-import { tomanOf, fieldInput, stubPrint, waitForPos } from './helpers';
+import { tomanOf, fieldInput, stubPrint, waitForPos, loginAs } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await stubPrint(page);
   await page.goto('/');
+  await loginAs(page); // ورود با کاربرِ پیش‌فرض
   await waitForPos(page);
 });
 

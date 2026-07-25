@@ -37,3 +37,21 @@ export async function stubPrint(page: Page): Promise<void> {
 export async function waitForPos(page: Page): Promise<void> {
   await expect(page.getByText('مبلغ کل قابل پرداخت')).toBeVisible();
 }
+
+/**
+ * ورود از صفحه‌ی لاگین: انتخابِ کاربر (کاشی) و زدنِ رمز.
+ * کاربرِ پیش‌فرض «مدیر» با رمز «yatash» است.
+ */
+export async function loginAs(page: Page, name = 'مدیر', password = 'yatash'): Promise<void> {
+  await page.getByRole('button', { name }).first().click();
+  await page.getByPlaceholder('رمز خود را وارد کنید').fill(password);
+  await page.getByRole('button', { name: 'ورود' }).click();
+}
+
+/** ورودِ ادمین + رفتن به پنل مدیریت (آماده برای تست‌های پنل). */
+export async function enterAdminPanel(page: Page): Promise<void> {
+  await loginAs(page);
+  await waitForPos(page);
+  await page.getByTitle('ورود به پنل مدیریت').click();
+  await expect(page.getByRole('button', { name: 'گزارش‌ها' })).toBeVisible();
+}

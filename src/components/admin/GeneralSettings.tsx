@@ -1,5 +1,5 @@
 import { ChangeEvent, FormEvent, useRef, useState } from 'react';
-import { Download, Upload, RefreshCw, Lock, Save, Eye, EyeOff } from 'lucide-react';
+import { Download, Upload, RefreshCw, Save } from 'lucide-react';
 import { Store } from '../../data/store';
 import { getJalaliDateParts } from '../../utils/jalali';
 import { SectionCard, inputClass, NumberInput, PrimaryButton, Field } from '../common';
@@ -18,41 +18,11 @@ export default function GeneralSettings({
   const [shopName, setShopName] = useState(config.shopName);
   const [footer, setFooter] = useState(config.footerText);
   const [counterStart, setCounterStart] = useState<number>(config.receiptCounterStart);
-  const [pin, setPin] = useState(config.adminPin);
-  const [showPin, setShowPin] = useState(false);
-
-  // «پرسیدنِ رمز»: هر بار (۰) یا به‌خاطرسپاری تا N دقیقه
-  const [rememberOn, setRememberOn] = useState(config.adminUnlockMinutes > 0);
-  const [unlockMinutes, setUnlockMinutes] = useState(config.adminUnlockMinutes || 15);
-
-  const chooseAlways = () => {
-    setRememberOn(false);
-    updateConfig({ adminUnlockMinutes: 0 });
-    notify('از این پس هر بار رمز پرسیده می‌شود', 'info');
-  };
-  const chooseRemember = () => {
-    const m = unlockMinutes > 0 ? unlockMinutes : 15;
-    setRememberOn(true);
-    setUnlockMinutes(m);
-    updateConfig({ adminUnlockMinutes: m });
-    notify('تا مدتِ تعیین‌شده دوباره رمز پرسیده نمی‌شود', 'success');
-  };
-  const changeMinutes = (value: number) => {
-    const m = Math.max(1, Math.round(value) || 1);
-    setUnlockMinutes(m);
-    if (rememberOn) updateConfig({ adminUnlockMinutes: m });
-  };
 
   const saveGeneral = (e: FormEvent) => {
     e.preventDefault();
     updateConfig({ shopName: shopName.trim() || 'کارواش', footerText: footer, receiptCounterStart: Number(counterStart) || 1000 });
     notify('تنظیمات ذخیره شد', 'success');
-  };
-
-  const savePin = (e: FormEvent) => {
-    e.preventDefault();
-    updateConfig({ adminPin: pin.trim() });
-    notify(pin.trim() ? 'رمز پنل تنظیم شد' : 'رمز پنل حذف شد', 'success');
   };
 
   const handleBackup = () => {
@@ -115,79 +85,6 @@ export default function GeneralSettings({
             </PrimaryButton>
           </div>
         </form>
-      </SectionCard>
-
-      {/* رمز پنل */}
-      <SectionCard title="رمز پنل مدیریت" subtitle="برای جداسازیِ دسترسیِ کارگر از تنظیمات. رمزِ فعلی همین‌جا نمایش داده می‌شود (با دکمه‌ی چشم)؛ می‌توانید عوضش کنید. خالی بگذارید تا بدون رمز باز شود.">
-        <form onSubmit={savePin} className="flex flex-col sm:flex-row items-end gap-3">
-          <div className="flex-1 w-full">
-            <Field label="رمز عبور پنل">
-              <div className="relative">
-                <Lock className="w-4 h-4 text-[var(--text-faint)] absolute right-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type={showPin ? 'text' : 'password'}
-                  value={pin}
-                  onChange={(e) => setPin(e.target.value)}
-                  placeholder="خالی = بدون رمز"
-                  className={`${inputClass} pr-9 pl-10`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPin((v) => !v)}
-                  title={showPin ? 'پنهان‌کردن رمز' : 'نمایش رمز'}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 text-[var(--text-muted)] hover:text-[var(--text)] rounded-lg cursor-pointer"
-                >
-                  {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </Field>
-          </div>
-          <PrimaryButton type="submit" className="w-full sm:w-auto">ثبت رمز</PrimaryButton>
-        </form>
-
-        {/* پرسیدنِ رمز — هر بار یا به‌خاطرسپاریِ زمان‌دار */}
-        <div className="border-t border-[var(--border)] pt-4 flex flex-col gap-3">
-          <div>
-            <span className="text-xs font-bold text-[var(--text-muted)] block">پرسیدنِ رمز</span>
-            <span className="text-[11px] text-[var(--text-faint)] font-medium">اگر «مرا به‌خاطر بسپار» را بزنی، تا مدتی که تعیین می‌کنی دوباره رمز پرسیده نمی‌شود.</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={chooseAlways}
-              className={`px-4 py-2 rounded-xl text-xs font-bold border-2 cursor-pointer transition-all ${
-                !rememberOn
-                  ? 'border-[var(--field-active-border)] bg-[var(--field-bg)] text-[var(--field-text)]'
-                  : 'border-[var(--border)] bg-[var(--field-bg)] text-[var(--field-muted)] hover:border-[var(--field-hover-border)]'
-              }`}
-            >
-              هر بار بپرس
-            </button>
-            <button
-              type="button"
-              onClick={chooseRemember}
-              className={`px-4 py-2 rounded-xl text-xs font-bold border-2 cursor-pointer transition-all ${
-                rememberOn
-                  ? 'border-[var(--field-active-border)] bg-[var(--field-bg)] text-[var(--field-text)]'
-                  : 'border-[var(--border)] bg-[var(--field-bg)] text-[var(--field-muted)] hover:border-[var(--field-hover-border)]'
-              }`}
-            >
-              مرا به‌خاطر بسپار
-            </button>
-          </div>
-          {rememberOn && (
-            <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-muted)] animate-fade-in">
-              <span>تا</span>
-              <NumberInput
-                thousands={false}
-                value={unlockMinutes}
-                onValueChange={changeMinutes}
-                className="w-20 text-center bg-[var(--field-bg)] border border-[var(--border)] rounded-lg px-2 py-1.5 font-mono text-[var(--field-text)] outline-none focus:border-[var(--accent-strong)]"
-              />
-              <span>دقیقه دوباره رمز نپرس</span>
-            </div>
-          )}
-        </div>
       </SectionCard>
 
       {/* پرینتر و چاپ */}

@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Printer, Edit3, XCircle, CheckCircle, Search, FileText, Droplets, ShoppingCart, LucideIcon } from 'lucide-react';
-import { Receipt, Sale } from '../../types';
+import { Receipt, Sale, User } from '../../types';
 import { Store } from '../../data/store';
 import { formatCurrencyToman, rialToToman, toEnglishDigits, toPersianDigits, tomanToRial } from '../../utils/format';
 import { Field, GhostButton, inputClass, Modal, ModalHeader, NumberInput, PillTabs, Pagination, PrimaryButton, SectionCard } from '../common';
@@ -13,6 +13,7 @@ interface Props {
   notify: (message: string, type?: 'success' | 'error' | 'info') => void;
   onPrint: (receipt: Receipt) => void;
   onPrintSale: (sale: Sale) => void;
+  currentUser: User;
 }
 
 type Kind = 'receipts' | 'sales';
@@ -21,7 +22,7 @@ const KIND_TABS: { id: Kind; label: string; icon: LucideIcon }[] = [
   { id: 'sales', label: 'فروش لوازم', icon: ShoppingCart },
 ];
 
-export default function History({ store, notify, onPrint, onPrintSale }: Props) {
+export default function History({ store, notify, onPrint, onPrintSale, currentUser }: Props) {
   const { receipts, tiers, workers, voidReceipt, updateReceipt } = store;
 
   const [kind, setKind] = useState<Kind>('receipts');
@@ -60,7 +61,7 @@ export default function History({ store, notify, onPrint, onPrintSale }: Props) 
   const submitVoid = (e: FormEvent) => {
     e.preventDefault();
     if (!voiding) return;
-    voidReceipt(voiding.id, voidReason);
+    voidReceipt(voiding.id, voidReason, currentUser.name);
     setVoiding(null);
     setVoidReason('');
     notify('قبض باطل شد', 'success');
@@ -79,7 +80,7 @@ export default function History({ store, notify, onPrint, onPrintSale }: Props) 
     return (
       <div className="flex flex-col gap-6">
         <PillTabs tabs={KIND_TABS} active={kind} onChange={setKind} />
-        <SalesHistory store={store} notify={notify} onPrintSale={onPrintSale} />
+        <SalesHistory store={store} notify={notify} onPrintSale={onPrintSale} currentUser={currentUser} />
       </div>
     );
   }
@@ -177,9 +178,14 @@ export default function History({ store, notify, onPrint, onPrintSale }: Props) 
                     <td className="px-3 py-3 text-[var(--text-muted)] text-[11px]">{r.jalaliDate}</td>
                     <td className="px-3 py-3">
                       {voided ? (
-                        <span className="inline-flex items-center gap-1 text-[var(--danger-text)] bg-[var(--danger-soft)] border border-[var(--danger-border)] px-2 py-0.5 rounded-full text-[10px] font-bold">
-                          <XCircle className="w-3 h-3" /> باطل
-                        </span>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="inline-flex items-center gap-1 text-[var(--danger-text)] bg-[var(--danger-soft)] border border-[var(--danger-border)] px-2 py-0.5 rounded-full text-[10px] font-bold w-fit">
+                            <XCircle className="w-3 h-3" /> باطل
+                          </span>
+                          {r.voidedBy && (
+                            <span className="text-[9px] font-bold text-[var(--text-muted)]">توسط {r.voidedBy}</span>
+                          )}
+                        </div>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-[var(--money-text)] bg-[var(--money-soft)] border border-[var(--money-border)] px-2 py-0.5 rounded-full text-[10px] font-bold">
                           <CheckCircle className="w-3 h-3" /> فعال

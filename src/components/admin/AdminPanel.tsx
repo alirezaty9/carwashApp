@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { DollarSign, Users, SlidersHorizontal, FileSpreadsheet, History as HistoryIcon, Wallet, Package, KeyRound, LucideIcon } from 'lucide-react';
-import { Receipt, Sale } from '../../types';
+import { DollarSign, Users, SlidersHorizontal, FileSpreadsheet, History as HistoryIcon, Wallet, Package, KeyRound, UserCog, LucideIcon } from 'lucide-react';
+import { Receipt, Sale, User } from '../../types';
 import { Store } from '../../data/store';
 import { PillTabs } from '../common';
 import Reports from '../pos/Reports';
@@ -10,9 +10,10 @@ import WorkersManager from './WorkersManager';
 import WorkerPayroll from './WorkerPayroll';
 import GeneralSettings from './GeneralSettings';
 import ProductsManager from './ProductsManager';
+import UsersManager from './UsersManager';
 import LicenseSettings from '../../license/LicenseSettings';
 
-type AdminTab = 'reports' | 'payroll' | 'history' | 'accessories' | 'pricing' | 'workers' | 'general' | 'license';
+type AdminTab = 'reports' | 'payroll' | 'history' | 'accessories' | 'pricing' | 'workers' | 'users' | 'general' | 'license';
 
 const TABS: { id: AdminTab; label: string; icon: LucideIcon }[] = [
   { id: 'reports', label: 'گزارش‌ها', icon: FileSpreadsheet },
@@ -21,6 +22,7 @@ const TABS: { id: AdminTab; label: string; icon: LucideIcon }[] = [
   { id: 'accessories', label: 'انبار لوازم', icon: Package },
   { id: 'pricing', label: 'قیمت‌ها و تیپ‌ها', icon: DollarSign },
   { id: 'workers', label: 'کارگرها', icon: Users },
+  { id: 'users', label: 'کاربران', icon: UserCog },
   { id: 'license', label: 'لایسنس', icon: KeyRound },
   { id: 'general', label: 'تنظیمات و بکاپ', icon: SlidersHorizontal },
 ];
@@ -30,11 +32,13 @@ export default function AdminPanel({
   notify,
   onPrint,
   onPrintSale,
+  currentUser,
 }: {
   store: Store;
   notify: (m: string, t?: 'success' | 'error' | 'info') => void;
   onPrint: (receipt: Receipt) => void;
   onPrintSale: (sale: Sale) => void;
+  currentUser: User;
 }) {
   const [tab, setTab] = useState<AdminTab>('reports');
 
@@ -45,10 +49,11 @@ export default function AdminPanel({
 
       {tab === 'reports' && <Reports store={store} />}
       {tab === 'payroll' && <WorkerPayroll store={store} />}
-      {tab === 'history' && <History store={store} notify={notify} onPrint={onPrint} onPrintSale={onPrintSale} />}
+      {tab === 'history' && <History store={store} notify={notify} onPrint={onPrint} onPrintSale={onPrintSale} currentUser={currentUser} />}
       {tab === 'accessories' && <ProductsManager store={store} notify={notify} />}
       {tab === 'pricing' && <PricingMatrix store={store} notify={notify} />}
       {tab === 'workers' && <WorkersManager store={store} notify={notify} />}
+      {tab === 'users' && <UsersManager store={store} notify={notify} currentUserId={currentUser.id} />}
       {tab === 'license' && <LicenseSettings />}
       {tab === 'general' && <GeneralSettings store={store} notify={notify} />}
     </div>

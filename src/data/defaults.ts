@@ -1,4 +1,4 @@
-import { CarwashConfig, Product, Service, Tier, Worker } from '../types';
+import { CarwashConfig, Product, Service, Tier, User, Worker } from '../types';
 import { DEFAULT_ADMIN_PIN } from '../auth';
 
 /**
@@ -59,6 +59,14 @@ export const DEFAULT_PRODUCTS: Product[] = [
 export const DEFAULT_WORKERS: Worker[] = [
   { id: 'wrk-1', name: 'اکبری', active: true },
   { id: 'wrk-2', name: 'محمدی', active: true },
+];
+
+/**
+ * کاربرانِ پیش‌فرض: یک ادمین که با آن اولین ورود انجام می‌شود (رمز = yatash).
+ * ادمین بعد از ورود می‌تواند صندوقدار و ادمین‌های دیگر بسازد و رمزها را عوض کند.
+ */
+export const DEFAULT_USERS: User[] = [
+  { id: 'usr-admin', name: 'مدیر', role: 'admin', password: DEFAULT_ADMIN_PIN, active: true },
 ];
 
 export const DEFAULT_CONFIG: CarwashConfig = {

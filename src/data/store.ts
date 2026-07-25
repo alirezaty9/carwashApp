@@ -10,6 +10,8 @@ import {
   SaleItem,
   Service,
   Tier,
+  User,
+  UserRole,
   Worker,
 } from '../types';
 import {
@@ -17,6 +19,7 @@ import {
   DEFAULT_PRODUCTS,
   DEFAULT_SERVICES,
   DEFAULT_TIERS,
+  DEFAULT_USERS,
   DEFAULT_WORKERS,
 } from './defaults';
 import { getFormattedJalali, getJalaliDateParts } from '../utils/jalali';
@@ -41,6 +44,7 @@ const KEYS = {
   products: 'cw2_products',
   sales: 'cw2_sales',
   config: 'cw2_config',
+  users: 'cw2_users',
 } as const;
 
 function load<T>(key: string, fallback: T): T {
@@ -99,6 +103,7 @@ export function useCarwashStore() {
   const [products, setProducts] = useState<Product[]>(() => load(KEYS.products, DEFAULT_PRODUCTS));
   const [sales, setSales] = useState<Sale[]>(() => load(KEYS.sales, []));
   const [config, setConfig] = useState<CarwashConfig>(() => load(KEYS.config, DEFAULT_CONFIG));
+  const [users, setUsers] = useState<User[]>(() => load(KEYS.users, DEFAULT_USERS));
 
   // --- ذخیره‌سازی خودکار ---
   useEffect(() => save(KEYS.tiers, tiers), [tiers]);
@@ -109,6 +114,7 @@ export function useCarwashStore() {
   useEffect(() => save(KEYS.products, products), [products]);
   useEffect(() => save(KEYS.sales, sales), [sales]);
   useEffect(() => save(KEYS.config, config), [config]);
+  useEffect(() => save(KEYS.users, users), [users]);
 
   // ================= تیپ‌ها =================
   const addTier = useCallback((name: string) => {
@@ -181,6 +187,56 @@ export function useCarwashStore() {
   const removeWorker = useCallback((id: string) => {
     setWorkers((prev) => prev.filter((w) => w.id !== id));
   }, []);
+
+  // ================= کاربران (ورود و نقش) =================
+  // نگهبان: همیشه باید حداقل یک ادمینِ فعال باقی بماند تا کسی خودش را از سیستم قفل نکند.
+  const activeAdminCount = (list: User[]) => list.filter((u) => u.role === 'admin' && u.active).length;
+
+  const addUser = useCallback((name: string, role: UserRole, password: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setUsers((prev) => [...prev, { id: uid('usr'), name: trimmed, role, password: password.trim(), active: true }]);
+  }, []);
+
+  const renameUser = useCallback((id: string, name: string) => {
+    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, name } : u)));
+  }, []);
+
+  const setUserPassword = useCallback((id: string, password: string) => {
+    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, password: password.trim() } : u)));
+  }, []);
+
+  // این سه اکشن قبل از تغییر، «همگام» تصمیم می‌گیرند (بر اساسِ users فعلی) تا مقدارِ
+  // برگشتی قابلِ اتکا باشد؛ اگر نتیجه صفر ادمینِ فعال شود، تغییر انجام نمی‌شود.
+  const setUserRole = useCallback(
+    (id: string, role: UserRole): boolean => {
+      const next = users.map((u) => (u.id === id ? { ...u, role } : u));
+      if (activeAdminCount(next) === 0) return false;
+      setUsers(next);
+      return true;
+    },
+    [users],
+  );
+
+  const toggleUser = useCallback(
+    (id: string): boolean => {
+      const next = users.map((u) => (u.id === id ? { ...u, active: !u.active } : u));
+      if (activeAdminCount(next) === 0) return false;
+      setUsers(next);
+      return true;
+    },
+    [users],
+  );
+
+  const removeUser = useCallback(
+    (id: string): boolean => {
+      const next = users.filter((u) => u.id !== id);
+      if (activeAdminCount(next) === 0) return false;
+      setUsers(next);
+      return true;
+    },
+    [users],
+  );
 
   // ================= مشتری‌ها =================
   const getCustomerByPhone = useCallback(
@@ -293,10 +349,13 @@ export function useCarwashStore() {
     [tiers, services, workers, nextReceiptNumber],
   );
 
-  const voidReceipt = useCallback((id: string, reason: string) => {
+  // byName: نامِ کاربری که ابطال را انجام می‌دهد (برای رهگیری). اختیاری تا در تست‌ها/جاهای قدیمی نشکند.
+  const voidReceipt = useCallback((id: string, reason: string, byName?: string) => {
     setReceipts((prev) =>
       prev.map((r) =>
-        r.id === id ? { ...r, status: 'voided' as const, voidReason: reason.trim() || 'بدون علت' } : r,
+        r.id === id
+          ? { ...r, status: 'voided' as const, voidReason: reason.trim() || 'بدون علت', voidedBy: byName || undefined }
+          : r,
       ),
     );
   }, []);
@@ -403,7 +462,7 @@ export function useCarwashStore() {
   );
 
   // ابطالِ فروش → موجودیِ کالاها به انبار برمی‌گردد
-  const voidSale = useCallback((id: string, reason: string) => {
+  const voidSale = useCallback((id: string, reason: string, byName?: string) => {
     setSales((prevSales) => {
       const target = prevSales.find((s) => s.id === id);
       // فقط فروشِ فعال را ابطال می‌کنیم تا موجودی دوباره برنگردد (ابطالِ تکراری)
@@ -416,7 +475,9 @@ export function useCarwashStore() {
         );
       }
       return prevSales.map((s) =>
-        s.id === id ? { ...s, status: 'voided' as const, voidReason: reason.trim() || 'بدون علت' } : s,
+        s.id === id
+          ? { ...s, status: 'voided' as const, voidReason: reason.trim() || 'بدون علت', voidedBy: byName || undefined }
+          : s,
       );
     });
   }, []);
@@ -439,8 +500,9 @@ export function useCarwashStore() {
       products,
       sales,
       config,
+      users,
     };
-  }, [tiers, services, workers, customers, receipts, products, sales, config]);
+  }, [tiers, services, workers, customers, receipts, products, sales, config, users]);
 
   const importData = useCallback((data: Partial<BackupData>): boolean => {
     if (!data || !Array.isArray(data.tiers) || !Array.isArray(data.services) || !Array.isArray(data.receipts)) {
@@ -473,6 +535,8 @@ export function useCarwashStore() {
     setProducts(Array.isArray(data.products) ? data.products : []);
     setSales(sales);
     if (data.config) setConfig({ ...DEFAULT_CONFIG, ...data.config });
+    // کاربران: اگر بکاپِ قدیمی کاربر نداشت، کاربرانِ پیش‌فرض را نگه می‌داریم تا قفل نشویم.
+    if (Array.isArray(data.users) && data.users.length > 0) setUsers(data.users);
     return true;
   }, []);
 
@@ -485,6 +549,7 @@ export function useCarwashStore() {
     setProducts(DEFAULT_PRODUCTS);
     setSales([]);
     setConfig(DEFAULT_CONFIG);
+    setUsers(DEFAULT_USERS);
   }, []);
 
   return {
@@ -497,6 +562,7 @@ export function useCarwashStore() {
     products,
     sales,
     config,
+    users,
     nextReceiptNumber,
     nextSaleNumber,
     // tiers
@@ -514,6 +580,13 @@ export function useCarwashStore() {
     renameWorker,
     toggleWorker,
     removeWorker,
+    // users
+    addUser,
+    renameUser,
+    setUserPassword,
+    setUserRole,
+    toggleUser,
+    removeUser,
     // customers
     getCustomerByPhone,
     getCustomerHistory,
