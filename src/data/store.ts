@@ -74,6 +74,7 @@ export interface CreateReceiptInput {
   workerId?: string;
   notes?: string;
   discount?: number; // مبلغِ تخفیف (ریال)
+  tip?: number; // انعامِ کارگر (ریال) — جدا از مبلغِ کل
 }
 
 /** یک ردیفِ ورودیِ فروشِ کالا (فقط شناسه و تعداد؛ قیمت از خودِ کالا خوانده می‌شود) */
@@ -229,6 +230,10 @@ export function useCarwashStore() {
       const discount = Math.min(Math.max(0, Math.round(input.discount ?? 0)), subtotal);
       const total = subtotal - discount;
 
+      // انعام: مبلغِ مثبتِ گِردشده. عمداً وارد `total`/`subtotal` نمی‌شود تا نه در
+      // مبلغِ کلِ فاکتور بیاید و نه در درآمدِ کارواش؛ فقط به سهمِ کارگر می‌رود.
+      const tip = Math.max(0, Math.round(input.tip ?? 0));
+
       const worker = input.workerId ? workers.find((w) => w.id === input.workerId) : undefined;
 
       // پورسانتِ کارگر = جمعِ (قیمتِ هر خدمت × درصدِ پورسانتِ همان خدمت).
@@ -255,6 +260,7 @@ export function useCarwashStore() {
         services: chosen,
         price: total,
         discount: discount || undefined,
+        tip: tip || undefined,
         workerCommission: workerCommission || undefined,
         workerId: worker?.id,
         workerName: worker?.name,

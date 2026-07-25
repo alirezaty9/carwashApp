@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { Store } from '../../data/store';
 import { rialToToman, tomanToRial } from '../../utils/format';
-import { SectionCard, inputClass, PrimaryButton } from '../common';
+import { SectionCard, inputClass, NumberInput, PrimaryButton } from '../common';
 
 /**
  * ماتریسِ قیمت‌گذاری: ردیف‌ها «خدمات» و ستون‌ها «تیپ‌ها».
@@ -40,6 +40,41 @@ export default function PricingMatrix({
       title="قیمت‌گذاری خدمات و تیپ‌ها"
       subtitle="قیمتِ هر سلول را جدا تعیین کنید (تومان). ستونِ «٪ پورسانت» = سهمِ کارگر از هر خدمت که در «دستمزد کارگرها» محاسبه می‌شود."
     >
+      {/* افزودن خدمت و تیپ — بالای صفحه تا دمِ‌دست باشد */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-[var(--bg)] p-4 rounded-xl border border-[var(--border)] flex items-end gap-2">
+          <div className="flex-1">
+            <label className="block text-[11px] font-bold text-[var(--text-muted)] mb-1.5">افزودن خدمت جدید (ردیف)</label>
+            <input
+              value={newService}
+              onChange={(e) => setNewService(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddService()}
+              placeholder="مثال: واکس بدنه"
+              className={`${inputClass} py-2`}
+            />
+          </div>
+          <PrimaryButton type="button" onClick={handleAddService} className="shrink-0">
+            <Plus className="w-4 h-4" /> خدمت
+          </PrimaryButton>
+        </div>
+
+        <div className="bg-[var(--bg)] p-4 rounded-xl border border-[var(--border)] flex items-end gap-2">
+          <div className="flex-1">
+            <label className="block text-[11px] font-bold text-[var(--text-muted)] mb-1.5">افزودن تیپ جدید (ستون)</label>
+            <input
+              value={newTier}
+              onChange={(e) => setNewTier(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddTier()}
+              placeholder="مثال: موتورسیکلت"
+              className={`${inputClass} py-2`}
+            />
+          </div>
+          <PrimaryButton type="button" onClick={handleAddTier} className="shrink-0">
+            <Plus className="w-4 h-4" /> تیپ
+          </PrimaryButton>
+        </div>
+      </div>
+
       <div className="overflow-x-auto border border-[var(--border)] rounded-xl">
         <table className="w-full text-right border-collapse text-xs">
           <thead>
@@ -87,22 +122,21 @@ export default function PricingMatrix({
                 </td>
                 {tiers.map((t) => (
                   <td key={t.id} className="px-3 py-2">
-                    <input
-                      type="number"
+                    <NumberInput
                       value={rialToToman(s.prices[t.id] ?? 0)}
-                      onChange={(e) => setServicePrice(s.id, t.id, tomanToRial(Number(e.target.value)))}
+                      onValueChange={(toman) => setServicePrice(s.id, t.id, tomanToRial(toman))}
+                      placeholder="۰"
                       className="bg-[var(--bg)] border border-[var(--border)] rounded px-2.5 py-1.5 text-xs font-mono font-bold text-[var(--text)] w-full outline-none focus:border-[var(--accent-strong)]"
                     />
                   </td>
                 ))}
                 <td className="px-3 py-2">
                   <div className="flex items-center justify-center gap-1">
-                    <input
-                      type="number"
-                      min={0}
-                      max={100}
+                    <NumberInput
+                      thousands={false}
                       value={s.commissionPct ?? 0}
-                      onChange={(e) => setServiceCommission(s.id, Number(e.target.value))}
+                      onValueChange={(n) => setServiceCommission(s.id, n)}
+                      placeholder="۰"
                       className="bg-[var(--bg)] border border-[var(--money-border)] rounded px-2.5 py-1.5 text-xs font-mono font-bold text-[var(--money-text)] w-16 text-center outline-none focus:border-[var(--money-strong)]"
                     />
                     <span className="text-[var(--text-faint)] text-xs font-bold">٪</span>
@@ -126,39 +160,6 @@ export default function PricingMatrix({
             ))}
           </tbody>
         </table>
-      </div>
-
-      {/* افزودن خدمت و تیپ */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-[var(--bg)] p-4 rounded-xl border border-[var(--border)] flex items-end gap-2">
-          <div className="flex-1">
-            <label className="block text-[11px] font-bold text-[var(--text-muted)] mb-1.5">افزودن خدمت جدید (ردیف)</label>
-            <input
-              value={newService}
-              onChange={(e) => setNewService(e.target.value)}
-              placeholder="مثال: واکس بدنه"
-              className={`${inputClass} py-2`}
-            />
-          </div>
-          <PrimaryButton type="button" onClick={handleAddService} className="shrink-0">
-            <Plus className="w-4 h-4" /> خدمت
-          </PrimaryButton>
-        </div>
-
-        <div className="bg-[var(--bg)] p-4 rounded-xl border border-[var(--border)] flex items-end gap-2">
-          <div className="flex-1">
-            <label className="block text-[11px] font-bold text-[var(--text-muted)] mb-1.5">افزودن تیپ جدید (ستون)</label>
-            <input
-              value={newTier}
-              onChange={(e) => setNewTier(e.target.value)}
-              placeholder="مثال: موتورسیکلت"
-              className={`${inputClass} py-2`}
-            />
-          </div>
-          <PrimaryButton type="button" onClick={handleAddTier} className="shrink-0">
-            <Plus className="w-4 h-4" /> تیپ
-          </PrimaryButton>
-        </div>
       </div>
     </SectionCard>
   );

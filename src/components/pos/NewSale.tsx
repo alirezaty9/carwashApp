@@ -3,7 +3,7 @@ import { Minus, Plus, Package, ShoppingCart, Check } from 'lucide-react';
 import { Sale } from '../../types';
 import { Store } from '../../data/store';
 import { formatCurrencyToman, toEnglishDigits, toPersianDigits, tomanToRial } from '../../utils/format';
-import { Field, inputClass, PrimaryButton, SectionCard } from '../common';
+import { Field, inputClass, NumberInput, PrimaryButton, SectionCard } from '../common';
 
 interface Props {
   store: Store;
@@ -22,7 +22,7 @@ export default function NewSale({ store, notify, onPrintSale }: Props) {
   const [qty, setQty] = useState<Record<string, number>>({});
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
-  const [discount, setDiscount] = useState('');
+  const [discount, setDiscount] = useState(0);
 
   const activeProducts = useMemo(() => products.filter((p) => p.active), [products]);
 
@@ -45,20 +45,14 @@ export default function NewSale({ store, notify, onPrintSale }: Props) {
   const subtotal = chosen.reduce((sum, x) => sum + x.product.price * x.qty, 0);
 
   // تخفیف را کاربر به «تومان» وارد می‌کند؛ داخل سیستم ریال است (×۱۰)
-  const discountToman = Math.max(0, Number(toEnglishDigits(discount).replace(/[^0-9]/g, '')) || 0);
-  const discountValue = Math.min(tomanToRial(discountToman), subtotal);
+  const discountValue = Math.min(tomanToRial(discount), subtotal);
   const total = subtotal - discountValue;
-
-  const handleDiscountChange = (raw: string) => {
-    const digits = toEnglishDigits(raw).replace(/[^0-9]/g, '');
-    setDiscount(digits ? new Intl.NumberFormat('fa-IR').format(Number(digits)) : '');
-  };
 
   const resetForm = () => {
     setQty({});
     setPhone('');
     setNotes('');
-    setDiscount('');
+    setDiscount(0);
   };
 
   // قفلِ ضدِ دوبار-کلیک (مثلِ صدورِ قبض): جلوی ثبتِ دوبارهٔ اتفاقیِ فروش را می‌گیرد.
@@ -209,11 +203,10 @@ export default function NewSale({ store, notify, onPrintSale }: Props) {
               />
             </Field>
             <Field label="۳) تخفیف (تومان)" hint="(اختیاری، از مبلغ کل کم می‌شود)">
-              <input
-                inputMode="numeric"
+              <NumberInput
                 placeholder="۰"
                 value={discount}
-                onChange={(e) => handleDiscountChange(e.target.value)}
+                onValueChange={setDiscount}
                 className={`${inputClass} text-right font-mono tabular-nums`}
               />
             </Field>

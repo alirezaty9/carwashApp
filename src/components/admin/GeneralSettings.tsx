@@ -2,7 +2,7 @@ import { ChangeEvent, FormEvent, useRef, useState } from 'react';
 import { Download, Upload, RefreshCw, Lock, Save, Eye, EyeOff } from 'lucide-react';
 import { Store } from '../../data/store';
 import { getJalaliDateParts } from '../../utils/jalali';
-import { SectionCard, inputClass, PrimaryButton, Field } from '../common';
+import { SectionCard, inputClass, NumberInput, PrimaryButton, Field } from '../common';
 import PrinterSettings from './PrinterSettings';
 
 export default function GeneralSettings({
@@ -102,7 +102,7 @@ export default function GeneralSettings({
             <input value={shopName} onChange={(e) => setShopName(e.target.value)} className={inputClass} />
           </Field>
           <Field label="شروع شماره‌ی قبض">
-            <input type="number" value={counterStart} onChange={(e) => setCounterStart(Number(e.target.value))} className={`${inputClass} font-mono`} />
+            <NumberInput thousands={false} value={counterStart} onValueChange={setCounterStart} placeholder="۱۰۰۰" className={`${inputClass} font-mono`} />
           </Field>
           <div className="md:col-span-3">
             <Field label="متن پایین قبض">
@@ -178,11 +178,10 @@ export default function GeneralSettings({
           {rememberOn && (
             <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-muted)] animate-fade-in">
               <span>تا</span>
-              <input
-                type="number"
-                min={1}
+              <NumberInput
+                thousands={false}
                 value={unlockMinutes}
-                onChange={(e) => changeMinutes(Number(e.target.value))}
+                onValueChange={changeMinutes}
                 className="w-20 text-center bg-[var(--field-bg)] border border-[var(--border)] rounded-lg px-2 py-1.5 font-mono text-[var(--field-text)] outline-none focus:border-[var(--accent-strong)]"
               />
               <span>دقیقه دوباره رمز نپرس</span>

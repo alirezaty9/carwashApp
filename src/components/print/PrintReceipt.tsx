@@ -68,11 +68,19 @@ export default function PrintReceipt({ receipt, config }: { receipt: Receipt | n
         </div>
       ) : null}
 
-      {/* مبلغ کل */}
+      {/* مبلغ کل — انعام عمداً در این مبلغ نیست */}
       <div className="my-3 p-2 border-2 border-black border-double text-center rounded">
         <span className="block text-[9px] font-bold">مبلغ قابل پرداخت:</span>
         <span className="text-base font-black mt-1 block">{formatCurrencyToman(receipt.price)}</span>
       </div>
+
+      {/* انعامِ کارگر — جدا از مبلغِ کل، به‌صورتِ خطِ مستقل */}
+      {receipt.tip ? (
+        <div className="mb-2 flex justify-between text-[11px] font-bold border border-black rounded px-2 py-1">
+          <span>انعام کارگر{receipt.workerName ? ` (${receipt.workerName})` : ''}:</span>
+          <span className="font-mono">{formatCurrencyToman(receipt.tip)}</span>
+        </div>
+      ) : null}
 
       <div className="text-center text-[9px] font-medium leading-relaxed pt-2 border-t-2 border-dashed border-black">
         <p>{config.footerText}</p>

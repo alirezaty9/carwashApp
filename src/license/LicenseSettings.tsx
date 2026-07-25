@@ -1,6 +1,7 @@
 import { KeyRound, ShieldCheck, Sparkles, AlertTriangle } from 'lucide-react';
 import { SectionCard } from '../components/common';
 import { toPersianDigits } from '../utils/format';
+import { getFormattedJalali } from '../utils/jalali';
 import { useLicense } from './useLicense';
 import { ActivationCard } from './LicenseGate';
 
@@ -22,7 +23,8 @@ export default function LicenseSettings() {
   })();
 
   const BadgeIcon = badge.icon;
-  const expiryDate = status.expiresAt ? status.expiresAt.slice(0, 10) : '—';
+  // تاریخِ اعتبار را به‌جای میلادیِ خام (YYYY-MM-DD) به شمسی نشان می‌دهیم.
+  const expiryDate = status.expiresAt ? getFormattedJalali(new Date(status.expiresAt), false) : '—';
 
   return (
     <SectionCard

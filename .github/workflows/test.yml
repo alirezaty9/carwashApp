@@ -1,0 +1,28 @@
+# گردشِ‌کارِ CI («ادغامِ پیوسته») — هر بار که کد را به GitHub push کنی، این فایل
+# خودکار روی سرورِ GitHub نصب و تست را اجرا می‌کند و اگر تستی قرمز شد خبرت می‌کند.
+#
+# چرا؟ تا هیچ‌وقت کدِ خرابی (که تست‌ها را می‌شکند) بی‌سر‌و‌صدا وارد پروژه نشود.
+# نکته: فقط تست‌های Vitest اجرا می‌شوند (نه E2E)، چون E2E به مرورگر نیاز دارد.
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: دریافتِ کد
+        uses: actions/checkout@v4
+
+      - name: نصبِ Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: نصبِ وابستگی‌ها
+        run: npm install --no-audit --no-fund
+
+      - name: اجرای تست‌ها (Vitest)
+        run: npm test

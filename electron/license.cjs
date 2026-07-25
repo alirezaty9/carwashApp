@@ -87,6 +87,13 @@ const ANCHOR_SECRET = 'Yatash-Trial-Anchor-#7Kq2!ZxR';
 
 /** مسیرهای پایدار برای نوشتنِ لنگر (مستقل از پوشه‌ی دیتای اپ). */
 function anchorPaths() {
+  // فقط برای تست: اگر YATASH_ANCHOR_DIR ست شده باشد، لنگرها را در همان پوشه بنویس
+  // تا تست‌ها به مسیرهای واقعیِ سیستم (ProgramData/خانه) دست نزنند و هرمتیک بمانند.
+  // در نسخه‌ی واقعی این متغیر هرگز ست نیست، پس رفتار عادی است.
+  if (process.env.YATASH_ANCHOR_DIR) {
+    const base = process.env.YATASH_ANCHOR_DIR;
+    return [path.join(base, 'machine', '.ytc'), path.join(base, '.yatash-ytc')];
+  }
   const list = [];
   // ۱) مسیرِ ماشین‌محور که با حذفِ اپ پاک نمی‌شود
   const machineDir =
@@ -250,4 +257,6 @@ function register(ipcMain, store) {
   ipcMain.handle('license:import', (_e, content) => importLicense(store, content));
 }
 
-module.exports = { register, getMachineId };
+// توابعِ داخلی هم export می‌شوند تا در تست‌ها (electron/license.test.cjs) بدونِ
+// راه‌اندازیِ کلِ Electron قابلِ بررسی باشند. در کدِ واقعی فقط register استفاده می‌شود.
+module.exports = { register, getMachineId, computeStatus, verifySignature, importLicense, canonicalPayload };

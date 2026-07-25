@@ -18,7 +18,12 @@ export default function SplashScreen() {
 
   return (
     <div
-      className="cw-splash no-print fixed inset-0 z-[100] flex flex-col items-center justify-center gap-5 backdrop-blur-2xl"
+      // 🔴 pointer-events-none بسیار مهم: این لایه‌ی تمام‌صفحه‌ی اسپلش نباید هیچ‌وقت
+      // کلیک‌ها را بگیرد. اگر در ویندوز/الکترون انیمیشنِ محو به هر دلیل اجرا نشود،
+      // بدونِ این خط، اسپلشِ نامرئی روی همه‌ی ورودی‌ها می‌ماند و کلیک/تایپ را می‌بلعد
+      // (همان مشکلِ «اینپوت‌ها قابلِ کلیک نبودند»). با این خط، حتی اگر دیده هم شود
+      // مزاحمِ کار نیست و کلیک‌ها مستقیم به ورودی‌های زیرش می‌رسند.
+      className="cw-splash no-print pointer-events-none fixed inset-0 z-[100] flex flex-col items-center justify-center gap-5 backdrop-blur-2xl"
       style={{
         // درخششِ فیروزه‌ایِ ملایم روی یک لایه‌ی تقریباً مات؛ همراه با backdrop-blur
         // باعث می‌شود پس‌زمینه‌ی برنامه بسیار کم‌پیدا و محو باشد.

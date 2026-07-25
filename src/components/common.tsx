@@ -1,6 +1,6 @@
-import { ButtonHTMLAttributes, ReactNode, useCallback, useState } from 'react';
+import { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, useCallback, useState } from 'react';
 import { AlertCircle, CheckCircle, Info, X, ChevronLeft, ChevronRight, LucideIcon } from 'lucide-react';
-import { toPersianDigits } from '../utils/format';
+import { toPersianDigits, toEnglishDigits } from '../utils/format';
 
 /** نوع پیام اعلان */
 export type NoticeType = 'success' | 'error' | 'info';
@@ -119,6 +119,52 @@ export function Field({
       </label>
       {children}
     </div>
+  );
+}
+
+/**
+ * ورودیِ عددیِ کاربرپسند — یک نقطه‌ی متمرکز برای همه‌ی ورودی‌های عددی (قیمت،
+ * موجودی، درصد، تخفیف، انعام و ...). سه رفتارِ مهم را یک‌جا فراهم می‌کند:
+ *  ۱) ارقامِ فارسی/عربی را می‌پذیرد و خودکار به عددِ درست تبدیل می‌کند
+ *     (چون <input type="number"> اصلاً ارقامِ فارسی را قبول نمی‌کند).
+ *  ۲) هنگام نمایش، عدد را با جداکننده‌ی هزارگانِ فارسی نشان می‌دهد (۱۲٬۵۰۰).
+ *  ۳) با گرفتنِ فوکوس (یک یا دو کلیک) کلِ متن را انتخاب می‌کند تا کاربر بتواند
+ *     بی‌دردسر مقدارِ تازه را تایپ کند و رقمِ قبلی را پاک نکند.
+ * برخلافِ type="number"، این ورودی متنی است پس در الکترونِ ویندوز هم قابلِ کلیک
+ * و ویرایش است و رفتارِ اسکرول/فلش هم آن را به‌هم نمی‌ریزد.
+ */
+export function NumberInput({
+  value,
+  onValueChange,
+  thousands = true,
+  selectOnFocus = true,
+  className = '',
+  ...rest
+}: {
+  value: number;
+  onValueChange: (n: number) => void;
+  /** نمایش با جداکننده‌ی هزارگان (برای مبالغ). برای شمارنده/درصد خاموش کنید. */
+  thousands?: boolean;
+  selectOnFocus?: boolean;
+} & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'type'>) {
+  // مقدارِ صفر را خالی نشان می‌دهیم تا placeholder («۰») دیده شود و کاربر روی صفرِ
+  // اضافه تایپ نکند؛ هر مقدارِ دیگر با/بدون جداکننده‌ی هزارگان.
+  const display = value ? (thousands ? new Intl.NumberFormat('fa-IR').format(value) : toPersianDigits(value)) : '';
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      value={display}
+      onChange={(e) => {
+        const digits = toEnglishDigits(e.target.value).replace(/[^0-9]/g, '');
+        onValueChange(digits ? Number(digits) : 0);
+      }}
+      onFocus={(e) => {
+        if (selectOnFocus) e.target.select();
+      }}
+      className={className}
+      {...rest}
+    />
   );
 }
 

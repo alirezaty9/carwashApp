@@ -12,6 +12,9 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js release",
     "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "electron:start": "electron .",
     "electron:build": "vite build && electron-builder --win",
     "electron:build:win": "vite build && electron-builder --win",
@@ -31,13 +34,19 @@
     "vite": "^6.2.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.48.2",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.5.0",
+    "@testing-library/react": "^16.0.1",
     "@types/node": "^22.14.0",
     "concurrently": "^8.2.2",
     "electron": "^31.3.0",
     "electron-builder": "^24.13.3",
+    "jsdom": "^25.0.1",
     "tailwindcss": "^4.1.14",
     "typescript": "~5.8.2",
     "vite": "^6.2.3",
+    "vitest": "^2.1.9",
     "wait-on": "^7.2.0"
   },
   "build": {

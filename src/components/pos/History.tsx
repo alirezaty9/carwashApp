@@ -3,7 +3,7 @@ import { Printer, Edit3, XCircle, CheckCircle, Search, FileText, Droplets, Shopp
 import { Receipt, Sale } from '../../types';
 import { Store } from '../../data/store';
 import { formatCurrencyToman, rialToToman, toEnglishDigits, toPersianDigits, tomanToRial } from '../../utils/format';
-import { Field, GhostButton, inputClass, Modal, ModalHeader, PillTabs, Pagination, PrimaryButton, SectionCard } from '../common';
+import { Field, GhostButton, inputClass, Modal, ModalHeader, NumberInput, PillTabs, Pagination, PrimaryButton, SectionCard } from '../common';
 import SalesHistory from '../admin/SalesHistory';
 
 const PAGE_SIZE = 15;
@@ -170,6 +170,9 @@ export default function History({ store, notify, onPrint, onPrintSale }: Props) 
                     <td className="px-3 py-3 text-[var(--text-muted)]">{r.workerName || '—'}</td>
                     <td className={`px-3 py-3 font-bold font-mono ${voided ? 'line-through text-[var(--text-faint)]' : 'text-[var(--price)]'}`}>
                       {formatCurrencyToman(r.price)}
+                      {r.tip ? (
+                        <div className="text-[9px] font-bold text-[var(--money-text)]">+ انعام {formatCurrencyToman(r.tip)}</div>
+                      ) : null}
                     </td>
                     <td className="px-3 py-3 text-[var(--text-muted)] text-[11px]">{r.jalaliDate}</td>
                     <td className="px-3 py-3">
@@ -255,10 +258,16 @@ export default function History({ store, notify, onPrint, onPrintSale }: Props) 
                 </select>
               </Field>
               <Field label="مبلغ (تومان)">
-                <input
-                  type="number"
+                <NumberInput
                   value={rialToToman(editing.price)}
-                  onChange={(e) => setEditing({ ...editing, price: tomanToRial(Number(e.target.value)) })}
+                  onValueChange={(toman) => setEditing({ ...editing, price: tomanToRial(toman) })}
+                  className={`${inputClass} font-mono`}
+                />
+              </Field>
+              <Field label="انعام کارگر (تومان)">
+                <NumberInput
+                  value={rialToToman(editing.tip ?? 0)}
+                  onValueChange={(toman) => setEditing({ ...editing, tip: tomanToRial(toman) || undefined })}
                   className={`${inputClass} font-mono`}
                 />
               </Field>

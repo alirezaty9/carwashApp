@@ -121,6 +121,9 @@ for (let i = 0; i < N_RECEIPTS; i++) {
   const workerCommission = worker
     ? chosen.reduce((a, s) => a + Math.round((s.prices[tier.id] * (s.commissionPct || 0)) / 100), 0)
     : 0;
+  // انعامِ کارگر (ریال) — فقط وقتی کارگری هست و ~۴۵٪ مواقع. جدا از مبلغِ کل نگه
+  // داشته می‌شود (در price نمی‌آید) تا با منطقِ برنامه یکسان باشد.
+  const tip = worker && chance(0.45) ? pick([50000, 100000, 150000, 200000, 300000]) : 0;
   const cust = customers[rnd(0, customers.length - 1)];
   const jp = jalaliParts(date);
   const voided = chance(0.07);
@@ -135,6 +138,7 @@ for (let i = 0; i < N_RECEIPTS; i++) {
     services,
     price: Math.max(0, subtotal - Math.min(discount, subtotal)),
     discount: discount || undefined,
+    tip: tip || undefined,
     workerCommission: workerCommission || undefined,
     workerId: worker ? worker.id : undefined,
     workerName: worker ? worker.name : undefined,

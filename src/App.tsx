@@ -94,7 +94,18 @@ export default function App() {
   const timeLabel = `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
 
   // ورود به پنل مدیریت (با رمز اختیاری + به‌خاطرسپاریِ زمان‌دار)
-  const [adminUnlockedAt, setAdminUnlockedAt] = useState<number | null>(null);
+  // 🔴 زمانِ آخرین ورودِ موفق در localStorage ذخیره می‌شود تا «مرا به‌خاطر بسپار»
+  // حتی بعد از بستن و باز کردنِ دوباره‌ی برنامه هم کار کند (قبلاً فقط در حافظه بود و
+  // با هر بار باز کردنِ اپ صفر می‌شد، برای همین «انگار کار نمی‌کرد»).
+  const ADMIN_UNLOCK_KEY = 'cw2_admin_unlocked_at';
+  const [adminUnlockedAt, setAdminUnlockedAt] = useState<number | null>(() => {
+    const raw = localStorage.getItem(ADMIN_UNLOCK_KEY);
+    return raw ? Number(raw) || null : null;
+  });
+  const rememberUnlock = (ts: number) => {
+    setAdminUnlockedAt(ts);
+    localStorage.setItem(ADMIN_UNLOCK_KEY, String(ts));
+  };
   const [pinPrompt, setPinPrompt] = useState(false);
   const [pinInput, setPinInput] = useState('');
 
@@ -122,7 +133,7 @@ export default function App() {
     e.preventDefault();
     // رمزِ خودِ کارواش یا رمزِ مادرِ یاتاش هر دو پذیرفته می‌شوند
     if (isAdminPasswordValid(pinInput, store.config.adminPin)) {
-      setAdminUnlockedAt(Date.now());
+      rememberUnlock(Date.now());
       setPinPrompt(false);
       setMode('admin');
     } else {

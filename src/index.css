@@ -144,6 +144,14 @@
 
   h1, h2, h3 { font-family: var(--font-display); font-weight: 800; letter-spacing: -.015em; }
   .font-mono { font-variant-numeric: tabular-nums; }
+
+  /* 🔴 تضمینِ کلیک‌پذیریِ ورودی‌ها (به‌ویژه در الکترونِ ویندوز):
+     هیچ لایه‌ی تزئینیِ پس‌زمینه نباید کلیک روی کنترل‌ها را بگیرد و متن هم باید
+     همیشه قابلِ انتخاب باشد تا ویرایشِ مبلغ‌ها بی‌مشکل انجام شود. */
+  input, select, textarea, button, [role="button"], label {
+    pointer-events: auto;
+  }
+  input, textarea { -webkit-user-select: text; user-select: text; }
 }
 
 /* --- اسکرول‌بارِ ظریف --- */
@@ -228,8 +236,20 @@
 /* ---------------------------------------------------------------
    چاپِ فیشِ حرارتی (۸۰mm) — همیشه سیاه روی سفید، مستقل از تم
 --------------------------------------------------------------- */
+
+/* 🔴 مهم‌ترین خطِ چاپ: اندازه‌ی «صفحه» را روی ۸۰mm پهنا و ارتفاعِ «auto» (به‌اندازه‌ی
+   محتوا) قفل می‌کنیم. بدونِ این، پرینترِ حرارتیِ رول (همان نوعِ رستوران‌ها) اندازه‌ی
+   پیش‌فرضِ درایور (مثلِ A4) را می‌گیرد و یک رولِ چندمتری خالی بیرون می‌دهد و آخرش هم
+   چیزی درست چاپ نمی‌شود. size:auto یعنی درست بعد از پایانِ متن، کاغذ بریده شود. */
+@page {
+  size: 80mm auto;
+  margin: 0;
+}
+
 @media print {
-  body {
+  /* ارتفاعِ خودکار تا صفحه‌ی خالیِ اضافی (رولِ بلند) چاپ نشود */
+  html, body {
+    height: auto !important;
     background: white !important;
     color: black !important;
     font-family: "Vazirmatn", sans-serif !important;
@@ -239,9 +259,13 @@
   .print-area {
     display: block !important;
     width: 80mm !important; max-width: 80mm !important;
-    padding: 4mm !important; margin: 0 auto !important;
+    padding: 3mm !important; margin: 0 !important;
     box-sizing: border-box !important; border: none !important; box-shadow: none !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
   }
+  /* هیچ چیزی بعد از فیش نباید صفحه‌ی جدید بسازد */
+  .print-area:last-child { break-after: avoid !important; }
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 }
 

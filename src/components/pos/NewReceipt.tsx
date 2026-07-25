@@ -2,8 +2,8 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { Printer, UserCheck, History as HistoryIcon } from 'lucide-react';
 import { Receipt } from '../../types';
 import { Store } from '../../data/store';
-import { formatCurrencyToman, toEnglishDigits, toPersianDigits, tomanToRial } from '../../utils/format';
-import { Field, inputClass, PrimaryButton, SectionCard } from '../common';
+import { formatCurrencyToman, toPersianDigits, tomanToRial } from '../../utils/format';
+import { Field, inputClass, NumberInput, PrimaryButton, SectionCard } from '../common';
 
 interface Props {
   store: Store;
@@ -22,7 +22,10 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
   const [serviceIds, setServiceIds] = useState<string[]>([]);
   const [workerId, setWorkerId] = useState('');
   const [notes, setNotes] = useState('');
-  const [discount, setDiscount] = useState('');
+  // تخفیف و انعام را کاربر به «تومان» وارد می‌کند و به‌صورتِ عدد نگه می‌داریم
+  // (نه رشته) تا ورودیِ عددیِ کاربرپسند با ارقامِ فارسی و انتخابِ خودکار کار کند.
+  const [discount, setDiscount] = useState(0);
+  const [tip, setTip] = useState(0);
 
   // انتخابِ پیش‌فرضِ اولین تیپ
   useEffect(() => {
@@ -51,18 +54,12 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
   };
 
   const subtotal = serviceIds.reduce((sum, id) => sum + priceFor(id), 0);
-  // کاربر تخفیف را به «تومان» وارد می‌کند؛ قیمت‌ها داخل سیستم به ریال ذخیره‌اند،
-  // پس ×۱۰ می‌کنیم و بین صفر و جمعِ خدمات محدود می‌کنیم تا مبلغ منفی نشود.
-  const discountToman = Math.max(0, Number(toEnglishDigits(discount).replace(/[^0-9]/g, '')) || 0);
-  const discountValue = Math.min(tomanToRial(discountToman), subtotal);
+  // قیمت‌ها داخل سیستم به ریال‌اند؛ تخفیف/انعامِ تومانی را ×۱۰ می‌کنیم.
+  // تخفیف بین صفر و جمعِ خدمات محدود می‌شود تا مبلغ منفی نشود.
+  const discountValue = Math.min(tomanToRial(discount), subtotal);
+  // 🔵 انعام عمداً در «total» نمی‌آید — نه در فاکتور، نه در درآمدِ کارواش.
+  const tipValue = tomanToRial(tip);
   const total = subtotal - discountValue;
-
-  // ورودیِ تخفیف را حینِ تایپ به «رقمِ فارسی + جداکننده‌ی سه‌رقمی» تبدیل می‌کنیم
-  // تا هم‌شکلِ قیمت‌هایِ نمایش‌داده‌شده باشد (مثلِ ۱۲٬۵۰۰).
-  const handleDiscountChange = (raw: string) => {
-    const digits = toEnglishDigits(raw).replace(/[^0-9]/g, '');
-    setDiscount(digits ? new Intl.NumberFormat('fa-IR').format(Number(digits)) : '');
-  };
 
   const toggleService = (id: string) => {
     setServiceIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -75,7 +72,8 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
     setServiceIds([]);
     setWorkerId('');
     setNotes('');
-    setDiscount('');
+    setDiscount(0);
+    setTip(0);
   };
 
   // قفلِ ضدِ دوبار-کلیک: بدونِ آن، دو کلیکِ سریع می‌تواند دو قبض با شماره‌ی یکسان بسازد
@@ -99,6 +97,7 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
       workerId: workerId || undefined,
       notes,
       discount: discountValue,
+      tip: tipValue,
     });
 
     if (!receipt) return notify('خطا در صدور قبض؛ ورودی‌ها را بررسی کنید', 'error');
@@ -240,9 +239,9 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
         {/* خطِ جداکننده‌ی سکشن */}
         <div className="border-t border-[var(--border)]" />
 
-        {/* ===== سکشن ۴: کارگر، تخفیف و توضیحات (گام‌های ۶ و ۷) ===== */}
-        {/* گام ۶ و ۷: کارگر + تخفیف — در یک خط */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {/* ===== سکشن ۴: کارگر، انعام، تخفیف و توضیحات (گام‌های ۶، ۷ و ۸) ===== */}
+        {/* گام ۶، ۷ و ۸: کارگر + انعام + تخفیف — در یک خط */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <Field label="۶) کارگرِ شوینده" hint="(اختیاری)">
             <select value={workerId} onChange={(e) => setWorkerId(e.target.value)} className={inputClass}>
               <option value="">— مشخص نشده —</option>
@@ -253,12 +252,19 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
               ))}
             </select>
           </Field>
-          <Field label="۷) تخفیف (تومان)" hint="(اختیاری، از مبلغ کل کم می‌شود)">
-            <input
-              inputMode="numeric"
+          <Field label="۷) انعام کارگر (تومان)" hint="(اختیاری، جدا از مبلغ کل)">
+            <NumberInput
+              placeholder="۰"
+              value={tip}
+              onValueChange={setTip}
+              className={`${inputClass} text-right font-mono tabular-nums`}
+            />
+          </Field>
+          <Field label="۸) تخفیف (تومان)" hint="(اختیاری، از مبلغ کل کم می‌شود)">
+            <NumberInput
               placeholder="۰"
               value={discount}
-              onChange={(e) => handleDiscountChange(e.target.value)}
+              onValueChange={setDiscount}
               className={`${inputClass} text-right font-mono tabular-nums`}
             />
           </Field>
@@ -283,13 +289,19 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
                 <span className="text-[var(--danger-text)]"> — تخفیف: {formatCurrencyToman(discountValue)}</span>
               </span>
             )}
-            {/* مبلغ کل: یک خط، بدون آیکون، فونتِ معمولی */}
+            {/* مبلغ کل: یک خط، بدون آیکون، فونتِ معمولی — انعام در این مبلغ نیست */}
             <div className="cw-total rounded-2xl px-5 py-3 flex items-center justify-between gap-4">
               <span className="text-sm font-bold text-[var(--text-muted)]">مبلغ کل قابل پرداخت</span>
               <span className="text-2xl font-extrabold text-[var(--price)] font-mono leading-none">
                 {formatCurrencyToman(total)}
               </span>
             </div>
+            {/* انعام جداگانه: جدا از مبلغِ کل نمایش داده می‌شود و مستقیم سهمِ کارگر است */}
+            {tipValue > 0 && (
+              <span className="text-[11px] font-bold text-[var(--money-text)] px-1">
+                💚 انعام کارگر (جدا از مبلغ کل): {formatCurrencyToman(tipValue)}
+              </span>
+            )}
           </div>
           <PrimaryButton type="submit" className="w-full sm:w-auto px-8 py-3.5 text-base rounded-2xl">
             <Printer className="w-5 h-5" />

@@ -1,10 +1,8 @@
 <div dir="rtl" align="right">
 
-# ✅ تستِ لایسنس موفق بود — چراغ سبزِ تحویل
+# ✅ تمام شد — هر ۶۱ تست سبز شد
 
-<br>
-
-آفرین 👏 اینکه تریال ۷روزه بود و بعد از واردکردنِ فایلِ لایسنس **یک‌ساله** شد، یعنی کلِ زنجیره درست کار می‌کند. این مهم‌ترین موردِ باقی‌مانده بود و حالا **تأیید شد**.
+تبریک 🎉 خروجی‌ات نشان می‌دهد **۶۱ تست در ۸ فایل، همه پاس شدند** — بدونِ حتی یک قرمز.
 
 <br>
 
@@ -12,39 +10,22 @@
 
 <br>
 
-## ۱) 🧭 این تستِ موفق دقیقاً چه چیزی را ثابت کرد؟
-
-وقتی تریال به یک‌ساله تبدیل شد، یعنی همه‌ی این مراحل **بی‌عیب** اجرا شدند:
+## 📊 معنیِ این خروجی
 
 <table dir="rtl" style="border-collapse:collapse;width:100%;font-size:14px">
   <thead>
-    <tr>
-      <th style="border:1px solid #999;padding:10px;text-align:right">مرحله</th>
-      <th style="border:1px solid #999;padding:10px;text-align:right">چه چیزی تأیید شد</th>
-    </tr>
+    <tr><th style="border:1px solid #999;padding:10px;text-align:right">فایل</th><th style="border:1px solid #999;padding:10px;text-align:right">تعداد</th><th style="border:1px solid #999;padding:10px;text-align:right">یعنی چه</th></tr>
   </thead>
   <tbody>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">جفت‌بودنِ کلیدها</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">کلیدِ عمومیِ داخلِ اپ با کلیدِ خصوصیِ <code>yatash-private.pem</code> جفت است — وگرنه امضا رد می‌شد.</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">تأییدِ امضا (Ed25519)</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">امضای فایلِ لایسنس معتبر شناخته شد.</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">گرهِ دستگاه</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">شناسه‌ی دستگاهِ داخلِ فایل با machineIdِ همین سیستم خواند.</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">سوییچِ وضعیت</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">اپ از حالتِ <code>trial</code> به <code>licensed</code> رفت و تاریخِ انقضا یک‌ساله شد.</td>
-    </tr>
+    <tr><td style="border:1px solid #999;padding:10px;text-align:right"><code>format</code> / <code>jalali</code> / <code>receipts</code></td><td style="border:1px solid #999;padding:10px;text-align:right">۱۲ / ۱۳ / ۹</td><td style="border:1px solid #999;padding:10px;text-align:right">پول، تاریخِ شمسی، گزارش و دستمزد سالم‌اند</td></tr>
+    <tr><td style="border:1px solid #999;padding:10px;text-align:right"><code>store</code></td><td style="border:1px solid #999;padding:10px;text-align:right">۱۱</td><td style="border:1px solid #999;padding:10px;text-align:right">صدور قبض/انعام/تخفیف/انبار/ابطال/ویرایش درست است</td></tr>
+    <tr><td style="border:1px solid #999;padding:10px;text-align:right">کامپوننتی (<code>NumberInput</code>/<code>NewReceipt</code>/<code>PrintReceipt</code>)</td><td style="border:1px solid #999;padding:10px;text-align:right">۳ / ۳ / ۲</td><td style="border:1px solid #999;padding:10px;text-align:right">UIِ واقعی مثلِ کاربر کار می‌کند</td></tr>
+    <tr><td style="border:1px solid #999;padding:10px;text-align:right"><code>license</code></td><td style="border:1px solid #999;padding:10px;text-align:right">۸</td><td style="border:1px solid #999;padding:10px;text-align:right">🔑 تریال و <b>لایسنسِ سالانه واقعاً اجرا شدند</b> (skip نشدند — یعنی کلیدِ خصوصی‌ات سرِجایش است)</td></tr>
   </tbody>
 </table>
 
-<div style="background:#ebfbee;border-right:4px solid #2f9e44;color:#14532d;padding:8px 12px;border-radius:6px">
-✅ <b>یعنی آخرین موردِ بحرانی هم بسته شد.</b> دیگر ریسکی که «لایسنسِ همه‌ی مشتری‌ها رد شود» وجود ندارد.
+<div style="background:#ebfbee;border-right:4px solid #2f9e44;color:#14532d;padding:10px 14px;border-radius:6px">
+✅ اینکه لایسنس <b>۸ تست</b> نشان داد (نه کمتر) یعنی تست‌های سالانه هم اجرا شدند: ساختِ لایسنسِ ۳۶۵روزه، فعال‌سازی، انقضا، و ردِ دستگاهِ دیگر — همه تأیید شد.
 </div>
 
 <br>
@@ -53,127 +34,47 @@
 
 <br>
 
-## ۲) 📋 وضعیتِ کلی — همه‌ی کارهای این چند نوبت
+## 🏁 وضعیتِ نهاییِ پروژه
+
+سه سطحِ تست، همه سبز:
 
 <table dir="rtl" style="border-collapse:collapse;width:100%;font-size:14px">
   <thead>
-    <tr>
-      <th style="border:1px solid #999;padding:10px;text-align:right">مورد</th>
-      <th style="border:1px solid #999;padding:10px;text-align:right">وضعیت</th>
-    </tr>
+    <tr><th style="border:1px solid #999;padding:10px;text-align:right">دستور</th><th style="border:1px solid #999;padding:10px;text-align:right">وضعیت</th></tr>
   </thead>
   <tbody>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">باگِ «NaN تومان» در ورودی‌های عددی</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">🟢 رفع</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">قبض/فروشِ تکراری با دوبار-کلیک</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">🟢 رفع</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">«شروع شماره‌ی قبض» بی‌اثر</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">🟢 رفع</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">آلودگیِ داده با بکاپِ خراب</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">🟢 رفع</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">قفل‌شدنِ لایسنس با تغییرِ کارت‌شبکه</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">🟢 پایدارتر</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">خطای بارگذاری وقتی سرورِ توسعه بالا نیست</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">🟢 محافظ اضافه شد</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">ریستِ تریال با حذف/نصبِ دوباره</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">🟢 لنگرِ پایدار</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">درستیِ کلیدِ لایسنس</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">🟢 تست شد و اوکی بود</td>
-    </tr>
-    <tr>
-      <td style="border:1px solid #999;padding:10px;text-align:right">بیلدِ ویندوز + لینوکس</td>
-      <td style="border:1px solid #999;padding:10px;text-align:right">🟢 تنظیم شد</td>
-    </tr>
+    <tr><td style="border:1px solid #999;padding:10px;text-align:right"><code>npm test</code> (Unit + Integration + Component)</td><td style="border:1px solid #999;padding:10px;text-align:right">✅ ۶۱ پاس</td></tr>
+    <tr><td style="border:1px solid #999;padding:10px;text-align:right"><code>PWTEST_CHANNEL=chrome npm run test:e2e</code> (E2E)</td><td style="border:1px solid #999;padding:10px;text-align:right">✅ ۹ پاس</td></tr>
+    <tr><td style="border:1px solid #999;padding:10px;text-align:right">CI روی GitHub (خودکار)</td><td style="border:1px solid #999;padding:10px;text-align:right">🤖 آماده</td></tr>
   </tbody>
 </table>
 
 <br>
 
----
-
-<br>
-
-## ۳) 🚀 چک‌لیستِ نهاییِ قبل از دادن به مشتری
-
-<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:8px 12px;border-radius:6px">
-ℹ️ گردشِ کارِ فروش به هر مشتری، این چند قدمِ ساده است:
+<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:10px 14px;border-radius:6px">
+📌 <b>یادت باشد:</b> این کارها فقط در سورس‌اند. برای دیدنِ همه‌ی تغییرات (انعام، رفعِ باگ‌ها، ...) در نسخه‌ی ویندوز، یک‌بار دیگر build بگیر:
+<br><br>
+<code>npm run electron:build:win</code>
 </div>
 
 <br>
 
-**۱) بیلد بگیر** (هر سیستم روی خودش):
-
-```bash
-npm install
-npm run electron:build:win      # روی ویندوز → release/Yatash Carwash Setup x.x.x.exe
-npm run electron:build:linux    # روی لینوکس → release/*.AppImage و *.deb
-```
-
-**۲) نصب روی سیستمِ مشتری** → اپ با **تریالِ ۷روزه** باز می‌شود.
-
-**۳) شناسه‌ی دستگاه را از مشتری بگیر** (اپ در صفحه‌ی لایسنس نشانش می‌دهد).
-
-**۴) لایسنسِ سالانه صادر کن** و فایلش را بده مشتری تا وارد کند:
-
-```bash
-npm run license:issue    # machineIdِ مشتری و نامش را می‌پرسد → license.dat
-```
-
-<div style="background:#ebfbee;border-right:4px solid #2f9e44;color:#14532d;padding:8px 12px;border-radius:6px">
-✅ همین. مشتری فایل را وارد می‌کند و — دقیقاً مثلِ تستی که تو کردی — اپ یک‌ساله می‌شود.
+<div style="background:#ebfbee;border-right:4px solid #2f9e44;color:#14532d;padding:10px 14px;border-radius:6px">
+✅ <b>جمع‌بندی:</b> کاری در این نوبت لازم نبود — فقط تأییدِ اینکه کلِ شبکه‌ی تست سبز است. پروژه‌ات حالا یک پایه‌ی تستِ محکم دارد و می‌توانی با خیالِ راحت تغییر بدهی؛ اگر چیزی بشکند، تست‌ها بهت می‌گویند.
 </div>
 
 <br>
 
----
+### 📌 دستورِ Git پیشنهادی
 
-<br>
-
-## ۴) 📌 یادآوری‌های کوچک (نه بلاکر)
-
-- 🔵 <b>یک آیکونِ برند</b> (`build/icon.png` ۵۱۲×۵۱۲ و `build/icon.ico`) بگذار تا نصب‌کننده ظاهرِ حرفه‌ای بگیرد.
-- 🔵 <b>کلیدِ خصوصی (`yatash-private.pem`) را جای امن نگه دار</b> و از آن بکاپ بگیر — اگر گم شود، دیگر نمی‌توانی برای مشتری‌های فعلی لایسنسِ تمدید صادر کنی. (در بیلد و گیت نمی‌رود؛ چک شده.)
-- 🔵 دو موردِ کوچک برای «نسخه‌ی بعد»: هشدارِ خطای ذخیره‌سازی وقتی دیسک پر است، و بازحسابِ ریزِ فیش هنگام ویرایشِ دستیِ مبلغ.
-
-<br>
-
----
-
-<br>
-
-## 🗂️ تغییرِ کد در این نوبت
-
-هیچ تغییرِ کدی لازم نبود — فقط نتیجه‌ی تستِ موفقِ تو ثبت شد. (حافظه‌ی پروژه هم به‌روز شد تا در نوبت‌های بعد بدانم کلیدِ لایسنس تست‌شده و اوکی است.)
-
-<br>
-
----
-
-<br>
-
-### 💾 دستورِ Git پیشنهادی
+هیچ تغییرِ کدی نبود؛ اگر بخواهی کارِ تست‌نویسیِ این چند نوبت را یک‌جا ثبت کنی:
 
 ```bash
-git add -A && git commit -m "docs: confirm license verification passed; finalize pre-ship notes"
+git add -A && git commit -m "test: full test suite green (61 unit/integration/component + 9 e2e)"
 ```
 
-**چرا `docs`؟**
-- چون در این نوبت **هیچ کدی عوض نشد**؛ فقط مستندات/گزارش (`response.md`) به‌روز شد. برای تغییری که فقط متن/مستندات است، `docs` درست‌ترین پیشوند است — نه `feat` (قابلیتِ جدید نیست) و نه `fix` (باگی رفع نشد).
-- اگر بخواهی همه‌ی تغییرهای کدِ نوبت‌های قبل را هم در همین کامیت جمع کنی، بهتر است جدا کامیت کنی؛ ولی اگر همه با هم مانده‌اند، پیشوندِ غالب همان کدِ لایسنس/باگ‌فیکس‌هاست و آن‌وقت `feat`/`fix` مناسب‌تر است.
+<div style="background:#e7f5ff;border-right:4px solid #1c7ed6;color:#0b3d66;padding:10px 14px;border-radius:6px">
+🧠 <b>چرا <code>test</code>؟</b> چون محتوای اصلیِ این تغییرات، فایل‌ها و زیرساختِ تست است. اگر هنوز رفعِ باگِ تاریخ (دسامبر) را جدا commit نکرده‌ای، بهتر است آن را در یک کامیتِ <code>fix(jalali)</code>ِ جدا نگه داری تا تاریخچه‌ی گیت شفاف بماند که یک رفعِ باگِ واقعی هم بوده.
+</div>
 
 </div>

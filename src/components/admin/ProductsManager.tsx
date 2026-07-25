@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Plus, Trash2, Minus, Package, Eye, EyeOff } from 'lucide-react';
 import { Store } from '../../data/store';
 import { rialToToman, toPersianDigits, tomanToRial } from '../../utils/format';
-import { SectionCard, inputClass, PrimaryButton } from '../common';
+import { SectionCard, inputClass, NumberInput, PrimaryButton } from '../common';
 
 /**
  * مدیریتِ انبارِ لوازم جانبی: افزودن کالا، تعیینِ قیمت (تومان)، و شارژ/کاهشِ موجودی.
@@ -64,10 +64,10 @@ export default function ProductsManager({
                     />
                   </td>
                   <td className="px-3 py-2">
-                    <input
-                      type="number"
+                    <NumberInput
                       value={rialToToman(p.price)}
-                      onChange={(e) => setProductPrice(p.id, tomanToRial(Number(e.target.value)))}
+                      onValueChange={(toman) => setProductPrice(p.id, tomanToRial(toman))}
+                      placeholder="۰"
                       className="bg-[var(--bg)] border border-[var(--border)] rounded px-2.5 py-1.5 text-xs font-mono font-bold text-[var(--text)] w-full outline-none focus:border-[var(--accent-strong)]"
                     />
                   </td>
@@ -80,11 +80,11 @@ export default function ProductsManager({
                       >
                         <Minus className="w-3.5 h-3.5" />
                       </button>
-                      <input
-                        type="number"
-                        min={0}
+                      <NumberInput
+                        thousands={false}
                         value={p.stock}
-                        onChange={(e) => setProductStock(p.id, Number(e.target.value))}
+                        onValueChange={(n) => setProductStock(p.id, n)}
+                        placeholder="۰"
                         className="w-16 text-center bg-[var(--bg)] border border-[var(--border)] rounded px-1 py-1.5 text-xs font-mono font-bold text-[var(--text)] outline-none focus:border-[var(--accent-strong)]"
                       />
                       <button

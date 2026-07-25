@@ -48,3 +48,49 @@ export function filterReceiptsByPeriod(receipts: Receipt[], period: Period, toda
 
 /** بخشِ جلالیِ «امروز» — میان‌بُرِ پرکاربرد */
 export const jalaliToday = (): JalaliDay => getJalaliDateParts(new Date());
+
+// ============================ دستمزد کارگرها ============================
+// این منطق قبلاً داخلِ کامپوننتِ WorkerPayroll بود؛ اینجا به یک تابعِ خالص منتقل شد
+// تا هم قابلِ تست باشد هم قابلِ استفاده‌ی مجدد (جداسازیِ منطق از UI).
+
+export interface WorkerPayrollRow {
+  name: string;
+  count: number;
+  revenue: number; // جمعِ مبلغِ قبض‌ها (ریال)
+  commission: number; // جمعِ پورسانت (ریال)
+  tip: number; // جمعِ انعام (ریال) — جدا از پورسانت
+}
+
+export interface WorkerPayrollResult {
+  rows: WorkerPayrollRow[];
+  totals: { count: number; revenue: number; commission: number; tip: number };
+  /** سهمِ خالصِ کارواش = درآمد − پورسانت. انعام دخالت ندارد چون پولِ کارواش نیست. */
+  shopShare: number;
+}
+
+/**
+ * تجمیعِ کارکردِ کارگرها از یک فهرست قبض (که قبلاً بر اساسِ بازه فیلتر شده).
+ * پورسانت و انعام را جدا نگه می‌دارد و ردیف‌ها را بر اساسِ کلِ دریافتیِ کارگر
+ * (پورسانت + انعام) نزولی مرتب می‌کند.
+ */
+export function aggregateWorkerPayroll(receipts: Receipt[]): WorkerPayrollResult {
+  const map = new Map<string, WorkerPayrollRow>();
+  for (const r of receipts) {
+    const key = r.workerId ?? '__none__';
+    const name = r.workerName ?? 'بدون کارگر';
+    const cur = map.get(key) ?? { name, count: 0, revenue: 0, commission: 0, tip: 0 };
+    cur.count += 1;
+    cur.revenue += r.price;
+    cur.commission += r.workerCommission ?? 0;
+    cur.tip += r.tip ?? 0;
+    map.set(key, cur);
+  }
+  const rows = Array.from(map.values()).sort((a, b) => b.commission + b.tip - (a.commission + a.tip));
+  const totals = {
+    count: receipts.length,
+    revenue: sumRevenue(receipts),
+    commission: receipts.reduce((s, r) => s + (r.workerCommission ?? 0), 0),
+    tip: receipts.reduce((s, r) => s + (r.tip ?? 0), 0),
+  };
+  return { rows, totals, shopShare: totals.revenue - totals.commission };
+}

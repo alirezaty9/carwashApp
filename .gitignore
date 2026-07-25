@@ -15,3 +15,9 @@ yatash-private*
 
 # فایلِ داده‌ی نمونه (تست)
 seed-backup.json
+
+# Playwright / test artifacts
+test-results/
+playwright-report/
+.playwright/
+coverage/

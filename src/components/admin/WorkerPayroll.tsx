@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Users, Wallet, ReceiptText, PiggyBank, CircleDollarSign } from 'lucide-react';
+import { Users, Wallet, ReceiptText, PiggyBank, CircleDollarSign, Coins } from 'lucide-react';
 import { Store } from '../../data/store';
 import { formatCurrencyToman, toPersianDigits } from '../../utils/format';
-import { filterReceiptsByPeriod, jalaliToday, Period, PERIODS, sumRevenue } from '../../utils/receipts';
+import { aggregateWorkerPayroll, filterReceiptsByPeriod, jalaliToday, Period, PERIODS } from '../../utils/receipts';
 import { PillTabs, SectionCard, StatCard } from '../common';
 
 /**
@@ -21,34 +21,14 @@ export default function WorkerPayroll({ store }: { store: Store }) {
     [receipts, period, today],
   );
 
-  // تجمیعِ کارکرد بر اساسِ کارگر
-  const rows = useMemo(() => {
-    const map = new Map<string, { name: string; count: number; revenue: number; commission: number }>();
-    for (const r of filtered) {
-      const key = r.workerId ?? '__none__';
-      const name = r.workerName ?? 'بدون کارگر';
-      const cur = map.get(key) ?? { name, count: 0, revenue: 0, commission: 0 };
-      cur.count += 1;
-      cur.revenue += r.price;
-      cur.commission += r.workerCommission ?? 0;
-      map.set(key, cur);
-    }
-    return Array.from(map.values()).sort((a, b) => b.commission - a.commission);
-  }, [filtered]);
-
-  const totals = useMemo(
-    () => ({
-      count: filtered.length,
-      revenue: sumRevenue(filtered),
-      commission: filtered.reduce((s, r) => s + (r.workerCommission ?? 0), 0),
-    }),
-    [filtered],
-  );
-  const shopShare = totals.revenue - totals.commission;
+  // تجمیعِ کارکرد بر اساسِ کارگر — منطقِ خالص در utils/receipts.ts است (تست‌پذیر).
+  // پورسانت و انعام جدا نگه داشته می‌شوند و «سهمِ خالص» = درآمد منهای پورسانت.
+  const { rows, totals, shopShare } = useMemo(() => aggregateWorkerPayroll(filtered), [filtered]);
 
   const summary = [
     { label: 'درآمد کل', value: formatCurrencyToman(totals.revenue), icon: CircleDollarSign, color: 'text-[var(--price)] bg-[var(--price-soft)] border-[var(--price-border)]' },
     { label: 'پورسانتِ کارگرها', value: formatCurrencyToman(totals.commission), icon: Wallet, color: 'text-[var(--money-text)] bg-[var(--money-soft)] border-[var(--money-border)]' },
+    { label: 'انعامِ کارگرها', value: formatCurrencyToman(totals.tip), icon: Coins, color: 'text-[var(--money-text)] bg-[var(--money-soft)] border-[var(--money-border)]' },
     { label: 'سهمِ خالصِ کارواش', value: formatCurrencyToman(shopShare), icon: PiggyBank, color: 'text-[var(--accent-text)] bg-[var(--accent-soft)] border-[var(--accent-border)]' },
     { label: 'تعداد قبض', value: `${toPersianDigits(totals.count)} قبض`, icon: ReceiptText, color: 'text-[var(--text-muted)] bg-[var(--surface-2)] border-[var(--border)]' },
   ];
@@ -59,7 +39,7 @@ export default function WorkerPayroll({ store }: { store: Store }) {
       <PillTabs tabs={PERIODS} active={period} onChange={setPeriod} />
 
       {/* کارت‌های خلاصه */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {summary.map((s) => (
           <StatCard key={s.label} label={s.label} value={s.value} icon={s.icon} color={s.color} />
         ))}
@@ -68,7 +48,7 @@ export default function WorkerPayroll({ store }: { store: Store }) {
       {/* جدولِ کارکردِ کارگرها */}
       <SectionCard
         title="دستمزد و کارکردِ کارگرها"
-        subtitle="پورسانتِ هر کارگر بر اساسِ درصدِ خدماتِ انجام‌شده. «سهمِ خالص» یعنی درآمد منهای پورسانتِ کارگرها."
+        subtitle="دریافتیِ هر کارگر = پورسانتِ خدمات + انعام (جدا نمایش داده می‌شوند). انعام در درآمد و سهمِ کارواش حساب نمی‌شود؛ مستقیم به کارگر می‌رسد."
       >
         {rows.length === 0 ? (
           <p className="text-center text-xs text-[var(--text-faint)] py-8">در این بازه قبضی ثبت نشده است.</p>
@@ -80,7 +60,9 @@ export default function WorkerPayroll({ store }: { store: Store }) {
                   <th className="px-4 py-3 font-bold text-[var(--text-muted)] min-w-[160px]">کارگر</th>
                   <th className="px-4 py-3 font-bold text-[var(--text-muted)] text-center">تعداد قبض</th>
                   <th className="px-4 py-3 font-bold text-[var(--text-muted)] text-center">مجموع فروش</th>
-                  <th className="px-4 py-3 font-bold text-[var(--money-text)] text-center">پورسانتِ قابل پرداخت</th>
+                  <th className="px-4 py-3 font-bold text-[var(--money-text)] text-center">پورسانت</th>
+                  <th className="px-4 py-3 font-bold text-[var(--money-text)] text-center">انعام</th>
+                  <th className="px-4 py-3 font-bold text-[var(--money-text)] text-center">جمعِ دریافتیِ کارگر</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)]">
@@ -98,8 +80,14 @@ export default function WorkerPayroll({ store }: { store: Store }) {
                     <td className="px-4 py-3 text-center font-mono font-bold text-[var(--text)]">
                       {formatCurrencyToman(r.revenue)}
                     </td>
-                    <td className="px-4 py-3 text-center font-mono font-black text-[var(--money-text)]">
+                    <td className="px-4 py-3 text-center font-mono font-bold text-[var(--money-text)]">
                       {formatCurrencyToman(r.commission)}
+                    </td>
+                    <td className="px-4 py-3 text-center font-mono font-bold text-[var(--money-text)]">
+                      {formatCurrencyToman(r.tip)}
+                    </td>
+                    <td className="px-4 py-3 text-center font-mono font-black text-[var(--money-text)]">
+                      {formatCurrencyToman(r.commission + r.tip)}
                     </td>
                   </tr>
                 ))}
@@ -110,6 +98,8 @@ export default function WorkerPayroll({ store }: { store: Store }) {
                   <td className="px-4 py-3 text-center font-mono text-[var(--text)]">{toPersianDigits(totals.count)}</td>
                   <td className="px-4 py-3 text-center font-mono text-[var(--text)]">{formatCurrencyToman(totals.revenue)}</td>
                   <td className="px-4 py-3 text-center font-mono text-[var(--money-text)]">{formatCurrencyToman(totals.commission)}</td>
+                  <td className="px-4 py-3 text-center font-mono text-[var(--money-text)]">{formatCurrencyToman(totals.tip)}</td>
+                  <td className="px-4 py-3 text-center font-mono text-[var(--money-text)]">{formatCurrencyToman(totals.commission + totals.tip)}</td>
                 </tr>
               </tfoot>
             </table>
