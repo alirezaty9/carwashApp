@@ -147,7 +147,11 @@ describe('کاربران و نقش‌ها', () => {
 
   it('افزودنِ صندوقدار درست ثبت می‌شود', () => {
     const { result } = renderHook(() => useCarwashStore());
-    act(() => result.current.addUser('ماهان', 'cashier', '1234'));
+    // بدنه‌ی بلوکی (نه تک‌عبارتی) چون addUser حالا مقدارِ موفقیت برمی‌گرداند و
+    // act انتظار دارد callback چیزی برنگرداند.
+    act(() => {
+      result.current.addUser('ماهان', 'cashier', '1234');
+    });
     const u = result.current.users.find((x) => x.name === 'ماهان')!;
     expect(u.role).toBe('cashier');
     expect(u.password).toBe('1234');

@@ -2,11 +2,19 @@ import { useState } from 'react';
 import { Plus, Trash2, ShieldCheck, User as UserIcon, Eye, EyeOff, Power } from 'lucide-react';
 import { UserRole } from '../../types';
 import { Store } from '../../data/store';
+import { MIN_PASSWORD_LENGTH, validatePasswordValue } from '../../auth';
+import { toPersianDigits } from '../../utils/format';
 import { SectionCard, inputClass, PrimaryButton } from '../common';
 
 /**
  * مدیریتِ کاربران: ساختنِ کاربرِ جدید (ادمین/صندوقدار)، تغییرِ نام/رمز/نقش و فعال‌سازی.
- * نگهبان: همیشه باید حداقل یک ادمینِ فعال بماند (در store کنترل می‌شود).
+ *
+ * دو نگهبانِ مهم:
+ *  ۱) همیشه باید حداقل یک ادمینِ فعال بماند (در store کنترل می‌شود).
+ *  ۲) 🔴 نام و رمز «هنگامِ تایپ» ذخیره نمی‌شوند، بلکه وقتی کاربر از کادر بیرون
+ *     می‌رود (یا Enter می‌زند) اعتبارسنجی و بعد ثبت می‌شوند. قبلاً هر کلید
+ *     مستقیماً ذخیره می‌شد؛ یعنی خالی‌کردنِ کادرِ رمز، همان لحظه حسابی بدونِ رمز
+ *     می‌ساخت که هرکسی با زدنِ «ورود» واردش می‌شد.
  */
 export default function UsersManager({
   store,
@@ -17,17 +25,23 @@ export default function UsersManager({
   notify: (m: string, t?: 'success' | 'error' | 'info') => void;
   currentUserId?: string;
 }) {
-  const { users, addUser, renameUser, setUserPassword, setUserRole, toggleUser, removeUser } = store;
+  const { users, addUser, isUserNameTaken, renameUser, setUserPassword, setUserRole, toggleUser, removeUser } = store;
 
   const [newName, setNewName] = useState('');
   const [newRole, setNewRole] = useState<UserRole>('cashier');
   const [newPass, setNewPass] = useState('');
   const [showPass, setShowPass] = useState<Record<string, boolean>>({});
 
+  // نسخه‌ی «در حالِ تایپِ» نام و رمزِ هر کاربر. تا تأیید نشود، چیزی ذخیره نمی‌شود.
+  const [nameDraft, setNameDraft] = useState<Record<string, string>>({});
+  const [passDraft, setPassDraft] = useState<Record<string, string>>({});
+
   const handleAdd = () => {
     if (!newName.trim()) return notify('نام کاربر را وارد کنید', 'error');
-    if (!newPass.trim()) return notify('برای کاربرِ جدید رمز بگذارید', 'error');
-    addUser(newName, newRole, newPass);
+    if (isUserNameTaken(newName)) return notify('کاربری با همین نام از قبل هست؛ نامِ دیگری بگذارید', 'error');
+    const problem = validatePasswordValue(newPass);
+    if (problem) return notify(problem, 'error');
+    if (!addUser(newName, newRole, newPass)) return notify('کاربرِ جدید ساخته نشد؛ نام و رمز را بررسی کنید', 'error');
     setNewName('');
     setNewPass('');
     setNewRole('cashier');
@@ -36,6 +50,26 @@ export default function UsersManager({
 
   const guarded = (ok: boolean) => {
     if (!ok) notify('حداقل یک ادمینِ فعال باید باقی بماند', 'error');
+  };
+
+  /** ثبتِ نامِ ویرایش‌شده. اگر خالی یا تکراری بود، به مقدارِ قبلی برمی‌گردد. */
+  const commitName = (id: string, current: string) => {
+    const draft = nameDraft[id];
+    setNameDraft(({ [id]: _dropped, ...rest }) => rest);
+    if (draft === undefined || draft.trim() === current.trim()) return;
+    if (!draft.trim()) return notify('نامِ کاربر نمی‌تواند خالی باشد', 'error');
+    if (isUserNameTaken(draft, id)) return notify('کاربرِ دیگری با همین نام هست؛ نامِ دیگری بگذارید', 'error');
+    if (renameUser(id, draft)) notify('نامِ کاربر تغییر کرد', 'success');
+  };
+
+  /** ثبتِ رمزِ ویرایش‌شده. اگر قواعدِ رمز را نداشت، به رمزِ قبلی برمی‌گردد. */
+  const commitPassword = (id: string, current: string) => {
+    const draft = passDraft[id];
+    setPassDraft(({ [id]: _dropped, ...rest }) => rest);
+    if (draft === undefined || draft.trim() === current.trim()) return;
+    const problem = validatePasswordValue(draft);
+    if (problem) return notify(`${problem} رمزِ قبلی دست‌نخورده ماند.`, 'error');
+    if (setUserPassword(id, draft)) notify('رمزِ کاربر تغییر کرد', 'success');
   };
 
   const adminCount = users.filter((u) => u.role === 'admin' && u.active).length;
@@ -70,12 +104,14 @@ export default function UsersManager({
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-[var(--text-muted)] mb-1.5">رمز عبور</label>
+            <label className="block text-[11px] font-bold text-[var(--text-muted)] mb-1.5">
+              رمز عبور <span className="text-[var(--danger-text)]">*</span>
+            </label>
             <input
               value={newPass}
               onChange={(e) => setNewPass(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-              placeholder="رمزِ ورود"
+              placeholder={`رمزِ ورود — حداقل ${toPersianDigits(MIN_PASSWORD_LENGTH)} کاراکتر`}
               className={inputClass}
             />
           </div>
@@ -121,8 +157,10 @@ export default function UsersManager({
 
                 <div className="flex-1 min-w-0">
                   <input
-                    value={u.name}
-                    onChange={(e) => renameUser(u.id, e.target.value)}
+                    value={nameDraft[u.id] ?? u.name}
+                    onChange={(e) => setNameDraft((d) => ({ ...d, [u.id]: e.target.value }))}
+                    onBlur={() => commitName(u.id, u.name)}
+                    onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
                     aria-label="نام کاربر"
                     className="w-full bg-transparent text-[var(--text)] text-base font-bold rounded-lg px-1 py-0.5 -mr-1 hover:bg-[var(--surface-2)] focus:bg-[var(--field-bg)] focus:ring-2 focus:ring-[var(--accent-soft)] outline-none transition-all"
                   />
@@ -156,12 +194,19 @@ export default function UsersManager({
               {/* طبقه‌ی ۲ — اعتبارنامه‌ها: رمز + نقش + حذف */}
               <div className="flex flex-wrap items-end gap-3 px-3.5 pb-3.5 pt-3 border-t border-[var(--border)]">
                 <div className="flex-1 min-w-[160px]">
-                  <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1">رمز عبور</label>
+                  <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1">
+                    رمز عبور <span className="text-[var(--danger-text)]">*</span>
+                    <span className="text-[var(--text-faint)] font-medium mr-1">
+                      (اجباری، حداقل {toPersianDigits(MIN_PASSWORD_LENGTH)} کاراکتر)
+                    </span>
+                  </label>
                   <div className="relative">
                     <input
                       type={showPass[u.id] ? 'text' : 'password'}
-                      value={u.password}
-                      onChange={(e) => setUserPassword(u.id, e.target.value)}
+                      value={passDraft[u.id] ?? u.password}
+                      onChange={(e) => setPassDraft((d) => ({ ...d, [u.id]: e.target.value }))}
+                      onBlur={() => commitPassword(u.id, u.password)}
+                      onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
                       className={`${inputClass} pl-9`}
                     />
                     <button

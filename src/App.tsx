@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { CarFront, Droplets, ShieldCheck, Sun, Moon, ArrowRight, Package, LogOut, User as UserIcon } from 'lucide-react';
+import { CarFront, Droplets, ShieldCheck, Sun, Moon, ArrowRight, Package, LogOut, User as UserIcon, AlertTriangle, X } from 'lucide-react';
 import { Receipt, Sale, User } from './types';
 import { useCarwashStore } from './data/store';
 import { getJalaliDateParts, JALALI_MONTH_NAMES } from './utils/jalali';
@@ -20,6 +20,7 @@ import ForcePasswordChange from './components/auth/ForcePasswordChange';
 import PrintReceipt from './components/print/PrintReceipt';
 import PrintSale from './components/print/PrintSale';
 import SplashScreen from './components/brand/SplashScreen';
+import StorageGate from './components/StorageGate';
 import BrandWatermark from './components/brand/BrandWatermark';
 import { YatashMark } from './components/brand/YatashLogo';
 import { BRAND } from './brand';
@@ -139,6 +140,12 @@ export default function App() {
       <BrandWatermark />
 
       <LicenseGate status={licenseStatus} importLicense={importLicense}>
+        <StorageGate
+          failedKeys={store.loadFailedKeys}
+          frozen={store.writesFrozen}
+          onRestore={store.importData}
+          onAcceptDataLoss={store.acceptDataLoss}
+        >
         {!currentUser ? (
           /* تا وقتی کاربری وارد نشده، صفحه‌ی ورود نشان داده می‌شود. */
           <LoginScreen users={store.users} shopName={store.config.shopName} onLogin={handleLogin} />
@@ -148,6 +155,28 @@ export default function App() {
         ) : (
           <div className="no-print min-h-screen flex flex-col antialiased">
             <NotificationBar notice={notice} />
+
+            {/* 🔴 نوارِ شکستِ ذخیره‌سازی — تا وقتی کاربر نبندد سرِ جایش می‌ماند.
+                بدونِ این، خرابیِ دیسک بی‌صدا می‌ماند و کارِ کلِ روز از دست می‌رفت. */}
+            {store.saveError && (
+              <div className="bg-[var(--danger-strong)] text-white px-4 py-2.5 flex items-center justify-between gap-3 sticky top-0 z-50">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <AlertTriangle className="w-5 h-5 shrink-0" />
+                  <span className="text-xs font-bold leading-relaxed">
+                    ذخیره‌سازی روی دیسک انجام نمی‌شود! قبض‌های جدید ممکن است بعد از بستنِ برنامه از بین بروند.
+                    هرچه زودتر از «پنلِ مدیریت ← تنظیمات و بکاپ» یک نسخه‌ی پشتیبان بگیرید و با پشتیبانی تماس
+                    بگیرید. (علت: {store.saveError.message})
+                  </span>
+                </div>
+                <button
+                  onClick={store.dismissSaveError}
+                  title="بستنِ پیام"
+                  className="p-1 rounded-lg hover:bg-white/15 cursor-pointer shrink-0"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
 
             {/* ===== هدر ===== */}
             <header className="bg-[var(--header-bg)] backdrop-blur-md border-b border-[var(--border)] sticky top-0 z-40 shadow-[0_10px_30px_-24px_rgba(0,0,0,0.6)]">
@@ -260,6 +289,7 @@ export default function App() {
             </footer>
           </div>
         )}
+        </StorageGate>
       </LicenseGate>
 
       {/* ناحیه‌ی چاپ (خواهرِ بخش اصلی تا در چاپ محو نشود) — فقط یکی از دو هدف پر است */}

@@ -145,6 +145,9 @@ export default function PricingMatrix({
                 <td className="px-2 py-2 text-center">
                   <button
                     onClick={() => {
+                      // بدونِ هیچ خدمتی، صندوق نمی‌تواند قبض صادر کند —
+                      // همان نگهبانی که برای تیپ‌ها هم هست.
+                      if (services.length <= 1) return notify('حداقل یک خدمت لازم است', 'error');
                       if (confirm(`حذف خدمت «${s.name}»؟`)) {
                         removeService(s.id);
                         notify('خدمت حذف شد', 'success');

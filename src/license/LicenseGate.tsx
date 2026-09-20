@@ -1,5 +1,5 @@
 import { ReactNode, useRef, useState } from 'react';
-import { KeyRound, Copy, Check, Upload, ShieldAlert, Clock, Sparkles } from 'lucide-react';
+import { KeyRound, Copy, Check, Upload, ShieldAlert, Sparkles } from 'lucide-react';
 import { BRAND } from '../brand';
 import { YatashMark } from '../components/brand/YatashLogo';
 import { toPersianDigits } from '../utils/format';
@@ -13,7 +13,6 @@ const REASON_TEXT: Record<string, string> = {
   signature: 'امضای لایسنس معتبر نیست.',
   machine: 'این لایسنس برای دستگاهِ دیگری صادر شده است.',
   corrupt: 'فایلِ لایسنس خراب است.',
-  clock: 'ساعتِ سیستم دستکاری شده است؛ آن را درست کنید.',
 };
 
 /** کارتِ فعال‌سازی: نمایشِ machineId + بارگذاریِ فایلِ لایسنس. مشترک بین قفل، بنرِ تریال و تنظیماتِ ادمین. */
@@ -109,11 +108,9 @@ export function ActivationCard({
 
 /** صفحه‌ی تمام‌قدِ قفل — وقتی تریال تمام شده یا لایسنس نامعتبر است. */
 function BlockingScreen({ status, importLicense }: { status: LicenseStatus; importLicense: ImportFn }) {
-  const isClock = status.reason === 'clock';
   const title = status.state === 'invalid' ? 'لایسنس نامعتبر است' : 'دوره‌ی استفاده به پایان رسید';
-  const subtitle = isClock
-    ? REASON_TEXT.clock
-    : status.state === 'invalid'
+  const subtitle =
+    status.state === 'invalid'
       ? REASON_TEXT[status.reason || 'corrupt']
       : 'برای ادامه‌ی کار، لایسنسِ یاتاش را فعال کنید.';
 
@@ -122,21 +119,15 @@ function BlockingScreen({ status, importLicense }: { status: LicenseStatus; impo
       <div className="cw-card w-full max-w-lg p-7 flex flex-col gap-6">
         <div className="flex flex-col items-center text-center gap-3">
           <div className="p-3 rounded-2xl bg-[var(--danger-soft)] border border-[var(--danger-border)]">
-            {isClock ? (
-              <Clock className="w-8 h-8 text-[var(--danger-text)]" />
-            ) : (
-              <KeyRound className="w-8 h-8 text-[var(--danger-text)]" />
-            )}
+            <KeyRound className="w-8 h-8 text-[var(--danger-text)]" />
           </div>
           <h1 className="font-display text-2xl text-[var(--text)]">{title}</h1>
           <p className="text-xs font-semibold text-[var(--text-muted)] leading-relaxed max-w-sm">{subtitle}</p>
         </div>
 
-        {!isClock && (
-          <div className="border-t border-[var(--border)] pt-5">
-            <ActivationCard machineId={status.machineId} importLicense={importLicense} />
-          </div>
-        )}
+        <div className="border-t border-[var(--border)] pt-5">
+          <ActivationCard machineId={status.machineId} importLicense={importLicense} />
+        </div>
 
         <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold text-[var(--text-faint)] pt-2 border-t border-[var(--border)]">
           {BRAND.poweredByFa}

@@ -48,8 +48,10 @@ export default function PrintReceipt({ receipt, config }: { receipt: Receipt | n
         </div>
       </div>
 
+      {/* خطِ جداکننده‌ی توضیحات سیاهِ خالص است، نه رنگِ تم: پرینترِ حرارتی فقط
+          سیاه می‌سوزاند و رنگِ تم روی کاغذ کم‌رنگ یا اصلاً چاپ‌نشده درمی‌آید. */}
       {receipt.notes && (
-        <div className="border-t border-dashed border-[var(--border-strong)] pt-1 mt-1.5 text-[10px]">
+        <div className="border-t border-dashed border-black pt-1 mt-1.5 text-[10px]">
           <span className="block font-bold underline">توضیحات:</span>
           <p className="mt-0.5 leading-relaxed">{receipt.notes}</p>
         </div>

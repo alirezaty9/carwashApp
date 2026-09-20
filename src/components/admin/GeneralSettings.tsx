@@ -1,7 +1,9 @@
-import { ChangeEvent, FormEvent, useRef, useState } from 'react';
-import { Download, Upload, RefreshCw, Save } from 'lucide-react';
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
+import { Download, Upload, RefreshCw, Save, ShieldCheck } from 'lucide-react';
 import { Store } from '../../data/store';
 import { getJalaliDateParts } from '../../utils/jalali';
+import { toPersianDigits } from '../../utils/format';
+import { getStorageInfo, StorageInfo } from '../../data/persistence';
 import { SectionCard, inputClass, NumberInput, PrimaryButton, Field } from '../common';
 import PrinterSettings from './PrinterSettings';
 
@@ -18,6 +20,18 @@ export default function GeneralSettings({
   const [shopName, setShopName] = useState(config.shopName);
   const [footer, setFooter] = useState(config.footerText);
   const [counterStart, setCounterStart] = useState<number>(config.receiptCounterStart);
+
+  // مسیرِ فایلِ داده و فهرستِ بکاپ‌های خودکار (فقط در نسخه‌ی نصب‌شده وجود دارد)
+  const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null);
+  useEffect(() => {
+    let alive = true;
+    getStorageInfo().then((info) => {
+      if (alive) setStorageInfo(info);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const saveGeneral = (e: FormEvent) => {
     e.preventDefault();
@@ -116,6 +130,25 @@ export default function GeneralSettings({
           </button>
           <input ref={fileRef} type="file" accept=".json" onChange={handleRestore} className="hidden" />
         </div>
+
+        {/* بکاپِ خودکار — بدونِ نشان دادنِ مسیر، این قابلیت عملاً نامرئی است و
+            روزِ مبادا کسی نمی‌داند نسخه‌ی پشتیبان کجاست. */}
+        {storageInfo && (
+          <div className="bg-[var(--money-soft)] border border-[var(--money-border)] rounded-xl p-4 flex flex-col gap-2">
+            <div className="flex items-center gap-2 text-[var(--money-text)] text-xs font-bold">
+              <ShieldCheck className="w-4 h-4 shrink-0" />
+              پشتیبانِ خودکارِ روزانه فعال است — {toPersianDigits(storageInfo.backups.length)} نسخه موجود است
+            </div>
+            <p className="text-[11px] font-semibold text-[var(--text-muted)] leading-relaxed">
+              برنامه در اولین اجرای هر روز خودش یک نسخه‌ی پشتیبان می‌سازد و ۷ نسخه‌ی آخر را نگه می‌دارد. این
+              جایگزینِ بکاپِ دستی نیست (چون روی همین کامپیوتر است)، ولی اگر فایلِ اصلی خراب شود نجاتتان می‌دهد.
+            </p>
+            <div className="flex flex-col gap-1 text-[10px] font-mono text-[var(--text-faint)] break-all">
+              <span>پوشه‌ی پشتیبان‌ها: {storageInfo.backupDir}</span>
+              <span>فایلِ اصلیِ اطلاعات: {storageInfo.dataPath}</span>
+            </div>
+          </div>
+        )}
 
         <div className="mt-2 bg-[var(--danger-soft)] border border-[var(--danger-border)] rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div>

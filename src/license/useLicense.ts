@@ -8,7 +8,8 @@ export interface LicenseStatus {
   machineId?: string;
   expiresAt?: string;
   daysLeft?: number;
-  reason?: 'signature' | 'machine' | 'corrupt' | 'clock';
+  /** علتِ نامعتبر بودن — دقیقاً همان سه حالتی که مدیرِ لایسنس برمی‌گرداند. */
+  reason?: 'signature' | 'machine' | 'corrupt';
 }
 
 interface LicenseBridge {

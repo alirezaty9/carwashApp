@@ -161,13 +161,6 @@ export interface CarwashConfig {
   shopName: string;
   footerText: string;
   receiptCounterStart: number;
-  /** رمزِ ورود به پنل مدیریت؛ رشته‌ی خالی یعنی بدون رمز */
-  adminPin: string;
-  /**
-   * «مرا به‌خاطر بسپار» برای پنل: چند دقیقه بعد از ورودِ موفق، دوباره رمز پرسیده نشود.
-   * ۰ = هر بار بپرس (امن‌ترین).  مثلاً ۱۵ = تا ۱۵ دقیقه دوباره نپرس.
-   */
-  adminUnlockMinutes: number;
   /**
    * حالتِ چاپ:
    * - 'dialog': نمایشِ پنجره‌ی چاپِ سیستم (پیش‌فرض؛ همه‌جا کار می‌کند)

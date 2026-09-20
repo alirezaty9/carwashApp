@@ -11,8 +11,6 @@ const config = {
   shopName: 'کارواش تست',
   footerText: 'ممنون از انتخاب شما',
   receiptCounterStart: 1000,
-  adminPin: '',
-  adminUnlockMinutes: 0,
   printMode: 'dialog',
   printerName: '',
 } as CarwashConfig;

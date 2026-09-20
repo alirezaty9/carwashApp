@@ -24,7 +24,7 @@ import {
 } from './defaults';
 import { getFormattedJalali, getJalaliDateParts } from '../utils/jalali';
 import { toEnglishDigits } from '../utils/format';
-import { loadRaw, saveRaw } from './persistence';
+import { readRaw, saveRaw, StorageError, subscribeStorageErrors } from './persistence';
 import { calcWorkerCommission } from '../utils/receipts';
 
 /**
@@ -48,18 +48,70 @@ const KEYS = {
   users: 'cw2_users',
 } as const;
 
-function load<T>(key: string, fallback: T): T {
-  try {
-    const raw = loadRaw(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
 function save<T>(key: string, value: T): void {
   saveRaw(key, JSON.stringify(value));
 }
+
+/**
+ * خواندنِ همه‌ی کلیدها در یک نوبت، همراه با فهرستِ کلیدهایی که خواندنشان شکست خورد.
+ *
+ * 🔴 چرا یک‌جا و چرا با فهرستِ خطا؟ چون «کلید وجود ندارد» و «کلید خراب است» دو
+ * وضعیتِ کاملاً متفاوت‌اند. قبلاً هر دو به مقدارِ پیش‌فرض تبدیل می‌شدند و چون
+ * ذخیره‌سازیِ خودکار بلافاصله بعد از بالا آمدن اجرا می‌شود، مقدارِ خالی روی
+ * داده‌ی خراب نوشته می‌شد و سوابق برای همیشه می‌رفت. حالا اگر حتی یک کلید خراب
+ * باشد، نوشتن «یخ» می‌زند تا کاربر تصمیم بگیرد (بازیابی از بکاپ یا شروعِ نو).
+ */
+function loadAll() {
+  const failedKeys: string[] = [];
+
+  const read = <T,>(key: string, fallback: T): T => {
+    const result = readRaw(key);
+    if (result.status === 'empty') return fallback;
+    if (result.status === 'error') {
+      failedKeys.push(key);
+      return fallback;
+    }
+    try {
+      return JSON.parse(result.value) as T;
+    } catch {
+      failedKeys.push(key);
+      return fallback;
+    }
+  };
+
+  return {
+    tiers: read(KEYS.tiers, DEFAULT_TIERS),
+    services: read(KEYS.services, DEFAULT_SERVICES),
+    workers: read(KEYS.workers, DEFAULT_WORKERS),
+    customers: read<Customer[]>(KEYS.customers, []),
+    receipts: read<Receipt[]>(KEYS.receipts, []),
+    products: read(KEYS.products, DEFAULT_PRODUCTS),
+    sales: read<Sale[]>(KEYS.sales, []),
+    config: read(KEYS.config, DEFAULT_CONFIG),
+    users: read(KEYS.users, DEFAULT_USERS),
+    failedKeys,
+  };
+}
+
+/**
+ * ثبت/به‌روزرسانیِ مشتری بر اساسِ شماره‌ی تلفن.
+ *
+ * این قاعده هم در «صدورِ قبضِ نو» و هم در «ویرایشِ قبضِ قدیمی» لازم است. اگر در
+ * دو جا جدا نوشته شود، دیر یا زود یکی‌شان به‌روز می‌شود و دیگری نه — همان چیزی
+ * که باعث شد قبضِ ویرایش‌شده از پرونده‌ی مشتری غیب شود.
+ */
+function upsertCustomer(list: Customer[], phone: string, name: string, at: string): Customer[] {
+  if (!phone) return list;
+  const existing = list.find((c) => c.phone === phone);
+  if (existing) {
+    return name && name !== existing.name ? list.map((c) => (c.phone === phone ? { ...c, name } : c)) : list;
+  }
+  return [...list, { phone, name, createdAt: at }];
+}
+
+/** بزرگ‌ترین عددِ یک فهرست، بدونِ باز کردنِ آرایه روی پارامترهای تابع.
+ *  (`Math.max(...list)` روی ده‌ها هزار قبض به سقفِ تعدادِ پارامترها می‌خورد.) */
+const maxOf = (values: number[]): number => values.reduce((max, v) => (v > max ? v : max), 0);
 
 // شناسه‌ی یکتا بدون وابستگی به Math.random (سازگار با محیط‌های محدود)
 let idCounter = 0;
@@ -96,26 +148,66 @@ export interface CreateSaleInput {
 }
 
 export function useCarwashStore() {
-  const [tiers, setTiers] = useState<Tier[]>(() => load(KEYS.tiers, DEFAULT_TIERS));
-  const [services, setServices] = useState<Service[]>(() => load(KEYS.services, DEFAULT_SERVICES));
-  const [workers, setWorkers] = useState<Worker[]>(() => load(KEYS.workers, DEFAULT_WORKERS));
-  const [customers, setCustomers] = useState<Customer[]>(() => load(KEYS.customers, []));
-  const [receipts, setReceipts] = useState<Receipt[]>(() => load(KEYS.receipts, []));
-  const [products, setProducts] = useState<Product[]>(() => load(KEYS.products, DEFAULT_PRODUCTS));
-  const [sales, setSales] = useState<Sale[]>(() => load(KEYS.sales, []));
-  const [config, setConfig] = useState<CarwashConfig>(() => load(KEYS.config, DEFAULT_CONFIG));
-  const [users, setUsers] = useState<User[]>(() => load(KEYS.users, DEFAULT_USERS));
+  // یک‌بار در عمرِ کامپوننت: همه‌ی کلیدها خوانده و وضعیتِ سلامتشان ثبت می‌شود.
+  const [initial] = useState(loadAll);
+
+  const [tiers, setTiers] = useState<Tier[]>(initial.tiers);
+  const [services, setServices] = useState<Service[]>(initial.services);
+  const [workers, setWorkers] = useState<Worker[]>(initial.workers);
+  const [customers, setCustomers] = useState<Customer[]>(initial.customers);
+  const [receipts, setReceipts] = useState<Receipt[]>(initial.receipts);
+  const [products, setProducts] = useState<Product[]>(initial.products);
+  const [sales, setSales] = useState<Sale[]>(initial.sales);
+  const [config, setConfig] = useState<CarwashConfig>(initial.config);
+  const [users, setUsers] = useState<User[]>(initial.users);
+
+  // 🔴 «یخِ ذخیره‌سازی»: تا وقتی خواندنِ اولیه مشکوک است، هیچ‌چیز روی دیسک نوشته
+  // نمی‌شود. این تنها چیزی است که جلوی بازنویسیِ داده‌ی سالم با فهرستِ خالی را
+  // می‌گیرد. با بازیابی از بکاپ یا تأییدِ صریحِ کاربر برداشته می‌شود.
+  const [writesFrozen, setWritesFrozen] = useState(initial.failedKeys.length > 0);
+  const [loadFailedKeys] = useState<string[]>(initial.failedKeys);
+  const [saveError, setSaveError] = useState<StorageError | null>(null);
+
+  // شکستِ نوشتن (دیسکِ پر، فایلِ قفل‌شده) از پروسه‌ی Main گزارش می‌شود
+  useEffect(() => subscribeStorageErrors(setSaveError), []);
 
   // --- ذخیره‌سازی خودکار ---
-  useEffect(() => save(KEYS.tiers, tiers), [tiers]);
-  useEffect(() => save(KEYS.services, services), [services]);
-  useEffect(() => save(KEYS.workers, workers), [workers]);
-  useEffect(() => save(KEYS.customers, customers), [customers]);
-  useEffect(() => save(KEYS.receipts, receipts), [receipts]);
-  useEffect(() => save(KEYS.products, products), [products]);
-  useEffect(() => save(KEYS.sales, sales), [sales]);
-  useEffect(() => save(KEYS.config, config), [config]);
-  useEffect(() => save(KEYS.users, users), [users]);
+  useEffect(() => {
+    if (writesFrozen) return;
+    save(KEYS.tiers, tiers);
+  }, [tiers, writesFrozen]);
+  useEffect(() => {
+    if (writesFrozen) return;
+    save(KEYS.services, services);
+  }, [services, writesFrozen]);
+  useEffect(() => {
+    if (writesFrozen) return;
+    save(KEYS.workers, workers);
+  }, [workers, writesFrozen]);
+  useEffect(() => {
+    if (writesFrozen) return;
+    save(KEYS.customers, customers);
+  }, [customers, writesFrozen]);
+  useEffect(() => {
+    if (writesFrozen) return;
+    save(KEYS.receipts, receipts);
+  }, [receipts, writesFrozen]);
+  useEffect(() => {
+    if (writesFrozen) return;
+    save(KEYS.products, products);
+  }, [products, writesFrozen]);
+  useEffect(() => {
+    if (writesFrozen) return;
+    save(KEYS.sales, sales);
+  }, [sales, writesFrozen]);
+  useEffect(() => {
+    if (writesFrozen) return;
+    save(KEYS.config, config);
+  }, [config, writesFrozen]);
+  useEffect(() => {
+    if (writesFrozen) return;
+    save(KEYS.users, users);
+  }, [users, writesFrozen]);
 
   // ================= تیپ‌ها =================
   const addTier = useCallback((name: string) => {
@@ -156,9 +248,16 @@ export function useCarwashStore() {
     setServices((prev) => prev.map((s) => (s.id === id ? { ...s, name } : s)));
   }, []);
 
-  const removeService = useCallback((id: string) => {
-    setServices((prev) => prev.filter((s) => s.id !== id));
-  }, []);
+  // نگهبان: آخرین خدمت حذف نمی‌شود. بدونِ خدمت هیچ قبضی صادر نمی‌شود و صندوق
+  // عملاً می‌خوابد — همان نگهبانی که برای تیپ‌ها هم گذاشته شده است.
+  const removeService = useCallback(
+    (id: string): boolean => {
+      if (services.length <= 1) return false;
+      setServices((prev) => prev.filter((s) => s.id !== id));
+      return true;
+    },
+    [services],
+  );
 
   const setServicePrice = useCallback((serviceId: string, tierId: string, price: number) => {
     setServices((prev) =>
@@ -199,18 +298,46 @@ export function useCarwashStore() {
   // نگهبان: همیشه باید حداقل یک ادمینِ فعال باقی بماند تا کسی خودش را از سیستم قفل نکند.
   const activeAdminCount = (list: User[]) => list.filter((u) => u.role === 'admin' && u.active).length;
 
-  const addUser = useCallback((name: string, role: UserRole, password: string) => {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    setUsers((prev) => [...prev, { id: uid('usr'), name: trimmed, role, password: password.trim(), active: true }]);
-  }, []);
+  /** آیا نامِ داده‌شده قبلاً برای کاربرِ دیگری استفاده شده؟ (نامِ تکراری در صفحه‌ی
+   *  ورود دو کاشیِ کاملاً یکسان می‌سازد و معلوم نیست کدام کدام است.) */
+  const isUserNameTaken = useCallback(
+    (name: string, exceptId?: string): boolean => {
+      const trimmed = name.trim();
+      return users.some((u) => u.id !== exceptId && u.name.trim() === trimmed);
+    },
+    [users],
+  );
 
-  const renameUser = useCallback((id: string, name: string) => {
-    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, name } : u)));
-  }, []);
+  const addUser = useCallback(
+    (name: string, role: UserRole, password: string): boolean => {
+      const trimmed = name.trim();
+      // نگهبانِ مرزِ ورودی: نه نامِ خالی، نه نامِ تکراری، نه رمزِ خالی.
+      // رمزِ خالی یعنی هرکس با زدنِ «ورود» بدونِ تایپِ چیزی وارد می‌شود.
+      if (!trimmed || !password.trim()) return false;
+      if (users.some((u) => u.name.trim() === trimmed)) return false;
+      setUsers((prev) => [...prev, { id: uid('usr'), name: trimmed, role, password: password.trim(), active: true }]);
+      return true;
+    },
+    [users],
+  );
 
-  const setUserPassword = useCallback((id: string, password: string) => {
-    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, password: password.trim() } : u)));
+  const renameUser = useCallback(
+    (id: string, name: string): boolean => {
+      const trimmed = name.trim();
+      if (!trimmed || isUserNameTaken(trimmed, id)) return false;
+      setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, name: trimmed } : u)));
+      return true;
+    },
+    [isUserNameTaken],
+  );
+
+  // نگهبان: رمزِ خالی پذیرفته نمی‌شود. اعتبارسنجیِ کاملِ قواعدِ رمز در لایه‌ی UI
+  // (با پیامِ فارسیِ دقیق) انجام می‌شود؛ این‌جا آخرین خطِ دفاع است.
+  const setUserPassword = useCallback((id: string, password: string): boolean => {
+    const trimmed = password.trim();
+    if (!trimmed) return false;
+    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, password: trimmed } : u)));
+    return true;
   }, []);
 
   // این سه اکشن قبل از تغییر، «همگام» تصمیم می‌گیرند (بر اساسِ users فعلی) تا مقدارِ
@@ -268,7 +395,7 @@ export function useCarwashStore() {
   // شماره‌ی قبضِ بعدی: هیچ‌وقت از «شروعِ شماره‌ی قبض» عقب‌تر نمی‌رود (تا اگر ادمین
   // شمارنده را جلو ببرد اثر کند) و هیچ‌وقت شماره‌ی تکراری نمی‌سازد (بزرگ‌ترین موجود +۱).
   const nextReceiptNumber = useMemo(() => {
-    const maxExisting = receipts.length === 0 ? 0 : Math.max(...receipts.map((r) => r.receiptNumber || 0));
+    const maxExisting = maxOf(receipts.map((r) => r.receiptNumber || 0));
     return Math.max(config.receiptCounterStart, maxExisting + 1);
   }, [receipts, config.receiptCounterStart]);
 
@@ -331,17 +458,7 @@ export function useCarwashStore() {
       setReceipts((prev) => [receipt, ...prev]);
 
       // ثبت/به‌روزرسانی مشتری
-      if (phone) {
-        setCustomers((prev) => {
-          const existing = prev.find((c) => c.phone === phone);
-          if (existing) {
-            return name && name !== existing.name
-              ? prev.map((c) => (c.phone === phone ? { ...c, name } : c))
-              : prev;
-          }
-          return [...prev, { phone, name, createdAt: now.toISOString() }];
-        });
-      }
+      setCustomers((prev) => upsertCustomer(prev, phone, name, now.toISOString()));
 
       return receipt;
     },
@@ -365,8 +482,20 @@ export function useCarwashStore() {
   const updateReceipt = useCallback(
     (updated: Receipt) => {
       const commission = calcWorkerCommission(updated.services, services, !!updated.workerId);
-      const fixed: Receipt = { ...updated, workerCommission: commission || undefined };
+      // شماره‌ی تلفن با همان قاعده‌ی لحظه‌ی صدور نرمال می‌شود (ارقامِ فارسی → لاتین).
+      // بدونِ این، شماره‌ی ویرایش‌شده با هیچ جست‌وجویی جور درنمی‌آمد.
+      const phone = toEnglishDigits(updated.customerPhone).trim();
+      const name = updated.customerName.trim();
+      const fixed: Receipt = {
+        ...updated,
+        customerPhone: phone,
+        customerName: name,
+        workerCommission: commission || undefined,
+      };
       setReceipts((prev) => prev.map((r) => (r.id === fixed.id ? fixed : r)));
+      // پرونده‌ی مشتری هم مثلِ لحظه‌ی صدور به‌روز می‌شود؛ وگرنه قبضِ ویرایش‌شده
+      // در پنلِ «مشتریِ قدیمیِ» صفحه‌ی صندوق دیگر دیده نمی‌شد.
+      setCustomers((prev) => upsertCustomer(prev, phone, name, new Date().toISOString()));
     },
     [services],
   );
@@ -409,10 +538,7 @@ export function useCarwashStore() {
   }, []);
 
   // ================= فروشِ کالا =================
-  const nextSaleNumber = useMemo(() => {
-    if (sales.length === 0) return 1;
-    return Math.max(...sales.map((s) => s.saleNumber || 0)) + 1;
-  }, [sales]);
+  const nextSaleNumber = useMemo(() => maxOf(sales.map((s) => s.saleNumber || 0)) + 1, [sales]);
 
   const createSale = useCallback(
     (input: CreateSaleInput): Sale | null => {
@@ -550,8 +676,19 @@ export function useCarwashStore() {
     if (data.config) setConfig({ ...DEFAULT_CONFIG, ...data.config });
     // کاربران: اگر بکاپِ قدیمی کاربر نداشت، کاربرانِ پیش‌فرض را نگه می‌داریم تا قفل نشویم.
     if (Array.isArray(data.users) && data.users.length > 0) setUsers(data.users);
+    // بازیابیِ موفق یعنی داده‌ی معتبری در دست داریم، پس نوشتن دوباره آزاد می‌شود.
+    setWritesFrozen(false);
     return true;
   }, []);
+
+  /**
+   * «می‌دانم داده‌ی قبلی خوانده نشد، با همین وضعِ خالی ادامه بده.»
+   * تصمیمِ صریحِ کاربر است و تنها راهِ برداشتنِ یخِ ذخیره‌سازی بدونِ بازیابی.
+   */
+  const acceptDataLoss = useCallback(() => setWritesFrozen(false), []);
+
+  /** بستنِ نوارِ هشدارِ شکستِ نوشتن (تا خطای بعدی دوباره ظاهر شود). */
+  const dismissSaveError = useCallback(() => setSaveError(null), []);
 
   const resetAll = useCallback(() => {
     setTiers(DEFAULT_TIERS);
@@ -563,9 +700,17 @@ export function useCarwashStore() {
     setSales([]);
     setConfig(DEFAULT_CONFIG);
     setUsers(DEFAULT_USERS);
+    setWritesFrozen(false);
   }, []);
 
   return {
+    // سلامتِ ذخیره‌سازی
+    /** کلیدهایی که خواندنشان شکست خورد؛ تا خالی نشود نوشتن یخ است. */
+    loadFailedKeys,
+    writesFrozen,
+    saveError,
+    acceptDataLoss,
+    dismissSaveError,
     // state
     tiers,
     services,
@@ -595,6 +740,7 @@ export function useCarwashStore() {
     removeWorker,
     // users
     addUser,
+    isUserNameTaken,
     renameUser,
     setUserPassword,
     setUserRole,

@@ -4,11 +4,16 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronStore', {
-  // همگام: مقدار را همان لحظه برمی‌گرداند (برای بارگذاریِ اولیه‌ی state)
+  // همگام: مقدار را همان لحظه برمی‌گرداند (برای بارگذاریِ اولیه‌ی state).
+  // خروجی سه‌حالته است: {status:'ok',value} | {status:'empty'} | {status:'error'}
   get: (key) => ipcRenderer.sendSync('storage:get', key),
-  // ناهمگام: نوشتن نیازی به انتظار ندارد
+  // ناهمگام: نوشتن نیازی به انتظار ندارد. اگر نوشتن شکست بخورد، پروسه‌ی Main
+  // از کانالِ 'storage:error' خبر می‌دهد (پایین).
   set: (key, value) => ipcRenderer.send('storage:set', { key, value }),
-  delete: (key) => ipcRenderer.send('storage:delete', key),
+  // گزارشِ شکستِ نوشتن — تا خرابیِ دیسک بی‌صدا نماند
+  onError: (handler) => ipcRenderer.on('storage:error', (_event, payload) => handler(payload)),
+  // مسیرِ فایلِ داده و فهرستِ بکاپ‌های خودکار (برای نمایش در تنظیمات)
+  info: () => ipcRenderer.invoke('storage:info'),
 });
 
 // پرچمی ساده تا UI بفهمد داخلِ الکترون اجرا می‌شود یا مرورگر

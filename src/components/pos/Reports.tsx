@@ -3,12 +3,15 @@ import { DollarSign, FileText, TrendingUp, ShoppingCart, Package } from 'lucide-
 import { Store } from '../../data/store';
 import { formatCurrencyToman, toPersianDigits } from '../../utils/format';
 import { getJalaliDateParts, JALALI_MONTH_NAMES } from '../../utils/jalali';
-import { activeReceipts, isOnJalaliDay, jalaliToday, sumRevenue } from '../../utils/receipts';
+import { activeReceipts, isOnJalaliDay, sumRevenue } from '../../utils/receipts';
+import { useJalaliToday } from '../../utils/useJalaliToday';
 import { SectionCard, StatCard } from '../common';
 
 export default function Reports({ store }: { store: Store }) {
   const { receipts, sales } = store;
-  const today = useMemo(() => jalaliToday(), []);
+  // «امروز» زنده است: اگر صفحه از دیشب باز مانده باشد، بعد از نیمه‌شب خودش
+  // به‌روز می‌شود و «درآمد امروز» دیگر عددِ دیروز را نشان نمی‌دهد.
+  const today = useJalaliToday();
 
   const active = useMemo(() => activeReceipts(receipts), [receipts]);
   const voided = useMemo(() => receipts.filter((r) => r.status === 'voided'), [receipts]);
@@ -39,7 +42,8 @@ export default function Reports({ store }: { store: Store }) {
       out.push({ dayName: d.toLocaleDateString('fa-IR', { weekday: 'long' }), day: p.day, month: p.month, value });
     }
     return out;
-  }, [active]);
+    // وابسته به `today` تا با عوض شدنِ روز، نمودارِ ۷ روزه هم بلغزد
+  }, [active, today]);
 
   const monthly = useMemo(
     () =>

@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { Users, Wallet, ReceiptText, PiggyBank, CircleDollarSign, Coins } from 'lucide-react';
 import { Store } from '../../data/store';
 import { formatCurrencyToman, toPersianDigits } from '../../utils/format';
-import { aggregateWorkerPayroll, filterReceiptsByPeriod, jalaliToday, Period, PERIODS } from '../../utils/receipts';
+import { aggregateWorkerPayroll, filterReceiptsByPeriod, Period, PERIODS } from '../../utils/receipts';
+import { useJalaliToday } from '../../utils/useJalaliToday';
 import { PillTabs, SectionCard, StatCard } from '../common';
 
 /**
@@ -13,7 +14,8 @@ import { PillTabs, SectionCard, StatCard } from '../common';
 export default function WorkerPayroll({ store }: { store: Store }) {
   const { receipts } = store;
   const [period, setPeriod] = useState<Period>('today');
-  const today = useMemo(() => jalaliToday(), []);
+  // «امروز» زنده — بعد از نیمه‌شب خودش عوض می‌شود (صفحه ممکن است شب‌ها باز بماند)
+  const today = useJalaliToday();
 
   // قبض‌های فعالِ داخلِ بازه‌ی انتخابی
   const filtered = useMemo(
