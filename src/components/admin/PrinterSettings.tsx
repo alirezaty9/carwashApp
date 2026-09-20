@@ -2,20 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Printer, Zap, Ban, RefreshCw } from 'lucide-react';
 import { Store } from '../../data/store';
 import { SectionCard } from '../common';
-
-interface PrinterInfo {
-  name: string;
-  displayName: string;
-  isDefault: boolean;
-}
-
-interface PrinterBridge {
-  list(): Promise<PrinterInfo[]>;
-  printSilent(deviceName: string): Promise<{ success: boolean; reason?: string }>;
-}
-
-const getBridge = (): PrinterBridge | undefined =>
-  (window as unknown as { printer?: PrinterBridge }).printer;
+import { getPrinterBridge, PrinterInfo } from '../../utils/printing';
 
 const MODES: { id: 'dialog' | 'silent' | 'off'; title: string; desc: string; icon: typeof Printer }[] = [
   { id: 'dialog', title: 'با پنجره‌ی چاپ', desc: 'هنگام هر قبض، پنجره‌ی چاپِ سیستم باز می‌شود (پیش‌فرض).', icon: Printer },
@@ -24,19 +11,13 @@ const MODES: { id: 'dialog' | 'silent' | 'off'; title: string; desc: string; ico
 ];
 
 /** تنظیماتِ پرینتر و حالتِ چاپ. */
-export default function PrinterSettings({
-  store,
-  notify,
-}: {
-  store: Store;
-  notify: (m: string, t?: 'success' | 'error' | 'info') => void;
-}) {
+export default function PrinterSettings({ store }: { store: Store }) {
   const { config, updateConfig } = store;
   const [printers, setPrinters] = useState<PrinterInfo[]>([]);
   const [loading, setLoading] = useState(false);
 
   const loadPrinters = useCallback(async () => {
-    const bridge = getBridge();
+    const bridge = getPrinterBridge();
     if (!bridge) return;
     setLoading(true);
     try {
@@ -50,7 +31,7 @@ export default function PrinterSettings({
     loadPrinters();
   }, [loadPrinters]);
 
-  const isElectron = !!getBridge();
+  const isElectron = !!getPrinterBridge();
 
   return (
     <SectionCard
@@ -127,18 +108,6 @@ export default function PrinterSettings({
                   پرینتری پیدا نشد. مطمئن شوید پرینتر روشن و در ویندوز نصب شده است، بعد «به‌روزرسانی» را بزنید.
                 </p>
               )}
-              <button
-                type="button"
-                onClick={async () => {
-                  const bridge = getBridge();
-                  if (!bridge) return;
-                  const r = await bridge.printSilent(config.printerName);
-                  notify(r.success ? 'صفحه‌ی آزمایشی به پرینتر ارسال شد' : `چاپ ناموفق بود: ${r.reason || 'نامشخص'}`, r.success ? 'success' : 'error');
-                }}
-                className="self-start cw-primary text-xs px-4 py-2 rounded-xl cursor-pointer"
-              >
-                چاپِ آزمایشی
-              </button>
             </>
           )}
         </div>

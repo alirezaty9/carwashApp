@@ -3,7 +3,7 @@ import { formatCurrencyToman, toPersianDigits } from '../../utils/format';
 import { BRAND } from '../../brand';
 
 /**
- * ناحیه‌ی چاپِ فاکتورِ فروشِ لوازم جانبی (فیشِ حرارتی ۸۰mm).
+ * ناحیه‌ی چاپِ فاکتورِ فروشِ لوازم جانبی (فیشِ حرارتیِ رولی).
  * جدا از PrintReceipt (قبضِ شست‌وشو) است — شماره و عنوانِ مستقل دارد.
  * فقط هنگام window.print() نمایش داده می‌شود.
  */

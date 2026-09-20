@@ -100,10 +100,28 @@ ipcMain.handle('printer:list', async (event) => {
   }
 });
 
-// چاپِ مستقیم (بدونِ پنجره) به یک پرینترِ مشخص. صفحه از CSS چاپ (print-area) پیروی می‌کند.
-ipcMain.handle('printer:print', async (event, { deviceName }) => {
+// کف و سقفِ ایمنِ اندازه‌ی برگه بر حسبِ میکرون (هر میلی‌متر = ۱۰۰۰ میکرون).
+// UI از بیرونِ این پروسه می‌آید، پس عددش همین‌جا در مرزِ ورودی اعتبارسنجی می‌شود؛
+// وگرنه یک عددِ خراب می‌تواند به پرینترِ رولی بگوید نیم‌متر کاغذ بیرون بدهد.
+const MIN_PAGE_MICRONS = 20_000; // ۲ سانتی‌متر
+const MAX_PAGE_MICRONS = 500_000; // ۵۰ سانتی‌متر
+
+const toPageSize = (page) => {
+  if (!page) return undefined;
+  const width = Number(page.widthMicrons);
+  const height = Number(page.heightMicrons);
+  const inRange = (v) => Number.isFinite(v) && v >= MIN_PAGE_MICRONS && v <= MAX_PAGE_MICRONS;
+  if (!inRange(width) || !inRange(height)) return undefined;
+  return { width: Math.round(width), height: Math.round(height) };
+};
+
+// چاپِ مستقیم (بدونِ پنجره) به یک پرینترِ مشخص.
+// اندازه‌ی برگه صریحاً اعلام می‌شود؛ بدونِ آن کروم اندازه‌ی پیش‌فرضِ درایور را
+// برمی‌دارد که روی پرینترِ حرارتی یعنی رولِ پیوسته و کاغذِ بی‌پایان.
+ipcMain.handle('printer:print', async (event, { deviceName, page } = {}) => {
   const wc = BrowserWindow.fromWebContents(event.sender)?.webContents;
   if (!wc) return { success: false, reason: 'no-window' };
+  const pageSize = toPageSize(page);
   return new Promise((resolve) => {
     wc.print(
       {
@@ -111,6 +129,10 @@ ipcMain.handle('printer:print', async (event, { deviceName }) => {
         deviceName: deviceName || undefined,
         printBackground: true,
         margins: { marginType: 'none' },
+        // ۱۰۰ یعنی «کوچک نکن» — جلوی «fit to page»ِ درایور را می‌گیرد که
+        // وگرنه فیش را ریز و ناخوانا می‌کند.
+        scaleFactor: 100,
+        ...(pageSize ? { pageSize } : {}),
       },
       (success, reason) => resolve({ success, reason }),
     );

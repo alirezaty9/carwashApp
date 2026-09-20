@@ -1,7 +1,7 @@
 {
   "name": "yatash-carwash",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "Yatash — offline carwash management app",
   "author": "Yatash",
@@ -10,7 +10,7 @@
     "dev": "concurrently -k \"vite --port=3000\" \"wait-on tcp:127.0.0.1:3000 && electron .\"",
     "build": "vite build",
     "preview": "vite preview",
-    "clean": "rm -rf dist server.js release",
+    "clean": "rm -rf dist release test-results",
     "lint": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -24,21 +24,23 @@
     "license:issue": "node tools/license-gen.cjs issue",
     "seed": "node tools/seed.cjs"
   },
+  "_comment_dependencies": "فقط چیزی که برنامه‌ی نصب‌شده در زمانِ اجرا require می‌کند. هر چه اینجا بیاید داخلِ فایلِ نصبی بسته‌بندی می‌شود و حجمش را بالا می‌برد. React و lucide و ابزارهای بیلد عمداً اینجا نیستند، چون Vite آن‌ها را از قبل داخلِ dist/ ادغام کرده است.",
   "dependencies": {
-    "@tailwindcss/vite": "^4.1.14",
-    "@vitejs/plugin-react": "^5.0.4",
-    "electron-store": "^8.2.0",
-    "lucide-react": "^0.546.0",
-    "react": "^19.0.1",
-    "react-dom": "^19.0.1",
-    "vite": "^6.2.3"
+    "electron-store": "^8.2.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.2",
+    "@tailwindcss/vite": "^4.1.14",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.5.0",
     "@testing-library/react": "^16.0.1",
     "@types/node": "^22.14.0",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.0.4",
+    "lucide-react": "^0.546.0",
+    "react": "^19.0.1",
+    "react-dom": "^19.0.1",
     "concurrently": "^8.2.2",
     "electron": "^31.3.0",
     "electron-builder": "^24.13.3",

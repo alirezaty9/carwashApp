@@ -24,5 +24,7 @@ contextBridge.exposeInMainWorld('license', {
 // API پرینتر
 contextBridge.exposeInMainWorld('printer', {
   list: () => ipcRenderer.invoke('printer:list'),
-  printSilent: (deviceName) => ipcRenderer.invoke('printer:print', { deviceName }),
+  // page = اندازه‌ی دقیقِ برگه‌ی همین فیش (بر حسبِ میکرون)، تا پرینترِ رولی
+  // به‌جای اندازه‌ی پیش‌فرضِ درایور، دقیقاً به‌اندازه‌ی فیش کاغذ بدهد.
+  printSilent: (deviceName, page) => ipcRenderer.invoke('printer:print', { deviceName, page }),
 });

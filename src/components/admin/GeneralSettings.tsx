@@ -88,7 +88,7 @@ export default function GeneralSettings({
       </SectionCard>
 
       {/* پرینتر و چاپ */}
-      <PrinterSettings store={store} notify={notify} />
+      <PrinterSettings store={store} />
 
       {/* پشتیبان‌گیری */}
       <SectionCard title="پشتیبان‌گیری و بازیابی" subtitle="تمام اطلاعات آفلاین ذخیره می‌شوند؛ برای اطمینان مرتب بکاپ بگیرید.">

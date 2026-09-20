@@ -2,8 +2,31 @@
  * کمک‌توابعِ مشترکِ گزارش‌گیری روی قبض‌ها.
  * فیلترِ بازه‌ی زمانی بینِ «گزارش‌ها» و «دستمزد کارگرها» مشترک است و اینجا متمرکز شده تا تکرار نشود.
  */
-import { Receipt } from '../types';
+import { Receipt, Service } from '../types';
 import { getJalaliDateParts } from './jalali';
+
+/**
+ * پورسانتِ کارگر برای یک قبض = جمعِ (قیمتِ هر خدمت × درصدِ پورسانتِ همان خدمت).
+ *
+ * بر پایه‌ی قیمتِ ناخالصِ خدمات (قبل از تخفیف) حساب می‌شود، چون تخفیف سهمِ کارواش
+ * است نه کارگر. اگر هیچ کارگری به قبض وصل نباشد، پورسانت صفر است — وگرنه مبلغی
+ * به حسابِ «بدون کارگر» می‌نشیند که کارواش آن را از سهمِ خودش کم می‌کند ولی به
+ * هیچ‌کس نمی‌پردازد.
+ *
+ * اینجا (و نه داخلِ کامپوننت) قرار دارد تا هم ثبتِ قبضِ جدید و هم ویرایشِ قبضِ قدیمی
+ * از یک قاعده‌ی واحد تغذیه شوند و با هم واگرا نشوند.
+ */
+export function calcWorkerCommission(
+  lines: { id: string; price: number }[],
+  services: Service[],
+  hasWorker: boolean,
+): number {
+  if (!hasWorker) return 0;
+  return lines.reduce((sum, line) => {
+    const pct = services.find((s) => s.id === line.id)?.commissionPct ?? 0;
+    return sum + Math.round((line.price * pct) / 100);
+  }, 0);
+}
 
 /** بازه‌ی زمانیِ گزارش */
 export type Period = 'today' | 'week' | 'month' | 'all';

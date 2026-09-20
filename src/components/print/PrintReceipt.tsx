@@ -3,7 +3,8 @@ import { formatCurrencyToman, toPersianDigits } from '../../utils/format';
 import { BRAND } from '../../brand';
 
 /**
- * ناحیه‌ی چاپِ فیشِ حرارتی (۸۰mm).
+ * ناحیه‌ی چاپِ فیشِ حرارتیِ رولی. عرض و ارتفاعِ برگه در لحظه‌ی چاپ و بر اساسِ
+ * ارتفاعِ واقعیِ همین فیش تعیین می‌شود — منطقش در src/utils/printing.ts است.
  * فقط هنگام window.print() نمایش داده می‌شود (کلاس print-area در index.css).
  * این عنصر «خواهرِ» بخشِ اصلیِ برنامه است، نه فرزندِ آن، تا در چاپ محو نشود.
  */

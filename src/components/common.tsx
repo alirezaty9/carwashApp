@@ -212,7 +212,10 @@ export function PillTabs<T extends string>({
 }: {
   tabs: { id: T; label: string; icon?: LucideIcon }[];
   active: T;
-  onChange: (id: T) => void;
+  // NoInfer یعنی «نوعِ تب را از روی این پارامتر حدس نزن». بدونِ آن، TypeScript
+  // از شکلِ تابعِ setState یک نوعِ نامناسب برمی‌داشت و در نهایت به string عقب‌نشینی
+  // می‌کرد — یعنی شناسه‌ی تب‌ها عملاً بررسی نمی‌شد و یک تایپِ اشتباه لو نمی‌رفت.
+  onChange: (id: NoInfer<T>) => void;
 }) {
   return (
     <div className="flex flex-wrap gap-2 bg-[var(--surface)] p-2 rounded-2xl border border-[var(--border)]">

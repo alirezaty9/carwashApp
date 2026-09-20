@@ -237,12 +237,17 @@
    چاپِ فیشِ حرارتی (۸۰mm) — همیشه سیاه روی سفید، مستقل از تم
 --------------------------------------------------------------- */
 
-/* 🔴 مهم‌ترین خطِ چاپ: اندازه‌ی «صفحه» را روی ۸۰mm پهنا و ارتفاعِ «auto» (به‌اندازه‌ی
-   محتوا) قفل می‌کنیم. بدونِ این، پرینترِ حرارتیِ رول (همان نوعِ رستوران‌ها) اندازه‌ی
-   پیش‌فرضِ درایور (مثلِ A4) را می‌گیرد و یک رولِ چندمتری خالی بیرون می‌دهد و آخرش هم
-   چیزی درست چاپ نمی‌شود. size:auto یعنی درست بعد از پایانِ متن، کاغذ بریده شود. */
+/* 🔴 مهم‌ترین خطِ چاپ: اندازه‌ی «صفحه».
+   این فقط پیش‌فرضِ اضطراری است (مثلاً اگر کاربر دستی Ctrl+P بزند). در چاپِ واقعی،
+   قبل از هر فیش، همین قانون با عرض و ارتفاعِ دقیقِ همان فیش بازنویسی می‌شود —
+   منطقش در src/utils/printing.ts است.
+
+   ⚠️ اینجا عمداً هر دو عدد نوشته شده‌اند. نوشتنِ «size: 72mm auto» از نظرِ CSS
+   نامعتبر است (گرامرِ size یا «auto»ِ تنها را می‌پذیرد یا یک/دو طول، نه ترکیبشان)
+   و مرورگر کلِ خط را دور می‌اندازد — آن‌وقت اندازه‌ی پیش‌فرضِ درایور حاکم می‌شود
+   که روی پرینترِ حرارتی یعنی رولِ پیوسته و کاغذِ بی‌پایان. */
 @page {
-  size: 80mm auto;
+  size: 72mm 200mm;
   margin: 0;
 }
 
@@ -258,8 +263,9 @@
   .no-print { display: none !important; }
   .print-area {
     display: block !important;
-    width: 80mm !important; max-width: 80mm !important;
-    padding: 3mm !important; margin: 0 !important;
+    width: var(--cw-paper-width, 72mm) !important;
+    max-width: var(--cw-paper-width, 72mm) !important;
+    padding: var(--cw-receipt-padding, 2mm) !important; margin: 0 !important;
     box-sizing: border-box !important; border: none !important; box-shadow: none !important;
     page-break-after: avoid !important;
     page-break-inside: avoid !important;
@@ -270,3 +276,16 @@
 }
 
 .print-area { display: none; }
+
+/* حالتِ اندازه‌گیری: برای یک لحظه ناحیه‌ی چاپ را با همان عرضِ واقعیِ کاغذ و بیرونِ
+   کادرِ دید می‌چیند تا ارتفاعش خوانده شود. کاربر هرگز این حالت را نمی‌بیند. */
+.cw-measuring .print-area {
+  display: block !important;
+  position: absolute !important;
+  top: 0 !important; left: -10000px !important;
+  visibility: hidden !important;
+  width: var(--cw-paper-width, 72mm) !important;
+  max-width: var(--cw-paper-width, 72mm) !important;
+  padding: var(--cw-receipt-padding, 2mm) !important;
+  box-sizing: border-box !important;
+}

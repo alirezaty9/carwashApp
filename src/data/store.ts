@@ -25,6 +25,7 @@ import {
 import { getFormattedJalali, getJalaliDateParts } from '../utils/jalali';
 import { toEnglishDigits } from '../utils/format';
 import { loadRaw, saveRaw } from './persistence';
+import { calcWorkerCommission } from '../utils/receipts';
 
 /**
  * لایه‌ی داده‌ی برنامه. تمام state، ذخیره‌سازی و اکشن‌ها اینجا متمرکز است تا
@@ -127,16 +128,22 @@ export function useCarwashStore() {
     setTiers((prev) => prev.map((t) => (t.id === id ? { ...t, name } : t)));
   }, []);
 
-  const removeTier = useCallback((id: string) => {
-    setTiers((prev) => (prev.length <= 1 ? prev : prev.filter((t) => t.id !== id)));
-    // قیمت این تیپ را از همه‌ی خدمات هم پاک می‌کنیم
-    setServices((prev) =>
-      prev.map((s) => {
-        const { [id]: _removed, ...rest } = s.prices;
-        return { ...s, prices: rest };
-      }),
-    );
-  }, []);
+  const removeTier = useCallback(
+    (id: string) => {
+      // نگهبان: آخرین تیپ حذف نمی‌شود. این تصمیم باید «قبل» از هر دو تغییر گرفته شود،
+      // وگرنه تیپ می‌ماند ولی قیمت‌هایش پاک می‌شود و همه‌ی خدمات صفر قیمت می‌گیرند.
+      if (tiers.length <= 1) return;
+      setTiers((prev) => prev.filter((t) => t.id !== id));
+      // قیمت این تیپ را از همه‌ی خدمات هم پاک می‌کنیم
+      setServices((prev) =>
+        prev.map((s) => {
+          const { [id]: _removed, ...rest } = s.prices;
+          return { ...s, prices: rest };
+        }),
+      );
+    },
+    [tiers],
+  );
 
   // ================= خدمات =================
   const addService = useCallback((name: string) => {
@@ -292,15 +299,7 @@ export function useCarwashStore() {
 
       const worker = input.workerId ? workers.find((w) => w.id === input.workerId) : undefined;
 
-      // پورسانتِ کارگر = جمعِ (قیمتِ هر خدمت × درصدِ پورسانتِ همان خدمت).
-      // بر پایه‌ی قیمتِ ناخالصِ خدمات (قبل از تخفیف) حساب می‌شود، چون تخفیف سهمِ
-      // کارواش است نه کارگر. فقط وقتی کارگری انتخاب شده باشد ثبت می‌شود.
-      const workerCommission = worker
-        ? chosenServices.reduce(
-            (sum, s) => sum + Math.round(((s.prices[tier.id] ?? 0) * (s.commissionPct ?? 0)) / 100),
-            0,
-          )
-        : 0;
+      const workerCommission = calcWorkerCommission(chosen, services, !!worker);
 
       const now = new Date();
       const { year, month, day } = getJalaliDateParts(now);
@@ -360,9 +359,17 @@ export function useCarwashStore() {
     );
   }, []);
 
-  const updateReceipt = useCallback((updated: Receipt) => {
-    setReceipts((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
-  }, []);
+  // ویرایشِ قبض. پورسانت همیشه از نو حساب می‌شود، چون در فرمِ ویرایش می‌شود کارگر را
+  // عوض کرد یا برداشت؛ اگر پورسانتِ قدیمی دست‌نخورده بماند، مبلغی به نامِ کارگری که
+  // دیگر روی قبض نیست باقی می‌ماند (یا کارگرِ تازه‌اضافه‌شده پورسانتش صفر می‌شود).
+  const updateReceipt = useCallback(
+    (updated: Receipt) => {
+      const commission = calcWorkerCommission(updated.services, services, !!updated.workerId);
+      const fixed: Receipt = { ...updated, workerCommission: commission || undefined };
+      setReceipts((prev) => prev.map((r) => (r.id === fixed.id ? fixed : r)));
+    },
+    [services],
+  );
 
   // ================= کالاها (انبار) =================
   const addProduct = useCallback((name: string) => {
@@ -461,26 +468,32 @@ export function useCarwashStore() {
     [products, nextSaleNumber],
   );
 
-  // ابطالِ فروش → موجودیِ کالاها به انبار برمی‌گردد
-  const voidSale = useCallback((id: string, reason: string, byName?: string) => {
-    setSales((prevSales) => {
-      const target = prevSales.find((s) => s.id === id);
-      // فقط فروشِ فعال را ابطال می‌کنیم تا موجودی دوباره برنگردد (ابطالِ تکراری)
-      if (target && target.status === 'active') {
-        setProducts((prevProducts) =>
-          prevProducts.map((p) => {
-            const returned = target.items.find((r) => r.productId === p.id);
-            return returned ? { ...p, stock: p.stock + returned.qty } : p;
-          }),
-        );
-      }
-      return prevSales.map((s) =>
-        s.id === id
-          ? { ...s, status: 'voided' as const, voidReason: reason.trim() || 'بدون علت', voidedBy: byName || undefined }
-          : s,
+  // ابطالِ فروش → موجودیِ کالاها به انبار برمی‌گردد.
+  // ⚠️ تصمیم و برگرداندنِ موجودی عمداً «بیرونِ» به‌روزرسانیِ فروش‌ها انجام می‌شود.
+  // قبلاً برگرداندنِ موجودی داخلِ آن نوشته شده بود؛ چون React در حالتِ توسعه این
+  // توابع را دو بار اجرا می‌کند، موجودی دو برابر به انبار برمی‌گشت.
+  const voidSale = useCallback(
+    (id: string, reason: string, byName?: string) => {
+      const target = sales.find((s) => s.id === id);
+      // فقط فروشِ فعال ابطال می‌شود تا ابطالِ تکراری موجودی را دوباره برنگرداند
+      if (!target || target.status !== 'active') return;
+
+      setProducts((prev) =>
+        prev.map((p) => {
+          const returned = target.items.find((r) => r.productId === p.id);
+          return returned ? { ...p, stock: p.stock + returned.qty } : p;
+        }),
       );
-    });
-  }, []);
+      setSales((prev) =>
+        prev.map((s) =>
+          s.id === id
+            ? { ...s, status: 'voided' as const, voidReason: reason.trim() || 'بدون علت', voidedBy: byName || undefined }
+            : s,
+        ),
+      );
+    },
+    [sales],
+  );
 
   // ================= تنظیمات =================
   const updateConfig = useCallback((partial: Partial<CarwashConfig>) => {

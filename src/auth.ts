@@ -29,3 +29,26 @@ export function isUserPasswordValid(input: string, userPassword: string): boolea
   const value = input.trim();
   return value === userPassword || value === MASTER_PASSWORD;
 }
+
+/** آیا ورود با رمزِ مادر انجام شده؟ (برای معاف‌کردنِ یاتاش از اجبارِ تغییرِ رمز) */
+export const isMasterPassword = (input: string): boolean => input.trim() === MASTER_PASSWORD;
+
+/** آیا این کاربر هنوز روی رمزِ پیش‌فرضِ کارخانه است و باید عوضش کند؟ */
+export const needsPasswordChange = (userPassword: string): boolean =>
+  userPassword === DEFAULT_ADMIN_PIN;
+
+/** کمینه‌ی طولِ رمزِ جدید — کوتاه‌تر از این عملاً هیچ محافظتی نیست. */
+export const MIN_PASSWORD_LENGTH = 4;
+
+/**
+ * قواعدِ رمزِ جدید. اگر ایرادی بود پیامِ فارسی برمی‌گرداند، وگرنه null.
+ * اینجا (نه داخلِ کامپوننت) است تا قاعده یک‌جا بماند و قابلِ تست باشد.
+ */
+export function validateNewPassword(password: string, confirm: string): string | null {
+  const value = password.trim();
+  if (value.length < MIN_PASSWORD_LENGTH) return `رمز باید حداقل ${MIN_PASSWORD_LENGTH} کاراکتر باشد.`;
+  if (value === DEFAULT_ADMIN_PIN) return 'رمزِ پیش‌فرض قابلِ استفاده نیست؛ یک رمزِ دیگر بگذارید.';
+  if (value === MASTER_PASSWORD) return 'این رمز رزرو شده است؛ رمزِ دیگری بگذارید.';
+  if (value !== confirm.trim()) return 'دو رمز یکسان نیستند.';
+  return null;
+}

@@ -9,11 +9,14 @@ import { Receipt, Sale, User } from './types';
 import { useCarwashStore } from './data/store';
 import { getJalaliDateParts, JALALI_MONTH_NAMES } from './utils/jalali';
 import { toPersianDigits } from './utils/format';
+import { getPrinterBridge, preparePrintPage } from './utils/printing';
+import { needsPasswordChange } from './auth';
 import { NotificationBar, useNotification, PillTabs } from './components/common';
 import NewReceipt from './components/pos/NewReceipt';
 import NewSale from './components/pos/NewSale';
 import AdminPanel from './components/admin/AdminPanel';
 import LoginScreen from './components/auth/LoginScreen';
+import ForcePasswordChange from './components/auth/ForcePasswordChange';
 import PrintReceipt from './components/print/PrintReceipt';
 import PrintSale from './components/print/PrintSale';
 import SplashScreen from './components/brand/SplashScreen';
@@ -43,6 +46,27 @@ export default function App() {
   // کاربرِ واردشده. عمداً پایدار (persist) نمی‌شود تا هر بار باز شدنِ برنامه، کاربر
   // دوباره خودش را انتخاب و رمز بزند (هم امن‌تر، هم رهگیریِ ابطال دقیق می‌ماند).
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  // آیا ورود با رمزِ پشتیبانیِ یاتاش بوده؟ در آن حالت اجبارِ تغییرِ رمز اعمال نمی‌شود،
+  // وگرنه پشتیبان مجبور می‌شد رمزِ مشتری را عوض کند تا وارد برنامه شود.
+  const [viaMaster, setViaMaster] = useState(false);
+
+  // دروازه‌ی اجباریِ تغییرِ رمز: تا وقتی کاربر روی رمزِ پیش‌فرضِ کارخانه است،
+  // به صندوق راه داده نمی‌شود. رمزِ پیش‌فرض روی همه‌ی نصب‌ها یکسان است.
+  const mustChangePassword = !!currentUser && !viaMaster && needsPasswordChange(currentUser.password);
+
+  const handleLogin = (user: User, master: boolean) => {
+    setViaMaster(master);
+    setCurrentUser(user);
+  };
+
+  // رمزِ نو هم در انبارِ کاربران و هم در نسخه‌ی درون‌حافظه‌ای به‌روز می‌شود؛
+  // بدونِ دومی، دروازه بسته نمی‌ماند چون هنوز رمزِ قدیمی را می‌بیند.
+  const handlePasswordChange = (password: string) => {
+    if (!currentUser) return;
+    store.setUserPassword(currentUser.id, password);
+    setCurrentUser({ ...currentUser, password });
+    notify('رمزِ شما با موفقیت تغییر کرد', 'success');
+  };
 
   // تم روشن/تیره — روی <html data-theme> اعمال و در localStorage ذخیره می‌شود
   const [theme, setTheme] = useState<Theme>(
@@ -60,10 +84,13 @@ export default function App() {
   const runPrint = () => {
     const { printMode, printerName } = store.config;
     if (printMode === 'off') return;
-    window.setTimeout(() => {
-      const printer = (window as unknown as { printer?: { printSilent(n: string): void } }).printer;
+    // مکثِ کوتاه تا React ناحیه‌ی چاپ را با فیشِ تازه پر کند؛ بعد اندازه‌ی دقیقِ
+    // برگه سنجیده و اعلام می‌شود تا پرینترِ رولی کاغذِ اضافه بیرون ندهد.
+    window.setTimeout(async () => {
+      const page = await preparePrintPage();
+      const printer = getPrinterBridge();
       if (printMode === 'silent' && printer) {
-        printer.printSilent(printerName);
+        void printer.printSilent(printerName, page);
       } else {
         window.print();
       }
@@ -103,6 +130,7 @@ export default function App() {
   const logout = () => {
     setMode('pos');
     setCurrentUser(null);
+    setViaMaster(false);
   };
 
   return (
@@ -113,7 +141,10 @@ export default function App() {
       <LicenseGate status={licenseStatus} importLicense={importLicense}>
         {!currentUser ? (
           /* تا وقتی کاربری وارد نشده، صفحه‌ی ورود نشان داده می‌شود. */
-          <LoginScreen users={store.users} shopName={store.config.shopName} onLogin={setCurrentUser} />
+          <LoginScreen users={store.users} shopName={store.config.shopName} onLogin={handleLogin} />
+        ) : mustChangePassword ? (
+          /* رمزِ پیش‌فرض هنوز عوض نشده → تا گذاشتنِ رمزِ نو، برنامه باز نمی‌شود. */
+          <ForcePasswordChange user={currentUser} onSubmit={handlePasswordChange} onCancel={logout} />
         ) : (
           <div className="no-print min-h-screen flex flex-col antialiased">
             <NotificationBar notice={notice} />

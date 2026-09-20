@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { ShieldCheck, User as UserIcon, ArrowRight, LogIn, Lock } from 'lucide-react';
 import { User } from '../../types';
-import { isUserPasswordValid } from '../../auth';
+import { isMasterPassword, isUserPasswordValid } from '../../auth';
 import { BRAND } from '../../brand';
 import { YatashMark } from '../brand/YatashLogo';
 import { inputClass, PrimaryButton, GhostButton } from '../common';
@@ -17,7 +17,8 @@ export default function LoginScreen({
 }: {
   users: User[];
   shopName: string;
-  onLogin: (user: User) => void;
+  /** viaMaster: ورود با رمزِ پشتیبانیِ یاتاش انجام شده — از اجبارِ تغییرِ رمز معاف است. */
+  onLogin: (user: User, viaMaster: boolean) => void;
 }) {
   const activeUsers = users.filter((u) => u.active);
   const [selected, setSelected] = useState<User | null>(null);
@@ -28,7 +29,7 @@ export default function LoginScreen({
     e.preventDefault();
     if (!selected) return;
     if (isUserPasswordValid(password, selected.password)) {
-      onLogin(selected);
+      onLogin(selected, isMasterPassword(password));
     } else {
       setError('رمز نادرست است');
     }
