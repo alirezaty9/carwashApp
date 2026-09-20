@@ -218,6 +218,211 @@ describe('createSale و انبار', () => {
   });
 });
 
+describe('🛡️ نگهبان‌های کاربران', () => {
+  it('کاربرِ بدونِ رمز ساخته نمی‌شود', () => {
+    const { result } = renderHook(() => useCarwashStore());
+    const before = result.current.users.length;
+    let ok: any = null;
+    act(() => {
+      ok = result.current.addUser('بی‌رمز', 'cashier', '');
+    });
+    expect(ok).toBe(false);
+    expect(result.current.users).toHaveLength(before);
+  });
+
+  it('کاربرِ بدونِ نام ساخته نمی‌شود', () => {
+    const { result } = renderHook(() => useCarwashStore());
+    const before = result.current.users.length;
+    let ok: any = null;
+    act(() => {
+      ok = result.current.addUser('   ', 'cashier', '1234');
+    });
+    expect(ok).toBe(false);
+    expect(result.current.users).toHaveLength(before);
+  });
+
+  it('نامِ تکراری پذیرفته نمی‌شود (در صفحه‌ی ورود دو کاشیِ یکسان می‌ساخت)', () => {
+    const { result } = renderHook(() => useCarwashStore());
+    act(() => {
+      result.current.addUser('ماهان', 'cashier', '1234');
+    });
+    let ok: any = null;
+    act(() => {
+      ok = result.current.addUser('ماهان', 'admin', '5678');
+    });
+    expect(ok).toBe(false);
+    expect(result.current.users.filter((u) => u.name === 'ماهان')).toHaveLength(1);
+  });
+
+  it('نامِ تکراری با فاصله‌ی اضافه هم تکراری حساب می‌شود', () => {
+    const { result } = renderHook(() => useCarwashStore());
+    act(() => {
+      result.current.addUser('ماهان', 'cashier', '1234');
+    });
+    expect(result.current.isUserNameTaken('  ماهان  ')).toBe(true);
+    expect(result.current.isUserNameTaken('ماهانِ دیگر')).toBe(false);
+  });
+
+  it('ویرایشِ نام به نامِ تکراری یا خالی رد می‌شود', () => {
+    const { result } = renderHook(() => useCarwashStore());
+    act(() => {
+      result.current.addUser('ماهان', 'cashier', '1234');
+    });
+    const mahan = result.current.users.find((u) => u.name === 'ماهان')!;
+    const admin = result.current.users.find((u) => u.role === 'admin')!;
+
+    let ok: any = null;
+    act(() => {
+      ok = result.current.renameUser(mahan.id, admin.name); // تکراری
+    });
+    expect(ok).toBe(false);
+
+    act(() => {
+      ok = result.current.renameUser(mahan.id, '  '); // خالی
+    });
+    expect(ok).toBe(false);
+    expect(result.current.users.find((u) => u.id === mahan.id)!.name).toBe('ماهان');
+  });
+
+  it('ویرایشِ نام به نامِ تازه انجام می‌شود (نگهبان سرِ راهِ کارِ درست نیست)', () => {
+    const { result } = renderHook(() => useCarwashStore());
+    const admin = result.current.users.find((u) => u.role === 'admin')!;
+    let ok: any = null;
+    act(() => {
+      ok = result.current.renameUser(admin.id, 'مدیرِ تازه');
+    });
+    expect(ok).toBe(true);
+    expect(result.current.users.find((u) => u.id === admin.id)!.name).toBe('مدیرِ تازه');
+  });
+
+  it('🔴 رمزِ خالی روی کاربرِ موجود نمی‌نشیند (رمزِ قبلی می‌ماند)', () => {
+    const { result } = renderHook(() => useCarwashStore());
+    const admin = result.current.users.find((u) => u.role === 'admin')!;
+    const before = admin.password;
+
+    let ok: any = null;
+    act(() => {
+      ok = result.current.setUserPassword(admin.id, '   ');
+    });
+    expect(ok).toBe(false);
+    expect(result.current.users.find((u) => u.id === admin.id)!.password).toBe(before);
+  });
+
+  it('رمزِ معتبر جایگزین می‌شود و فاصله‌هایش پاک می‌گردد', () => {
+    const { result } = renderHook(() => useCarwashStore());
+    const admin = result.current.users.find((u) => u.role === 'admin')!;
+    let ok: any = null;
+    act(() => {
+      ok = result.current.setUserPassword(admin.id, '  رمزِ نو  ');
+    });
+    expect(ok).toBe(true);
+    expect(result.current.users.find((u) => u.id === admin.id)!.password).toBe('رمزِ نو');
+  });
+});
+
+describe('🛡️ نگهبانِ آخرین خدمت', () => {
+  it('حذفِ خدمات تا وقتی بیش از یکی هست انجام می‌شود', () => {
+    const { result } = renderHook(() => useCarwashStore());
+    const first = result.current.services[0].id;
+    let ok: any = null;
+    act(() => {
+      ok = result.current.removeService(first);
+    });
+    expect(ok).toBe(true);
+  });
+
+  it('آخرین خدمت حذف نمی‌شود (وگرنه صندوق نمی‌تواند قبض صادر کند)', () => {
+    const { result } = renderHook(() => useCarwashStore());
+    // همه را جز یکی حذف کن
+    act(() => {
+      for (const s of result.current.services.slice(1)) result.current.removeService(s.id);
+    });
+    expect(result.current.services).toHaveLength(1);
+
+    let ok: any = null;
+    act(() => {
+      ok = result.current.removeService(result.current.services[0].id);
+    });
+    expect(ok).toBe(false);
+    expect(result.current.services).toHaveLength(1);
+  });
+});
+
+describe('updateReceipt — شماره‌ی مشتری و پرونده‌ی او', () => {
+  function makeReceipt(store: ReturnType<typeof useCarwashStore>, phone = '09120000000') {
+    return store.createReceipt({
+      customerPhone: phone,
+      customerName: 'مشتریِ تست',
+      carModel: 'x',
+      tierId: 'tier-sedan',
+      serviceIds: ['srv-roshuyi'],
+    });
+  }
+
+  it('🟢 شماره‌ی فارسی هنگامِ ویرایش به لاتین تبدیل می‌شود', () => {
+    const { result } = renderHook(() => useCarwashStore());
+    let rec: any = null;
+    act(() => {
+      rec = makeReceipt(result.current);
+    });
+    act(() => result.current.updateReceipt({ ...rec, customerPhone: '۰۹۱۲۱۱۱۱۱۱۱' }));
+    expect(result.current.receipts.find((r) => r.id === rec.id)!.customerPhone).toBe('09121111111');
+  });
+
+  it('🟢 بعد از ویرایشِ شماره، قبض در پرونده‌ی همان مشتری دیده می‌شود', () => {
+    const { result } = renderHook(() => useCarwashStore());
+    let rec: any = null;
+    act(() => {
+      rec = makeReceipt(result.current, '09120000000');
+    });
+    expect(result.current.getCustomerHistory('09120000000')).toHaveLength(1);
+
+    act(() => result.current.updateReceipt({ ...rec, customerPhone: '09121111111' }));
+
+    // قبض زیرِ شماره‌ی تازه پیدا می‌شود...
+    expect(result.current.getCustomerHistory('09121111111')).toHaveLength(1);
+    // ...و مشتریِ تازه هم در فهرستِ مشتری‌ها ثبت شده است
+    expect(result.current.getCustomerByPhone('09121111111')).toBeDefined();
+    // زیرِ شماره‌ی قدیمی دیگر قبضی نیست
+    expect(result.current.getCustomerHistory('09120000000')).toHaveLength(0);
+  });
+
+  it('نامِ ویرایش‌شده در پرونده‌ی مشتری هم به‌روز می‌شود', () => {
+    const { result } = renderHook(() => useCarwashStore());
+    let rec: any = null;
+    act(() => {
+      rec = makeReceipt(result.current);
+    });
+    act(() => result.current.updateReceipt({ ...rec, customerName: '  نامِ تازه  ' }));
+    expect(result.current.getCustomerByPhone('09120000000')!.name).toBe('نامِ تازه');
+  });
+});
+
+describe('شماره‌ی قبض روی تعدادِ زیاد', () => {
+  it('با ۵۰٬۰۰۰ قبضِ بازیابی‌شده هم بدونِ خطا شماره‌ی بعدی را می‌دهد', () => {
+    const { result } = renderHook(() => useCarwashStore());
+    // روشِ قبلی (باز کردنِ آرایه روی پارامترهای Math.max) در این اندازه می‌شکست
+    const many = Array.from({ length: 50_000 }, (_, i) => ({
+      id: `r${i}`,
+      receiptNumber: 1000 + i,
+      price: 0,
+      services: [],
+      status: 'active',
+    }));
+    let ok: any = null;
+    act(() => {
+      ok = result.current.importData({
+        tiers: [{ id: 't', name: 'x' }],
+        services: [{ id: 's', name: 'x', prices: {} }],
+        receipts: many,
+        sales: [],
+      } as any);
+    });
+    expect(ok).toBe(true);
+    expect(result.current.nextReceiptNumber).toBe(1000 + 49_999 + 1);
+  });
+});
+
 describe('importData (اعتبارسنجیِ بکاپ)', () => {
   it('بکاپِ نامعتبر (بدونِ آرایه‌ی receipts) را رد می‌کند', () => {
     const { result } = renderHook(() => useCarwashStore());

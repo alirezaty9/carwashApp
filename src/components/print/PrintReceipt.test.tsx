@@ -48,4 +48,18 @@ describe('PrintReceipt', () => {
     const { container } = render(<PrintReceipt receipt={noTip} config={config} />);
     expect(container.textContent).not.toContain('انعام کارگر');
   });
+
+  /**
+   * پرینترِ حرارتی فقط سیاه می‌سوزاند. اگر خطی رنگش را از تمِ برنامه بگیرد
+   * (فیروزه‌ای در تمِ تیره)، روی کاغذ کم‌رنگ یا اصلاً چاپ‌نشده درمی‌آید.
+   * این تست نگهبانِ آن است: هیچ خطی در ناحیه‌ی چاپ نباید رنگِ تم داشته باشد.
+   */
+  it('🟢 همه‌ی خط‌های فیش سیاهِ خالص‌اند (نه رنگِ تم)', () => {
+    const withNotes = { ...receipt, notes: 'لطفاً صندوق عقب هم جارو شود' };
+    const { container } = render(<PrintReceipt receipt={withNotes} config={config} />);
+
+    expect(container.textContent).toContain('لطفاً صندوق عقب هم جارو شود');
+    const themed = container.querySelectorAll('[class*="--border-strong"], [class*="--border)"]');
+    expect(themed).toHaveLength(0);
+  });
 });
