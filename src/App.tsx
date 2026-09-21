@@ -9,7 +9,8 @@ import { Receipt, Sale, User } from './types';
 import { useCarwashStore } from './data/store';
 import { getJalaliDateParts, JALALI_MONTH_NAMES } from './utils/jalali';
 import { toPersianDigits } from './utils/format';
-import { getPrinterBridge, preparePrintPage } from './utils/printing';
+import { describePrintOutcome, printPreparedReceipt, savePrintPreview, PrintReport } from './utils/printing';
+import { startSystemLogBridge } from './utils/printLog';
 import { needsPasswordChange } from './auth';
 import { NotificationBar, useNotification, PillTabs } from './components/common';
 import NewReceipt from './components/pos/NewReceipt';
@@ -19,6 +20,7 @@ import LoginScreen from './components/auth/LoginScreen';
 import ForcePasswordChange from './components/auth/ForcePasswordChange';
 import PrintReceipt from './components/print/PrintReceipt';
 import PrintSale from './components/print/PrintSale';
+import { createSampleReceipt } from './components/print/sampleReceipt';
 import SplashScreen from './components/brand/SplashScreen';
 import StorageGate from './components/StorageGate';
 import BrandWatermark from './components/brand/BrandWatermark';
@@ -30,6 +32,12 @@ import LicenseGate from './license/LicenseGate';
 type Mode = 'pos' | 'admin';
 type PosTab = 'wash' | 'sale';
 type Theme = 'dark' | 'light';
+
+/**
+ * مکثِ کوتاه بینِ «نشاندنِ فیش روی ناحیه‌ی چاپ» و «اندازه‌گیری و چاپ».
+ * بدونِ این مکث، اندازه‌گیری روی ناحیه‌ی چاپِ خالی یا نیمه‌آماده انجام می‌شود.
+ */
+const PRINT_RENDER_SETTLE_MS = 250;
 
 const POS_TABS: { id: PosTab; label: string; icon: typeof Droplets }[] = [
   { id: 'wash', label: 'قبض شست‌وشو', icon: Droplets },
@@ -69,6 +77,12 @@ export default function App() {
     notify('رمزِ شما با موفقیت تغییر کرد', 'success');
   };
 
+  // گزارشِ مسیرِ چاپ: قدم‌هایی که بخشِ سیستمیِ برنامه می‌فرستد را هم به گزارشِ
+  // داخلِ اپ وصل می‌کند تا هر دو سمتِ ماجرا در یک کادر دیده شوند.
+  useEffect(() => {
+    startSystemLogBridge();
+  }, []);
+
   // تم روشن/تیره — روی <html data-theme> اعمال و در localStorage ذخیره می‌شود
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem('cw2_theme') as Theme) || 'dark',
@@ -87,15 +101,15 @@ export default function App() {
     if (printMode === 'off') return;
     // مکثِ کوتاه تا React ناحیه‌ی چاپ را با فیشِ تازه پر کند؛ بعد اندازه‌ی دقیقِ
     // برگه سنجیده و اعلام می‌شود تا پرینترِ رولی کاغذِ اضافه بیرون ندهد.
-    window.setTimeout(async () => {
-      const page = await preparePrintPage();
-      const printer = getPrinterBridge();
-      if (printMode === 'silent' && printer) {
-        void printer.printSilent(printerName, page);
-      } else {
-        window.print();
-      }
-    }, 250);
+    window.setTimeout(() => {
+      void printPreparedReceipt(printMode, printerName).then((outcome) => {
+        // چاپِ موفق خودش را روی کاغذ نشان می‌دهد و پیام لازم ندارد؛ ولی هر شکست یا
+        // هر هشدار باید دیده شود. بی‌صدا ماندنِ شکستِ چاپ همان چیزی است که باعث
+        // می‌شد صندوقدار فکر کند «برنامه هیچ واکنشی نشان نمی‌دهد».
+        const report = describePrintOutcome(outcome);
+        if (report.type !== 'success') notify(report.text, report.type);
+      });
+    }, PRINT_RENDER_SETTLE_MS);
   };
 
   const handlePrint = (r: Receipt) => {
@@ -107,6 +121,35 @@ export default function App() {
     setPrintTarget(null);
     setPrintSaleTarget(s);
     runPrint();
+  };
+
+  /**
+   * چاپِ آزمایشی از تنظیماتِ پرینتر — یک فیشِ نمونه که هیچ‌جا ذخیره نمی‌شود.
+   * نتیجه‌اش به‌جای اعلانِ گذرا، برگردانده می‌شود تا همان‌جا در صفحه‌ی تنظیمات
+   * بماند و کاربر فرصتِ خواندنش را داشته باشد.
+   */
+  const handleTestPrint = async (kind: 'print' | 'pdf'): Promise<PrintReport> => {
+    const { printMode, printerName } = store.config;
+    setPrintSaleTarget(null);
+    setPrintTarget(createSampleReceipt());
+    await new Promise<void>((resolve) => {
+      window.setTimeout(resolve, PRINT_RENDER_SETTLE_MS);
+    });
+
+    if (kind === 'pdf') {
+      const preview = await savePrintPreview();
+      return preview.success
+        ? {
+            type: 'success',
+            text: `فایلِ پیش‌نمایش ساخته شد: ${preview.path} — بازش کنید. اگر فیش داخلش درست و خوانا بود، ساختِ فیش در برنامه سالم است و ایراد سمتِ پرینتر یا درایور است.`,
+          }
+        : {
+            type: 'error',
+            text: `ساختِ فایلِ پیش‌نمایش انجام نشد.${preview.reason ? ` (جزئیات: ${preview.reason})` : ''}`,
+          };
+    }
+
+    return describePrintOutcome(await printPreparedReceipt(printMode, printerName));
   };
 
   // ساعت زنده — هر ثانیه به‌روز می‌شود (ریل‌تایم)
@@ -264,7 +307,14 @@ export default function App() {
             {/* ===== محتوا ===== */}
             <main className="max-w-6xl mx-auto px-4 py-6 w-full flex-1 flex flex-col justify-center gap-6">
               {mode === 'admin' && isAdmin ? (
-                <AdminPanel store={store} notify={notify} onPrint={handlePrint} onPrintSale={handlePrintSale} currentUser={currentUser} />
+                <AdminPanel
+                  store={store}
+                  notify={notify}
+                  onPrint={handlePrint}
+                  onPrintSale={handlePrintSale}
+                  onTestPrint={handleTestPrint}
+                  currentUser={currentUser}
+                />
               ) : (
                 <div className="flex flex-col gap-6">
                   <PillTabs tabs={POS_TABS} active={posTab} onChange={setPosTab} />

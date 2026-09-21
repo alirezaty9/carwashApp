@@ -283,6 +283,29 @@
 
 .print-area { display: none; }
 
+/* حالتِ عکس‌برداری (چاپِ حرارتیِ مستقیم): ناحیه‌ی چاپ برای چند لحظه روی گوشه‌ی
+   بالا-راستِ پنجره و روی همه‌چیز می‌نشیند تا بشود از آن عکس گرفت.
+
+   چرا «روی همه‌چیز» و با پس‌زمینه‌ی سفیدِ مات: عکس از خودِ صفحه گرفته می‌شود، پس
+   هر چیزی که روی فیش بیفتد داخلِ عکس هم می‌افتد. مقدارِ بزرگ‌نمایی از کد تنظیم
+   می‌شود تا متن در همان تراکمِ نقطه‌ی پرینتر (نه بیشتر، نه کمتر) رندر شود و
+   حروف تیز بمانند. */
+.cw-capturing .print-area {
+  display: block !important;
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  z-index: 2147483647 !important;
+  background: white !important;
+  color: black !important;
+  width: var(--cw-paper-width, 72mm) !important;
+  max-width: var(--cw-paper-width, 72mm) !important;
+  padding: var(--cw-receipt-padding, 2mm) !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  transform-origin: top right !important;
+}
+
 /* حالتِ اندازه‌گیری: برای یک لحظه ناحیه‌ی چاپ را با همان عرضِ واقعیِ کاغذ و بیرونِ
    کادرِ دید می‌چیند تا ارتفاعش خوانده شود. کاربر هرگز این حالت را نمی‌بیند. */
 .cw-measuring .print-area {

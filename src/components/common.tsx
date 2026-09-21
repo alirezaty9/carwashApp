@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, useCallback, useState } from 'react';
+import { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, useCallback, useRef, useState } from 'react';
 import { AlertCircle, CheckCircle, Info, X, ChevronLeft, ChevronRight, LucideIcon } from 'lucide-react';
 import { toPersianDigits, toEnglishDigits } from '../utils/format';
 
@@ -12,9 +12,17 @@ export interface Notice {
 /** هوکِ ساده برای مدیریت اعلان‌های موقت */
 export function useNotification() {
   const [notice, setNotice] = useState<Notice | null>(null);
+  // تایمرِ پیامِ قبلی باید لغو شود، وگرنه وقتی دو پیام پشتِ‌سرِهم می‌آیند (مثلاً
+  // «قبض ثبت شد» و بلافاصله «چاپ انجام نشد»)، تایمرِ پیامِ اول پیامِ دوم را زودتر
+  // از موعد پاک می‌کند و مهم‌ترین پیام عملاً دیده نمی‌شود.
+  const timerRef = useRef<number | null>(null);
   const notify = useCallback((message: string, type: NoticeType = 'info') => {
+    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
     setNotice({ message, type });
-    window.setTimeout(() => setNotice(null), 4000);
+    timerRef.current = window.setTimeout(() => {
+      timerRef.current = null;
+      setNotice(null);
+    }, 4000);
   }, []);
   return { notice, notify };
 }

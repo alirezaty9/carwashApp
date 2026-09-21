@@ -6,13 +6,16 @@ import { toPersianDigits } from '../../utils/format';
 import { getStorageInfo, StorageInfo } from '../../data/persistence';
 import { SectionCard, inputClass, NumberInput, PrimaryButton, Field } from '../common';
 import PrinterSettings from './PrinterSettings';
+import { PrintReport } from '../../utils/printing';
 
 export default function GeneralSettings({
   store,
   notify,
+  onTestPrint,
 }: {
   store: Store;
   notify: (m: string, t?: 'success' | 'error' | 'info') => void;
+  onTestPrint: (kind: 'print' | 'pdf') => Promise<PrintReport>;
 }) {
   const { config, updateConfig, exportData, importData, resetAll } = store;
   const fileRef = useRef<HTMLInputElement>(null);
@@ -102,7 +105,7 @@ export default function GeneralSettings({
       </SectionCard>
 
       {/* پرینتر و چاپ */}
-      <PrinterSettings store={store} />
+      <PrinterSettings store={store} onTestPrint={onTestPrint} />
 
       {/* پشتیبان‌گیری */}
       <SectionCard title="پشتیبان‌گیری و بازیابی" subtitle="تمام اطلاعات آفلاین ذخیره می‌شوند؛ برای اطمینان مرتب بکاپ بگیرید.">

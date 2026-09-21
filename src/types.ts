@@ -167,7 +167,7 @@ export interface CarwashConfig {
    * - 'silent': چاپِ مستقیم به پرینترِ انتخاب‌شده بدونِ پنجره (مناسبِ پرینترِ حرارتی)
    * - 'off': بدونِ پرینتر — قبض فقط در سیستم ثبت می‌شود (برای جمعِ آخرِ شب)
    */
-  printMode: 'dialog' | 'silent' | 'off';
+  printMode: 'thermal' | 'dialog' | 'silent' | 'off';
   /** نامِ پرینترِ مقصد در حالتِ silent (از لیستِ پرینترهای سیستم) */
   printerName: string;
 }

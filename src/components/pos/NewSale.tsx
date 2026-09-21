@@ -77,9 +77,11 @@ export default function NewSale({ store, notify, onPrintSale }: Props) {
       submittingRef.current = false;
     }, 700);
 
+    // مثلِ قبضِ شست‌وشو: این پیام فقط ثبتِ فروش را تأیید می‌کند. نتیجه‌ی چاپ
+    // جداگانه و بعد از اجرای واقعی‌اش اعلام می‌شود.
     const noPrint = store.config.printMode === 'off';
     notify(
-      `فروش شماره ${toPersianDigits(sale.saleNumber)} ${noPrint ? 'ثبت شد (چاپ غیرفعال)' : 'ثبت و برای چاپ ارسال شد'}`,
+      `فروش شماره ${toPersianDigits(sale.saleNumber)} ${noPrint ? 'ثبت شد (چاپ غیرفعال)' : 'ثبت شد'}`,
       'success',
     );
     resetForm();

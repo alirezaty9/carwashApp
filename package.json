@@ -24,6 +24,7 @@
     "license:issue": "node tools/license-gen.cjs issue",
     "seed": "node tools/seed.cjs"
   },
+  "_comment_build_win": "signAndEditExecutable=false یعنی مرحله‌ی «امضا و ویرایشِ فایلِ اجرایی» رد شود. آن مرحله روی لینوکس به wine نیاز دارد و چون این نسخه امضای دیجیتال ندارد، رد کردنش چیزی از نصبی کم نمی‌کند و ساختِ نصبیِ ویندوز را روی لینوکس ممکن می‌کند.",
   "_comment_dependencies": "فقط چیزی که برنامه‌ی نصب‌شده در زمانِ اجرا require می‌کند. هر چه اینجا بیاید داخلِ فایلِ نصبی بسته‌بندی می‌شود و حجمش را بالا می‌برد. React و lucide و ابزارهای بیلد عمداً اینجا نیستند، چون Vite آن‌ها را از قبل داخلِ dist/ ادغام کرده است.",
   "dependencies": {
     "electron-store": "^8.2.0"
@@ -63,6 +64,7 @@
       "!electron/**/*.test.*"
     ],
     "win": {
+      "signAndEditExecutable": false,
       "target": [
         {
           "target": "nsis",

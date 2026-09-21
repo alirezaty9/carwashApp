@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { DollarSign, Users, SlidersHorizontal, FileSpreadsheet, History as HistoryIcon, Wallet, Package, KeyRound, UserCog, LucideIcon } from 'lucide-react';
 import { Receipt, Sale, User } from '../../types';
 import { Store } from '../../data/store';
+import { PrintReport } from '../../utils/printing';
 import { PillTabs } from '../common';
 import Reports from '../pos/Reports';
 import History from '../pos/History';
@@ -32,12 +33,15 @@ export default function AdminPanel({
   notify,
   onPrint,
   onPrintSale,
+  onTestPrint,
   currentUser,
 }: {
   store: Store;
   notify: (m: string, t?: 'success' | 'error' | 'info') => void;
   onPrint: (receipt: Receipt) => void;
   onPrintSale: (sale: Sale) => void;
+  /** چاپِ یک فیشِ نمونه برای امتحانِ پرینتر؛ نتیجه‌اش در همان صفحه نشان داده می‌شود. */
+  onTestPrint: (kind: 'print' | 'pdf') => Promise<PrintReport>;
   currentUser: User;
 }) {
   const [tab, setTab] = useState<AdminTab>('reports');
@@ -55,7 +59,7 @@ export default function AdminPanel({
       {tab === 'workers' && <WorkersManager store={store} notify={notify} />}
       {tab === 'users' && <UsersManager store={store} notify={notify} currentUserId={currentUser.id} />}
       {tab === 'license' && <LicenseSettings />}
-      {tab === 'general' && <GeneralSettings store={store} notify={notify} />}
+      {tab === 'general' && <GeneralSettings store={store} notify={notify} onTestPrint={onTestPrint} />}
     </div>
   );
 }

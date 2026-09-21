@@ -108,9 +108,12 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
       submittingRef.current = false;
     }, 700);
 
+    // 🔴 این پیام فقط «ثبت شدنِ قبض» را تأیید می‌کند، نه چاپ شدنش. سرنوشتِ چاپ
+    // جداگانه و بعد از اجرای واقعیِ آن اعلام می‌شود؛ وگرنه اگر چاپ شکست بخورد،
+    // صندوقدار پیامِ موفقیت می‌بیند و تا آخرِ شب خبردار نمی‌شود.
     const noPrint = store.config.printMode === 'off';
     notify(
-      `قبض شماره ${toPersianDigits(receipt.receiptNumber)} ${noPrint ? 'ثبت شد (چاپ غیرفعال)' : 'صادر و برای چاپ ارسال شد'}`,
+      `قبض شماره ${toPersianDigits(receipt.receiptNumber)} ${noPrint ? 'ثبت شد (چاپ غیرفعال)' : 'ثبت شد'}`,
       'success',
     );
     resetForm();
