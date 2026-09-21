@@ -3,7 +3,7 @@ import { Minus, Plus, Package, ShoppingCart, Check } from 'lucide-react';
 import { Sale } from '../../types';
 import { Store } from '../../data/store';
 import { formatCurrencyToman, toEnglishDigits, toPersianDigits, tomanToRial } from '../../utils/format';
-import { Field, inputClass, NumberInput, PrimaryButton, SectionCard } from '../common';
+import { EmptyState, Field, IconButton, inputClass, NumberInput, PrimaryButton, SectionCard } from '../common';
 
 interface Props {
   store: Store;
@@ -77,8 +77,7 @@ export default function NewSale({ store, notify, onPrintSale }: Props) {
       submittingRef.current = false;
     }, 700);
 
-    // مثلِ قبضِ شست‌وشو: این پیام فقط ثبتِ فروش را تأیید می‌کند. نتیجه‌ی چاپ
-    // جداگانه و بعد از اجرای واقعی‌اش اعلام می‌شود.
+    // این پیام فقط ثبتِ فروش را تأیید می‌کند؛ نتیجه‌ی چاپ جداگانه اعلام می‌شود.
     const noPrint = store.config.printMode === 'off';
     notify(
       `فروش شماره ${toPersianDigits(sale.saleNumber)} ${noPrint ? 'ثبت شد (چاپ غیرفعال)' : 'ثبت شد'}`,
@@ -94,14 +93,11 @@ export default function NewSale({ store, notify, onPrintSale }: Props) {
       subtitle="کالا و تعداد را انتخاب کنید. موجودی با هر فروش کم می‌شود و قبضِ آن جدا از قبضِ شست‌وشوست."
     >
       {activeProducts.length === 0 ? (
-        <div className="text-center py-12 bg-[var(--bg)] rounded-2xl border border-dashed border-[var(--border)]">
-          <Package className="w-12 h-12 text-[var(--text-faint)] mx-auto mb-3" />
-          <p className="text-xs font-bold text-[var(--text-muted)]">
-            هنوز کالایی در انبار نیست. از پنل مدیریت → «لوازم و انبار» کالا اضافه کنید.
-          </p>
-        </div>
+        <EmptyState icon={Package}>
+          هنوز کالایی در انبار نیست. از پنل مدیریت ← «انبار لوازم» کالا اضافه کنید.
+        </EmptyState>
       ) : (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-7">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           {/* ===== لیستِ کالاها ===== */}
           <Field label="۱) انتخاب کالا" required hint="(روی کالا بزنید تا انتخاب شود؛ تعداد پیش‌فرض ۱)">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -121,32 +117,34 @@ export default function NewSale({ store, notify, onPrintSale }: Props) {
                         toggleProduct(p.id, p.stock);
                       }
                     }}
-                    className={`flex items-center justify-between gap-2 p-3.5 rounded-xl border-2 transition-all outline-none ${
+                    className={`flex items-center justify-between gap-2 p-3.5 rounded-xl border transition-colors outline-none ${
                       out
-                        ? 'opacity-60 cursor-not-allowed border-[var(--border)] bg-[var(--field-bg)]'
+                        ? 'opacity-55 cursor-not-allowed border-[var(--border)] bg-[var(--field-bg)]'
                         : selected
-                          ? 'cursor-pointer border-[var(--money-border)] bg-[var(--field-bg)] shadow-sm'
-                          : 'cursor-pointer border-[var(--border)] bg-[var(--field-bg)] hover:border-[var(--field-hover-border)] hover:bg-[var(--field-hover-bg)] focus-visible:border-[var(--accent-strong)]'
+                          ? 'cursor-pointer border-[var(--accent)] bg-[var(--accent-soft)]'
+                          : 'cursor-pointer border-[var(--border)] bg-[var(--field-bg)] hover:border-[var(--field-hover-border)]'
                     }`}
                   >
                     {/* تیکِ انتخاب + مشخصات */}
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span
-                        className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border-2 transition-all ${
+                        className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 border transition-colors ${
                           selected
-                            ? 'bg-[var(--money-strong)] border-[var(--money-strong)] text-white'
-                            : 'border-[var(--border)] text-transparent'
+                            ? 'bg-[var(--accent)] border-[var(--accent)] text-[var(--on-accent)]'
+                            : 'border-[var(--border-strong)] text-transparent'
                         }`}
                       >
                         <Check className="w-3.5 h-3.5" strokeWidth={3} />
                       </span>
                       <div className="min-w-0">
-                        <div className="text-xs font-bold text-[var(--field-text)] truncate">{p.name}</div>
+                        <div className={`text-[13px] truncate ${selected ? 'font-semibold text-[var(--text)]' : 'font-medium text-[var(--text-muted)]'}`}>
+                          {p.name}
+                        </div>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[11px] font-extrabold text-[var(--price)] font-mono px-2 py-0.5 rounded-md bg-[var(--price-soft)]">
+                          <span className="text-[11px] font-semibold text-[var(--text)] tabular-nums px-2 py-0.5 rounded-lg bg-[var(--chip-bg)] border border-[var(--chip-border)]">
                             {formatCurrencyToman(p.price)}
                           </span>
-                          <span className={`text-[10px] font-bold ${out ? 'text-[var(--danger-text)]' : 'text-[var(--text-muted)]'}`}>
+                          <span className={`text-[11px] ${out ? 'font-semibold text-[var(--danger-text)]' : 'text-[var(--text-muted)]'}`}>
                             {out ? 'ناموجود' : `موجودی: ${toPersianDigits(p.stock)}`}
                           </span>
                         </div>
@@ -160,29 +158,32 @@ export default function NewSale({ store, notify, onPrintSale }: Props) {
                         onClick={(e) => e.stopPropagation()}
                         onKeyDown={(e) => e.stopPropagation()}
                       >
-                        <button
+                        <IconButton
                           type="button"
                           onClick={() => setQtyFor(p.id, q - 1, p.stock)}
                           title="کمتر"
-                          className="p-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] cursor-pointer"
+                          aria-label="کمتر"
+                          className="border border-[var(--border)] bg-[var(--surface)]"
                         >
                           <Minus className="w-4 h-4" />
-                        </button>
+                        </IconButton>
                         <input
                           inputMode="numeric"
+                          aria-label={`تعدادِ ${p.name}`}
                           value={toPersianDigits(q)}
                           onChange={(e) => setQtyFor(p.id, Number(toEnglishDigits(e.target.value).replace(/[^0-9]/g, '')) || 0, p.stock)}
-                          className="w-11 text-center bg-[var(--bg)] border border-[var(--border)] rounded-lg px-1 py-1.5 text-xs font-mono font-bold text-[var(--text)] outline-none focus:border-[var(--accent-strong)]"
+                          className="w-11 text-center bg-[var(--surface)] border border-[var(--border)] rounded-lg px-1 py-2 text-[13px] font-semibold text-[var(--text)] outline-none focus:border-[var(--accent)]"
                         />
-                        <button
+                        <IconButton
                           type="button"
                           disabled={q >= p.stock}
                           onClick={() => setQtyFor(p.id, q + 1, p.stock)}
                           title="بیشتر"
-                          className="p-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                          aria-label="بیشتر"
+                          className="border border-[var(--border)] bg-[var(--surface)]"
                         >
                           <Plus className="w-4 h-4" />
-                        </button>
+                        </IconButton>
                       </div>
                     )}
                   </div>
@@ -201,7 +202,7 @@ export default function NewSale({ store, notify, onPrintSale }: Props) {
                 placeholder="۰۹۱۲۳۴۵۶۷۸۹"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className={`${inputClass} text-right font-mono`}
+                className={`${inputClass} tabular-nums`}
               />
             </Field>
             <Field label="۳) تخفیف (تومان)" hint="(اختیاری، از مبلغ کل کم می‌شود)">
@@ -209,7 +210,7 @@ export default function NewSale({ store, notify, onPrintSale }: Props) {
                 placeholder="۰"
                 value={discount}
                 onValueChange={setDiscount}
-                className={`${inputClass} text-right font-mono tabular-nums`}
+                className={`${inputClass} tabular-nums`}
               />
             </Field>
           </div>
@@ -223,26 +224,27 @@ export default function NewSale({ store, notify, onPrintSale }: Props) {
             />
           </Field>
 
-          {/* جمع و ثبت */}
-          <div className="border-t border-[var(--border)] pt-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="w-full sm:w-auto flex flex-col gap-1.5">
-              {discountValue > 0 && (
-                <span className="text-[11px] font-semibold text-[var(--text-muted)] px-1">
-                  جمع اقلام: {formatCurrencyToman(subtotal)}
-                  <span className="text-[var(--danger-text)]"> — تخفیف: {formatCurrencyToman(discountValue)}</span>
-                </span>
-              )}
-              <div className="cw-total rounded-2xl px-5 py-3 flex items-center justify-between gap-4">
-                <span className="text-sm font-bold text-[var(--text-muted)]">مبلغ کل قابل پرداخت</span>
-                <span className="text-2xl font-extrabold text-[var(--price)] font-mono leading-none">
-                  {formatCurrencyToman(total)}
+          {/* جمع و ثبت — همان نوارِ پایانیِ صفحه‌ی قبضِ شست‌وشو، تا دو صفحه‌ی
+              صندوق دقیقاً یک‌شکل تمام شوند */}
+          <div className="border-t border-[var(--border)] pt-5 flex flex-col gap-2.5">
+            {discountValue > 0 && (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--text-muted)] px-1">
+                <span className="tabular-nums">جمع اقلام: {formatCurrencyToman(subtotal)}</span>
+                <span className="tabular-nums text-[var(--danger-text)]">
+                  تخفیف: {formatCurrencyToman(discountValue)}
                 </span>
               </div>
+            )}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="cw-total flex-1 px-5 py-3.5 flex items-center justify-between gap-4">
+                <span className="text-[13px] font-medium text-[var(--text-muted)]">مبلغ کل قابل پرداخت</span>
+                <span className="cw-amount text-[28px] leading-none">{formatCurrencyToman(total)}</span>
+              </div>
+              <PrimaryButton type="submit" className="shrink-0 px-8 !py-4 text-base">
+                <ShoppingCart className="w-5 h-5" />
+                ثبت و چاپ فاکتور
+              </PrimaryButton>
             </div>
-            <PrimaryButton type="submit" className="w-full sm:w-auto px-8 py-3.5 text-base rounded-2xl">
-              <ShoppingCart className="w-5 h-5" />
-              ثبت و چاپ فاکتور
-            </PrimaryButton>
           </div>
         </form>
       )}

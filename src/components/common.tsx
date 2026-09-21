@@ -2,6 +2,25 @@ import { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, useCallback, useR
 import { AlertCircle, CheckCircle, Info, X, ChevronLeft, ChevronRight, LucideIcon } from 'lucide-react';
 import { toPersianDigits, toEnglishDigits } from '../utils/format';
 
+/**
+ * اجزای مشترکِ ظاهری.
+ *
+ * قاعده‌ی رنگ در کلِ برنامه: رنگ فقط «حالت» را می‌گوید، نه تزئین.
+ *   accent → تعامل (دکمه‌ی اصلی، تبِ فعال، فوکوس، انتخاب‌شده)
+ *   ok     → تأیید/فعال          danger → ابطال/حذف/خطا        warn → هشدار
+ * مبلغ‌ها هیچ رنگی ندارند؛ با اندازه و وزن و عددِ هم‌عرض برجسته می‌شوند.
+ */
+export type Tone = 'neutral' | 'accent' | 'ok' | 'danger' | 'warn';
+
+/** کلاس‌های «متن/زمینه/خط» هر تُن — یک جا تعریف تا همه‌ی چیپ‌ها و کادرها یکی باشند. */
+const TONE_SURFACE: Record<Tone, string> = {
+  neutral: 'bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-muted)]',
+  accent: 'bg-[var(--accent-soft)] border-[var(--accent-border)] text-[var(--accent-text)]',
+  ok: 'bg-[var(--ok-soft)] border-[var(--ok-border)] text-[var(--ok-text)]',
+  danger: 'bg-[var(--danger-soft)] border-[var(--danger-border)] text-[var(--danger-text)]',
+  warn: 'bg-[var(--warn-soft)] border-[var(--warn-border)] text-[var(--warn-text)]',
+};
+
 /** نوع پیام اعلان */
 export type NoticeType = 'success' | 'error' | 'info';
 export interface Notice {
@@ -12,9 +31,8 @@ export interface Notice {
 /** هوکِ ساده برای مدیریت اعلان‌های موقت */
 export function useNotification() {
   const [notice, setNotice] = useState<Notice | null>(null);
-  // تایمرِ پیامِ قبلی باید لغو شود، وگرنه وقتی دو پیام پشتِ‌سرِهم می‌آیند (مثلاً
-  // «قبض ثبت شد» و بلافاصله «چاپ انجام نشد»)، تایمرِ پیامِ اول پیامِ دوم را زودتر
-  // از موعد پاک می‌کند و مهم‌ترین پیام عملاً دیده نمی‌شود.
+  // تایمرِ پیامِ قبلی لغو می‌شود، وگرنه وقتی دو پیام پشتِ‌سرِهم بیایند، تایمرِ اولی
+  // دومی را زودتر از موعد پاک می‌کند.
   const timerRef = useRef<number | null>(null);
   const notify = useCallback((message: string, type: NoticeType = 'info') => {
     if (timerRef.current !== null) window.clearTimeout(timerRef.current);
@@ -27,21 +45,31 @@ export function useNotification() {
   return { notice, notify };
 }
 
-/** نوار اعلانِ شناور بالای صفحه */
+/**
+ * نوار اعلانِ شناور بالای صفحه.
+ * زمینه‌اش مات است (نه ته‌رنگِ نیمه‌شفاف) تا هر چیزی که زیرش باشد متنِ پیام را
+ * ناخوانا نکند؛ رنگ فقط در نوارِ کناری و آیکن دیده می‌شود.
+ */
 export function NotificationBar({ notice }: { notice: Notice | null }) {
   if (!notice) return null;
-  const styles: Record<NoticeType, string> = {
-    success: 'bg-[var(--money-soft)] border-[var(--money-border)] text-[var(--money-text)]',
-    error: 'bg-[var(--danger-soft)] border-[var(--danger-border)] text-[var(--danger-text)]',
-    info: 'bg-[var(--accent-soft)] border-[var(--accent-border)] text-[var(--accent-text)]',
+  const tone: Tone = notice.type === 'success' ? 'ok' : notice.type === 'error' ? 'danger' : 'accent';
+  const accents: Record<Tone, string> = {
+    neutral: 'text-[var(--text-muted)] border-r-[var(--border-strong)]',
+    accent: 'text-[var(--accent-text)] border-r-[var(--accent)]',
+    ok: 'text-[var(--ok-text)] border-r-[var(--ok-strong)]',
+    danger: 'text-[var(--danger-text)] border-r-[var(--danger-strong)]',
+    warn: 'text-[var(--warn-text)] border-r-[var(--warn-strong)]',
   };
   const Icon = notice.type === 'success' ? CheckCircle : notice.type === 'error' ? AlertCircle : Info;
   return (
     <div
-      className={`no-print fixed top-4 left-1/2 -translate-x-1/2 z-[60] max-w-md w-[92%] p-3.5 rounded-xl flex items-start gap-3 border shadow-2xl animate-fade-in ${styles[notice.type]}`}
+      role="status"
+      aria-live="polite"
+      className={`no-print fixed top-4 left-1/2 -translate-x-1/2 z-[60] max-w-md w-[92%] px-4 py-3 rounded-xl flex items-start gap-3
+        bg-[var(--surface)] border border-[var(--border)] border-r-[3px] shadow-[var(--elev-float)] animate-fade-in ${accents[tone]}`}
     >
-      <Icon className="w-5 h-5 shrink-0" />
-      <div className="text-xs font-semibold leading-relaxed">{notice.message}</div>
+      <Icon className="w-[18px] h-[18px] shrink-0 mt-[3px]" />
+      <div className="text-[13px] font-medium leading-relaxed text-[var(--text)]">{notice.message}</div>
     </div>
   );
 }
@@ -63,12 +91,15 @@ export function SectionCard({
   return (
     <div className={`cw-card p-5 sm:p-6 flex flex-col gap-5 ${className}`}>
       {(title || action) && (
-        <div className="border-b border-[var(--border)] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            {title && <h2 className="font-display text-xl text-[var(--text)] leading-tight">{title}</h2>}
-            {subtitle && <p className="text-xs text-[var(--text-muted)] mt-1.5 font-medium leading-relaxed">{subtitle}</p>}
+        <div className="border-b border-[var(--border)] pb-4 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+          <div className="min-w-0">
+            {title && <h2 className="text-lg text-[var(--text)] leading-snug">{title}</h2>}
+            {/* توضیح حداکثر ~۷۵ کاراکتر در هر سطر می‌ماند؛ سطرِ بلندتر از این خوانده نمی‌شود */}
+            {subtitle && (
+              <p className="text-[13px] text-[var(--text-muted)] mt-1.5 leading-relaxed max-w-[68ch]">{subtitle}</p>
+            )}
           </div>
-          {action}
+          {action && <div className="shrink-0">{action}</div>}
         </div>
       )}
       {children}
@@ -95,7 +126,7 @@ export function Modal({
       onClick={onClose}
     >
       <div
-        className={`cw-card w-full ${maxWidth} p-6 flex flex-col gap-5`}
+        className={`cw-card w-full ${maxWidth} p-6 flex flex-col gap-5 shadow-[var(--elev-float)]`}
         onClick={(e) => e.stopPropagation()}
       >
         {children}
@@ -104,7 +135,12 @@ export function Modal({
   );
 }
 
-/** فیلدِ ورودی با برچسب */
+/**
+ * فیلدِ ورودی با برچسب.
+ *
+ * 🔴 ساختار عمداً ثابت است: `<label>` باید دقیقاً «خواهرِ قبلیِ» خودِ کنترل بماند،
+ * چون تست‌ها ورودی را از روی همین رابطه پیدا می‌کنند.
+ */
 export function Field({
   label,
   required,
@@ -116,14 +152,22 @@ export function Field({
   hint?: string;
   children: ReactNode;
 }) {
-  // تیترِ گام‌های شماره‌دار (که با رقمِ فارسی یا انگلیسی شروع می‌شوند: ۱، ۲، ... ۸ ...)
-  // به‌صورتِ خودکار آبی می‌شوند — بدون نیاز به تنظیمِ دستی برای هر فیلد.
-  const isNumbered = /^\s*[۰-۹0-9]/.test(label);
+  // برچسب‌های گام‌دارِ فرمِ قبض («۱) شماره‌ی مشتری») یک دنباله‌ی واقعی‌اند، پس
+  // شماره‌شان را جدا و با رنگِ اکسنت نشان می‌دهیم تا ترتیبِ پرکردنِ فرم از یک
+  // نگاه پیدا باشد. متنِ نهایی تغییری نمی‌کند.
+  const step = /^\s*([۰-۹0-9]+)\)\s*(.*)$/.exec(label);
   return (
     <div>
-      <label className={`block text-xs font-bold mb-2 ${isNumbered ? 'text-[#7f8081]' : 'text-[var(--text-muted)]'}`}>
-        {label} {required && <span className="text-[var(--danger-text)]">*</span>}
-        {hint && <span className="text-[var(--text-faint)] font-medium mr-1">{hint}</span>}
+      <label className="block text-xs font-medium text-[var(--text-muted)] mb-2">
+        {step ? (
+          <>
+            <span className="text-[var(--accent-text)] font-semibold">{step[1]})</span> {step[2]}
+          </>
+        ) : (
+          label
+        )}
+        {required && <span className="text-[var(--danger-text)] mr-1">*</span>}
+        {hint && <span className="text-[var(--text-faint)] font-normal mr-1">{hint}</span>}
       </label>
       {children}
     </div>
@@ -178,33 +222,46 @@ export function NumberInput({
 
 /** کلاس‌های مشترک ورودی‌ها برای یکدستی و DRY */
 export const inputClass =
-  'w-full bg-[var(--field-bg)] text-[var(--field-text)] border border-[var(--border)] placeholder-[var(--text-faint)] placeholder:font-normal placeholder:text-xs rounded-xl px-3.5 py-2.5 text-sm font-semibold hover:bg-[var(--field-hover-bg)] focus:bg-[var(--field-bg)] focus:ring-4 focus:ring-[var(--accent-soft)] focus:border-[var(--accent-strong)] outline-none transition-all';
+  'w-full bg-[var(--field-bg)] text-[var(--field-text)] border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-sm font-medium ' +
+  'placeholder-[var(--text-faint)] placeholder:font-normal hover:border-[var(--field-hover-border)] ' +
+  'focus:border-[var(--accent)] outline-none transition-colors';
 
-/** دکمه‌ی اصلی */
-export function PrimaryButton({
-  children,
-  className = '',
-  ...rest
-}: ButtonHTMLAttributes<HTMLButtonElement>) {
+/** کلاس‌های ورودیِ فشرده‌ی داخلِ جدول‌ها (ماتریسِ قیمت، انبار) */
+export const cellInputClass =
+  'w-full bg-[var(--field-bg)] text-[var(--field-text)] border border-[var(--border)] rounded-lg px-2.5 py-1.5 text-[13px] font-medium ' +
+  'hover:border-[var(--field-hover-border)] focus:border-[var(--accent)] outline-none transition-colors';
+
+/* ---------------------------------------------------------------
+   جدول‌ها — پنج جدولِ برنامه (تاریخچه‌ی قبض، تاریخچه‌ی فروش، ماتریسِ قیمت،
+   انبار، دستمزد) قبلاً هرکدام کمی متفاوت استایل شده بودند. این چند کلاس
+   همه‌شان را یکدست می‌کند.
+--------------------------------------------------------------- */
+export const tableWrapClass = 'overflow-x-auto border border-[var(--border)] rounded-xl';
+export const tableClass = 'w-full text-right border-collapse text-[13px]';
+export const theadRowClass =
+  'bg-[var(--surface-2)] border-b border-[var(--border)] text-xs font-semibold text-[var(--text-muted)]';
+export const tbodyClass = 'divide-y divide-[var(--border)]';
+export const rowHoverClass = 'hover:bg-[var(--surface-2)] transition-colors';
+
+/** اسکلتِ مشترکِ همه‌ی دکمه‌ها — اندازه و گردی و چیدمان یکی می‌ماند */
+const BTN_BASE = 'inline-flex items-center justify-center gap-2 text-sm px-5 py-2.5 rounded-xl cursor-pointer';
+
+/** دکمه‌ی اصلی — عملِ قطعیِ هر صفحه. در هر صفحه فقط یکی از این باید باشد. */
+export function PrimaryButton({ children, className = '', ...rest }: ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
-    <button
-      className={`cw-primary text-sm px-5 py-2.5 rounded-2xl flex items-center justify-center gap-2 cursor-pointer font-bold ${className}`}
-      {...rest}
-    >
+    <button className={`cw-primary ${BTN_BASE} ${className}`} {...rest}>
       {children}
     </button>
   );
 }
 
 /** دکمه‌ی خنثی (ثانویه) */
-export function GhostButton({
-  children,
-  className = '',
-  ...rest
-}: ButtonHTMLAttributes<HTMLButtonElement>) {
+export function GhostButton({ children, className = '', ...rest }: ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
-      className={`text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] border border-[var(--border)] font-bold text-sm px-4 py-2.5 rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition-all ${className}`}
+      className={`${BTN_BASE} font-semibold px-4 border border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)]
+        hover:text-[var(--text)] hover:bg-[var(--surface-2)] hover:border-[var(--border-strong)]
+        disabled:opacity-45 disabled:cursor-not-allowed transition-colors ${className}`}
       {...rest}
     >
       {children}
@@ -212,7 +269,122 @@ export function GhostButton({
   );
 }
 
-/** نوارِ زبانه‌ی قرص‌شکل (pill) — برای زیرمنوها و انتخابِ بازه؛ آیکن اختیاری */
+/** دکمه‌ی عملِ برگشت‌ناپذیر (ابطال، حذف، ریست) */
+export function DangerButton({ children, className = '', ...rest }: ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button className={`cw-danger ${BTN_BASE} ${className}`} {...rest}>
+      {children}
+    </button>
+  );
+}
+
+/** دکمه‌ی فقط-آیکن (چاپ، حذف، کم/زیاد، به‌روزرسانی) */
+export function IconButton({
+  children,
+  tone = 'neutral',
+  className = '',
+  ...rest
+}: { tone?: 'neutral' | 'accent' | 'danger' } & ButtonHTMLAttributes<HTMLButtonElement>) {
+  const tones = {
+    neutral: 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]',
+    accent: 'text-[var(--accent-text)] hover:bg-[var(--accent-soft)]',
+    danger: 'text-[var(--danger-text)] hover:bg-[var(--danger-soft)]',
+  };
+  return (
+    <button
+      className={`inline-flex items-center justify-center p-2 rounded-lg cursor-pointer transition-colors
+        disabled:opacity-40 disabled:cursor-not-allowed ${tones[tone]} ${className}`}
+      {...rest}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** چیپِ وضعیت (فعال / باطل / ناموجود / …) — کوچک، فقط برای نشان‌دادنِ حالت */
+export function StatusPill({
+  tone = 'neutral',
+  icon: Icon,
+  children,
+  className = '',
+}: {
+  tone?: Tone;
+  icon?: LucideIcon;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold w-fit whitespace-nowrap ${TONE_SURFACE[tone]} ${className}`}
+    >
+      {Icon && <Icon className="w-3 h-3 shrink-0" />}
+      {children}
+    </span>
+  );
+}
+
+/** برچسبِ شمارشِ کنارِ تیترِ کارت‌ها («مجموع: ۱۲ قبض») */
+export function CountBadge({ children }: { children: ReactNode }) {
+  return (
+    <span className="inline-block bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-muted)] text-xs font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap">
+      {children}
+    </span>
+  );
+}
+
+/**
+ * کادرِ توضیح/هشدار. جای ~۱۳ کادرِ دست‌سازِ قبلی را می‌گیرد که هرکدام کمی با
+ * بقیه فرق داشتند. رنگ فقط از نوارِ کناری و آیکن می‌آید؛ متن همیشه با رنگِ
+ * متنِ عادی نوشته می‌شود تا در هر دو تم خوانا بماند.
+ */
+export function Callout({
+  tone = 'accent',
+  icon: Icon,
+  title,
+  children,
+  className = '',
+}: {
+  tone?: Tone;
+  icon?: LucideIcon;
+  title?: string;
+  children?: ReactNode;
+  className?: string;
+}) {
+  const edge: Record<Tone, string> = {
+    neutral: 'border-r-[var(--border-strong)] text-[var(--text-muted)]',
+    accent: 'border-r-[var(--accent)] text-[var(--accent-text)]',
+    ok: 'border-r-[var(--ok-strong)] text-[var(--ok-text)]',
+    danger: 'border-r-[var(--danger-strong)] text-[var(--danger-text)]',
+    warn: 'border-r-[var(--warn-strong)] text-[var(--warn-text)]',
+  };
+  return (
+    <div
+      className={`rounded-xl border border-[var(--border)] border-r-[3px] bg-[var(--surface-2)] p-3.5 flex items-start gap-2.5 ${edge[tone]} ${className}`}
+    >
+      {Icon && <Icon className="w-4 h-4 shrink-0 mt-[3px]" />}
+      <div className="min-w-0 flex-1">
+        {title && <div className="text-[13px] font-semibold mb-1">{title}</div>}
+        {children && <div className="text-[13px] leading-relaxed text-[var(--text-muted)]">{children}</div>}
+      </div>
+    </div>
+  );
+}
+
+/** کادرِ «چیزی اینجا نیست» — خالی‌بودن یک دعوت به عمل است، نه یک بن‌بست */
+export function EmptyState({ icon: Icon, children }: { icon: LucideIcon; children: ReactNode }) {
+  return (
+    <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-[var(--border)]">
+      <Icon className="w-10 h-10 text-[var(--text-faint)] mx-auto mb-3" strokeWidth={1.5} />
+      <p className="text-[13px] text-[var(--text-muted)] leading-relaxed max-w-sm mx-auto">{children}</p>
+    </div>
+  );
+}
+
+/**
+ * نوارِ زبانه‌ی قرص‌شکل (pill) — برای زیرمنوها و انتخابِ بازه؛ آیکن اختیاری.
+ * زبانه‌ی فعال عمداً «پُرِ فیروزه‌ای» نیست: بلندترین عنصرِ هر صفحه باید دکمه‌ی
+ * ثبت باشد، نه منویی که همیشه روی صفحه است.
+ */
 export function PillTabs<T extends string>({
   tabs,
   active,
@@ -226,43 +398,62 @@ export function PillTabs<T extends string>({
   onChange: (id: NoInfer<T>) => void;
 }) {
   return (
-    <div className="flex flex-wrap gap-2 bg-[var(--surface)] p-2 rounded-2xl border border-[var(--border)]">
-      {tabs.map((t) => (
-        <button
-          key={t.id}
-          onClick={() => onChange(t.id)}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-all ${
-            active === t.id ? 'cw-primary' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
-          }`}
-        >
-          {t.icon && <t.icon className="w-4 h-4" />}
-          {t.label}
-        </button>
-      ))}
+    <div className="flex flex-wrap gap-1 bg-[var(--surface)] p-1.5 rounded-2xl border border-[var(--border)]">
+      {tabs.map((t) => {
+        const isActive = active === t.id;
+        return (
+          <button
+            key={t.id}
+            type="button"
+            aria-pressed={isActive}
+            onClick={() => onChange(t.id)}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-[13px] cursor-pointer transition-colors ${
+              isActive
+                ? 'bg-[var(--accent-soft)] text-[var(--accent-text)] font-semibold'
+                : 'text-[var(--text-muted)] font-medium hover:bg-[var(--surface-2)] hover:text-[var(--text)]'
+            }`}
+          >
+            {t.icon && <t.icon className="w-4 h-4 shrink-0" />}
+            {t.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-/** کارتِ آماریِ خلاصه (برچسب + مقدار + آیکنِ رنگی) */
+/**
+ * کارتِ آماریِ خلاصه.
+ * عددِ آماری همیشه با جوهرِ عادی نوشته می‌شود نه با رنگ — رنگ را برای «حالت»
+ * نگه داشته‌ایم. فقط کاشیِ آیکن می‌تواند تُن بگیرد، آن هم وقتی واقعاً معنا دارد.
+ */
 export function StatCard({
   label,
   value,
+  unit,
   icon: Icon,
-  color,
+  tone = 'neutral',
 }: {
   label: string;
   value: string;
+  /** واحد (مثلِ «تومان») — ریز و کم‌رنگ کنارِ عدد، تا خودِ عدد کوتاه و خوانا بماند. */
+  unit?: string;
   icon: LucideIcon;
-  color: string;
+  tone?: Tone;
 }) {
   return (
-    <div className="group bg-[var(--surface)] p-4 rounded-2xl border border-[var(--border)] shadow-[var(--card-shadow)] flex items-center justify-between gap-3 transition-transform duration-200 hover:-translate-y-0.5">
+    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 flex items-center justify-between gap-3">
       <div className="min-w-0">
-        <span className="text-[11px] text-[var(--text-muted)] font-bold block mb-1.5 tracking-wide">{label}</span>
-        <span className="text-lg font-black text-[var(--text)] font-mono tabular-nums leading-none">{value}</span>
+        <span className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">{label}</span>
+        {/* 🔴 عدد هرگز بریده نمی‌شود: مبلغِ «...»دار یعنی عددی که خوانده نمی‌شود.
+            به‌جایش در عرضِ کم، خودِ فونت کوچک‌تر می‌شود و عدد کامل می‌ماند. */}
+        <span className="cw-amount block text-lg xl:text-xl leading-none whitespace-nowrap">
+          {value}
+          {unit && <span className="text-[11px] font-medium text-[var(--text-muted)] mr-1">{unit}</span>}
+        </span>
       </div>
-      <div className={`p-3 rounded-2xl border shrink-0 transition-transform duration-200 group-hover:scale-105 ${color}`}>
-        <Icon className="w-5 h-5" />
+      <div className={`w-10 h-10 grid place-items-center rounded-xl border shrink-0 ${TONE_SURFACE[tone]}`}>
+        <Icon className="w-[18px] h-[18px]" />
       </div>
     </div>
   );
@@ -283,13 +474,14 @@ export function Pagination({
 }) {
   if (pageCount <= 1) return null;
   const btn =
-    'px-3 py-1.5 rounded-lg text-xs font-bold border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition-all';
+    'inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border border-[var(--border)] text-[var(--text-muted)] ' +
+    'hover:bg-[var(--surface-2)] hover:text-[var(--text)] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-colors';
   return (
     <div className="flex items-center justify-center gap-3 pt-1">
       <button type="button" className={btn} disabled={page <= 1} onClick={() => onPage(page - 1)}>
         <ChevronRight className="w-4 h-4" /> قبلی
       </button>
-      <span className="text-xs font-bold text-[var(--text-muted)] font-mono">
+      <span className="text-xs font-medium text-[var(--text-muted)] tabular-nums">
         صفحه {toPersianDigits(page)} از {toPersianDigits(pageCount)}
       </span>
       <button type="button" className={btn} disabled={page >= pageCount} onClick={() => onPage(page + 1)}>
@@ -302,11 +494,11 @@ export function Pagination({
 /** هدرِ مودال با آیکن و امکان بستن */
 export function ModalHeader({ title, onClose }: { title: string; onClose: () => void }) {
   return (
-    <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
-      <h3 className="font-display text-lg text-[var(--text)]">{title}</h3>
-      <button onClick={onClose} className="p-1.5 text-[var(--text-muted)] hover:bg-[var(--surface-2)] rounded-lg cursor-pointer">
-        <X className="w-5 h-5" />
-      </button>
+    <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] pb-3">
+      <h3 className="text-base text-[var(--text)]">{title}</h3>
+      <IconButton onClick={onClose} title="بستن" aria-label="بستن">
+        <X className="w-[18px] h-[18px]" />
+      </IconButton>
     </div>
   );
 }

@@ -3,7 +3,28 @@ import { Printer, Edit3, XCircle, CheckCircle, Search, FileText, Droplets, Shopp
 import { Receipt, Sale, User } from '../../types';
 import { Store } from '../../data/store';
 import { formatCurrencyToman, rialToToman, toEnglishDigits, toPersianDigits, tomanToRial } from '../../utils/format';
-import { Field, GhostButton, inputClass, Modal, ModalHeader, NumberInput, PillTabs, Pagination, PrimaryButton, SectionCard } from '../common';
+import {
+  CountBadge,
+  DangerButton,
+  EmptyState,
+  Field,
+  GhostButton,
+  IconButton,
+  Modal,
+  ModalHeader,
+  NumberInput,
+  Pagination,
+  PillTabs,
+  PrimaryButton,
+  SectionCard,
+  StatusPill,
+  inputClass,
+  rowHoverClass,
+  tableClass,
+  tableWrapClass,
+  tbodyClass,
+  theadRowClass,
+} from '../common';
 import SalesHistory from '../admin/SalesHistory';
 
 const PAGE_SIZE = 15;
@@ -91,29 +112,26 @@ export default function History({ store, notify, onPrint, onPrintSale, currentUs
     <SectionCard
       title="تاریخچه‌ی قبوض شست‌وشو"
       subtitle="جستجو، چاپ مجدد، ویرایش و ابطال قبض‌های صادرشده."
-      action={
-        <span className="bg-[var(--surface-2)] text-[var(--text)] text-xs px-3.5 py-1.5 rounded-lg font-bold border border-[var(--border)]">
-          مجموع: {toPersianDigits(receipts.length)} قبض
-        </span>
-      }
+      action={<CountBadge>مجموع: {toPersianDigits(receipts.length)} قبض</CountBadge>}
     >
-      {/* نوار فیلترها */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-[var(--bg)] p-4 rounded-xl border border-[var(--border)]">
+      {/* نوار فیلترها — یک ردیف، بالای جدول */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="relative">
-          <Search className="w-4 h-4 text-[var(--text-faint)] absolute right-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[var(--text-faint)] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             placeholder="جستجو: شماره قبض، نام، تلفن، خودرو..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className={`${inputClass} pr-9 py-2`}
+            aria-label="جستجوی قبض"
+            className={`${inputClass} pr-9`}
           />
         </div>
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className={`${inputClass} py-2`}>
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} aria-label="فیلترِ وضعیت" className={inputClass}>
           <option value="all">همه‌ی وضعیت‌ها</option>
           <option value="active">فعال</option>
           <option value="voided">باطل‌شده</option>
         </select>
-        <select value={tierFilter} onChange={(e) => setTierFilter(e.target.value)} className={`${inputClass} py-2`}>
+        <select value={tierFilter} onChange={(e) => setTierFilter(e.target.value)} aria-label="فیلترِ تیپ" className={inputClass}>
           <option value="all">همه‌ی تیپ‌ها</option>
           {tiers.map((t) => (
             <option key={t.id} value={t.id}>
@@ -125,15 +143,14 @@ export default function History({ store, notify, onPrint, onPrintSale, currentUs
 
       {/* جدول */}
       {filtered.length === 0 ? (
-        <div className="text-center py-12 bg-[var(--bg)] rounded-2xl border border-dashed border-[var(--border)]">
-          <FileText className="w-12 h-12 text-[var(--text-faint)] mx-auto mb-3" />
-          <p className="text-xs font-bold text-[var(--text-muted)]">هیچ قبضی یافت نشد.</p>
-        </div>
+        <EmptyState icon={FileText}>
+          هیچ قبضی با این جست‌وجو پیدا نشد. عبارتِ جست‌وجو یا فیلترها را عوض کنید.
+        </EmptyState>
       ) : (
-        <div className="overflow-x-auto border border-[var(--border)] rounded-xl">
-          <table className="w-full text-right border-collapse text-xs whitespace-nowrap">
+        <div className={tableWrapClass}>
+          <table className={`${tableClass} whitespace-nowrap`}>
             <thead>
-              <tr className="bg-[var(--bg)] text-[var(--text-muted)] font-bold border-b border-[var(--border)]">
+              <tr className={theadRowClass}>
                 <th className="px-3 py-3">ش.قبض</th>
                 <th className="px-3 py-3">مشتری</th>
                 <th className="px-3 py-3">خودرو / تیپ</th>
@@ -145,65 +162,70 @@ export default function History({ store, notify, onPrint, onPrintSale, currentUs
                 <th className="px-3 py-3 text-center">عملیات</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--border)] font-semibold text-[var(--text-muted)]">
+            <tbody className={`${tbodyClass} text-[var(--text-muted)]`}>
               {pageItems.map((r) => {
                 const voided = r.status === 'voided';
                 return (
-                  <tr key={r.id} className={`hover:bg-[var(--surface-2)] transition-all ${voided ? 'bg-[var(--danger-soft)] text-[var(--text-faint)]' : ''}`}>
-                    <td className="px-3 py-3 font-mono text-[var(--text)] font-bold">{toPersianDigits(r.receiptNumber)}</td>
-                    <td className="px-3 py-3">
-                      <div className="font-bold text-[var(--text)]">{r.customerName || '—'}</div>
-                      <div className="font-mono text-[10px] text-[var(--text-muted)]">{toPersianDigits(r.customerPhone)}</div>
+                  <tr key={r.id} className={`${rowHoverClass} ${voided ? 'bg-[var(--danger-soft)]' : ''}`}>
+                    <td className="px-3 py-3 tabular-nums font-semibold text-[var(--text)]">
+                      {toPersianDigits(r.receiptNumber)}
                     </td>
                     <td className="px-3 py-3">
-                      <div className="text-[var(--text)]">{r.carModel}</div>
-                      <div className="text-[10px] text-[var(--text-muted)]">{r.tierName}</div>
+                      <div className="font-medium text-[var(--text)]">{r.customerName || '—'}</div>
+                      <div className="text-[11px] tabular-nums text-[var(--text-faint)]">{toPersianDigits(r.customerPhone)}</div>
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="text-[var(--text)]">{r.carModel || '—'}</div>
+                      <div className="text-[11px] text-[var(--text-faint)]">{r.tierName}</div>
                     </td>
                     <td className="px-3 py-3 max-w-[180px] whitespace-normal">
                       <div className="flex flex-wrap gap-1">
                         {r.services.map((s) => (
-                          <span key={s.id} className="bg-[var(--money-soft)] border border-[var(--money-border)] text-[var(--money-text)] text-[9px] px-1.5 py-0.5 rounded">
+                          <span
+                            key={s.id}
+                            className="bg-[var(--chip-bg)] border border-[var(--chip-border)] text-[var(--text-muted)] text-[11px] px-1.5 py-0.5 rounded-lg"
+                          >
                             {s.name}
                           </span>
                         ))}
                       </div>
                     </td>
-                    <td className="px-3 py-3 text-[var(--text-muted)]">{r.workerName || '—'}</td>
-                    <td className={`px-3 py-3 font-bold font-mono ${voided ? 'line-through text-[var(--text-faint)]' : 'text-[var(--price)]'}`}>
-                      {formatCurrencyToman(r.price)}
+                    <td className="px-3 py-3">{r.workerName || '—'}</td>
+                    <td className="px-3 py-3 tabular-nums">
+                      <span className={voided ? 'line-through text-[var(--text-faint)]' : 'font-semibold text-[var(--text)]'}>
+                        {formatCurrencyToman(r.price)}
+                      </span>
                       {r.tip ? (
-                        <div className="text-[9px] font-bold text-[var(--money-text)]">+ انعام {formatCurrencyToman(r.tip)}</div>
+                        <div className="text-[11px] text-[var(--ok-text)]">+ انعام {formatCurrencyToman(r.tip)}</div>
                       ) : null}
                     </td>
-                    <td className="px-3 py-3 text-[var(--text-muted)] text-[11px]">{r.jalaliDate}</td>
+                    <td className="px-3 py-3 text-[11px]">{r.jalaliDate}</td>
                     <td className="px-3 py-3">
                       {voided ? (
-                        <div className="flex flex-col gap-0.5">
-                          <span className="inline-flex items-center gap-1 text-[var(--danger-text)] bg-[var(--danger-soft)] border border-[var(--danger-border)] px-2 py-0.5 rounded-full text-[10px] font-bold w-fit">
-                            <XCircle className="w-3 h-3" /> باطل
-                          </span>
-                          {r.voidedBy && (
-                            <span className="text-[9px] font-bold text-[var(--text-muted)]">توسط {r.voidedBy}</span>
-                          )}
+                        <div className="flex flex-col gap-1">
+                          <StatusPill tone="danger" icon={XCircle}>
+                            باطل
+                          </StatusPill>
+                          {r.voidedBy && <span className="text-[11px] text-[var(--text-faint)]">توسط {r.voidedBy}</span>}
                         </div>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[var(--money-text)] bg-[var(--money-soft)] border border-[var(--money-border)] px-2 py-0.5 rounded-full text-[10px] font-bold">
-                          <CheckCircle className="w-3 h-3" /> فعال
-                        </span>
+                        <StatusPill tone="ok" icon={CheckCircle}>
+                          فعال
+                        </StatusPill>
                       )}
                     </td>
                     <td className="px-3 py-3">
-                      <div className="flex items-center justify-center gap-1">
-                        <button title="چاپ مجدد" onClick={() => onPrint(r)} className="p-1.5 text-[var(--accent-text)] hover:bg-[var(--surface-2)] rounded-lg cursor-pointer">
+                      <div className="flex items-center justify-center gap-0.5">
+                        <IconButton tone="accent" title="چاپ مجدد" aria-label="چاپ مجدد" onClick={() => onPrint(r)}>
                           <Printer className="w-4 h-4" />
-                        </button>
-                        <button title="ویرایش" onClick={() => setEditing(r)} className="p-1.5 text-[var(--text-muted)] hover:bg-[var(--surface-2)] rounded-lg cursor-pointer">
+                        </IconButton>
+                        <IconButton title="ویرایش" aria-label="ویرایش" onClick={() => setEditing(r)}>
                           <Edit3 className="w-4 h-4" />
-                        </button>
+                        </IconButton>
                         {!voided && (
-                          <button title="ابطال" onClick={() => setVoiding(r)} className="p-1.5 text-[var(--danger-text)] hover:bg-[var(--surface-2)] rounded-lg cursor-pointer">
+                          <IconButton tone="danger" title="ابطال" aria-label="ابطال" onClick={() => setVoiding(r)}>
                             <XCircle className="w-4 h-4" />
-                          </button>
+                          </IconButton>
                         )}
                       </div>
                     </td>
@@ -226,9 +248,7 @@ export default function History({ store, notify, onPrint, onPrintSale, currentUs
           </Field>
           <div className="flex justify-end gap-2 border-t border-[var(--border)] pt-3">
             <GhostButton type="button" onClick={() => setVoiding(null)}>انصراف</GhostButton>
-            <button type="submit" className="bg-[var(--danger-strong)] hover:bg-[var(--danger-strong)] text-white font-bold text-sm px-5 py-2.5 rounded-xl cursor-pointer">
-              تایید ابطال
-            </button>
+            <DangerButton type="submit">تایید ابطال</DangerButton>
           </div>
         </form>
       </Modal>
@@ -243,7 +263,7 @@ export default function History({ store, notify, onPrint, onPrintSale, currentUs
                 <input value={editing.customerName} onChange={(e) => setEditing({ ...editing, customerName: e.target.value })} className={inputClass} />
               </Field>
               <Field label="شماره‌ی مشتری">
-                <input value={editing.customerPhone} onChange={(e) => setEditing({ ...editing, customerPhone: e.target.value })} className={`${inputClass} font-mono text-right`} />
+                <input value={editing.customerPhone} onChange={(e) => setEditing({ ...editing, customerPhone: e.target.value })} className={`${inputClass} tabular-nums`} />
               </Field>
               <Field label="نوع/مدل ماشین">
                 <input value={editing.carModel} onChange={(e) => setEditing({ ...editing, carModel: e.target.value })} className={inputClass} />
@@ -267,14 +287,14 @@ export default function History({ store, notify, onPrint, onPrintSale, currentUs
                 <NumberInput
                   value={rialToToman(editing.price)}
                   onValueChange={(toman) => setEditing({ ...editing, price: tomanToRial(toman) })}
-                  className={`${inputClass} font-mono`}
+                  className={`${inputClass} tabular-nums`}
                 />
               </Field>
               <Field label="انعام کارگر (تومان)">
                 <NumberInput
                   value={rialToToman(editing.tip ?? 0)}
                   onValueChange={(toman) => setEditing({ ...editing, tip: tomanToRial(toman) || undefined })}
-                  className={`${inputClass} font-mono`}
+                  className={`${inputClass} tabular-nums`}
                 />
               </Field>
               <Field label="توضیحات">

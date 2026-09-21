@@ -4,7 +4,7 @@ import { User } from '../../types';
 import { validateNewPassword } from '../../auth';
 import { BRAND } from '../../brand';
 import { YatashMark } from '../brand/YatashLogo';
-import { inputClass, PrimaryButton, GhostButton } from '../common';
+import { Callout, inputClass, PrimaryButton, GhostButton } from '../common';
 
 /**
  * دروازه‌ی اجباریِ تغییرِ رمز.
@@ -46,23 +46,20 @@ export default function ForcePasswordChange({
           <div className="p-3 rounded-2xl bg-[var(--accent-soft)] border border-[var(--accent-border)]">
             <KeyRound className="w-7 h-7 text-[var(--accent-text)]" />
           </div>
-          <h1 className="font-display text-2xl text-[var(--text)]">یک رمزِ تازه بگذارید</h1>
-          <p className="text-xs font-semibold text-[var(--text-muted)] leading-relaxed">
+          <h1 className="text-2xl text-[var(--text)]">یک رمزِ تازه بگذارید</h1>
+          <p className="text-[13px] text-[var(--text-muted)] leading-relaxed">
             خوش آمدید، {user.name}. شما هنوز با رمزِ پیش‌فرضِ برنامه وارد می‌شوید.
           </p>
         </div>
 
-        <div className="bg-[var(--danger-soft)] border border-[var(--danger-border)] text-[var(--danger-text)] text-[11px] font-bold rounded-xl p-3 flex items-start gap-2 leading-relaxed">
-          <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
-          <span>
-            رمزِ پیش‌فرض روی همه‌ی نصب‌ها یکسان است. تا آن را عوض نکنید، هر کسی که این رمز را بداند به
-            صندوق و گزارش‌های مالیِ شما دسترسی دارد.
-          </span>
-        </div>
+        <Callout tone="danger" icon={ShieldAlert}>
+          رمزِ پیش‌فرض روی همه‌ی نصب‌ها یکسان است. تا آن را عوض نکنید، هر کسی که این رمز را بداند به صندوق و
+          گزارش‌های مالیِ شما دسترسی دارد.
+        </Callout>
 
         <form onSubmit={submit} className="flex flex-col gap-4">
           <div>
-            <label className="block text-xs font-bold text-[var(--text-muted)] mb-2">رمزِ جدید</label>
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-2">رمزِ جدید</label>
             <div className="relative">
               <Lock className="w-4 h-4 text-[var(--text-faint)] absolute right-3 top-1/2 -translate-y-1/2" />
               <input
@@ -80,7 +77,7 @@ export default function ForcePasswordChange({
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[var(--text-muted)] mb-2">تکرارِ رمزِ جدید</label>
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-2">تکرارِ رمزِ جدید</label>
             <div className="relative">
               <Lock className="w-4 h-4 text-[var(--text-faint)] absolute right-3 top-1/2 -translate-y-1/2" />
               <input
@@ -94,7 +91,7 @@ export default function ForcePasswordChange({
                 className={`${inputClass} pr-9`}
               />
             </div>
-            {error && <p className="text-[11px] font-bold text-[var(--danger-text)] mt-2">{error}</p>}
+            {error && <p className="text-xs font-medium text-[var(--danger-text)] mt-2">{error}</p>}
           </div>
 
           <PrimaryButton type="submit" className="w-full py-3">
@@ -106,7 +103,7 @@ export default function ForcePasswordChange({
           </GhostButton>
         </form>
 
-        <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold text-[var(--text-faint)] pt-2 border-t border-[var(--border)]">
+        <div className="flex items-center justify-center gap-1.5 text-[11px] font-semibold text-[var(--text-faint)] pt-2 border-t border-[var(--border)]">
           {BRAND.poweredByFa}
           <YatashMark size={13} />
         </div>

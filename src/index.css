@@ -15,18 +15,10 @@
 @font-face { font-family: 'Vazirmatn'; font-style: normal; font-weight: 700; font-display: swap; src: url('./assets/fonts/Vazirmatn-Bold.woff2') format('woff2'); }
 @font-face { font-family: 'Vazirmatn'; font-style: normal; font-weight: 900; font-display: swap; src: url('./assets/fonts/Vazirmatn-Black.woff2') format('woff2'); }
 
-/* تیترها (کلاسِ font-display) با وزنِ سنگینِ وزیرمتن تا بعد از حذفِ لاله‌زار
-   همچنان «تیتر» به نظر برسند. وزنِ ۸۰۰ به نزدیک‌ترین فایل (Black/۹۰۰) نگاشت می‌شود. */
-.font-display { font-weight: 800; }
-
-/* ---------------------------------------------------------------
-   پالتِ رسمی: آبی به‌عنوان رنگِ اصلی (حسِ آب/تمیزی/اعتماد)،
-   فیروزه‌ای به‌عنوان اکسنت، خنثی‌های اسلیت، مینیمال و تخت.
-   منبع: پالتِ انتخابیِ کاربر (Primary #2563EB / Accent #06B6D4).
-   تایپوگرافی: لاله‌زار (نمایشی) + وزیرمتن (متن/اعداد).
---------------------------------------------------------------- */
 @theme {
-  /* همه‌جا وزیرمتن — تیترها هم (font-display) دیگر لاله‌زار نیست، طبق خواسته */
+  /* همه‌جا وزیرمتن. تیتر و متن یک خانواده‌اند؛ تفاوتشان در وزن و اندازه است،
+     نه در قلم — چون هیچ قلمِ نمایشیِ فارسیِ دیگری به‌صورتِ آفلاین همراهِ برنامه
+     نیست و جفت‌کردنِ دو قلمِ فارسی بیشتر به‌هم می‌ریزد تا کمک کند. */
   --font-sans: "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Vazirmatn", ui-sans-serif, sans-serif;
   /* اعداد هم وزیرمتن‌اند (وزیر مونواسپیس نیست)؛ فالبک هم «سنس» است نه Courier
@@ -34,106 +26,151 @@
   --font-mono: "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
 }
 
-/* ===== تمِ تیره — «جوهرِ نفتیِ آبی» با اکسنتِ فیروزه‌ای (حسِ آب/براقی) ===== */
+/* ---------------------------------------------------------------
+   پالت — یک رنگِ رنگی، یک رنگِ هشدار، و یک زمینه‌ی واقعاً خنثی.
+
+   چرا این‌طور: نسخه‌ی قبلی شش رنگ داشت که همه‌شان در یک بازه‌ی ۳۷ درجه‌ای از
+   چرخه‌ی رنگ بودند (فیروزه‌ای، سبزِ مبلغ، و حتی خودِ پس‌زمینه و خط‌ها). وقتی
+   همه‌چیز یک ته‌رنگ دارد، هیچ‌چیز نمی‌تواند برجسته شود. حالا زمینه خنثی است تا
+   فیروزه‌ایِ برند جایی برای نشستن داشته باشد.
+
+   نقشِ هر رنگ:
+     accent → تنها رنگِ «تعامل»: دکمه‌ی اصلی، تبِ فعال، حلقه‌ی فوکوس، انتخاب‌شده.
+     ok     → فقط «تأیید/فعال» و فقط روی چیپ‌های کوچک؛ هرگز پُرکننده یا کنترل.
+     danger → ابطال، حذف، خطا.
+     warn   → هشدارِ غیربحرانی (قبلاً وجود نداشت و هشدارها از قرمز قرض می‌گرفتند).
+   مبلغ‌ها عمداً هیچ رنگی ندارند: مبلغ با «اندازه و وزن و عددِ هم‌عرض» برجسته
+   می‌شود، نه با رنگ. همین یک تصمیم، برخوردِ سبزِ مبلغ با فیروزه‌ای را حذف کرد.
+--------------------------------------------------------------- */
+
+/* ===== تمِ تیره ===== */
 :root, :root[data-theme="dark"] {
-  --primary: #0D9488;
-  --primary-hover: #14B8A6;
+  color-scheme: dark;
 
-  --bg: #0B1A1F;
-  --surface: #122A31;
-  --surface-2: #1C3A43;
-  --border: #21424C;
-  --border-strong: rgba(45, 212, 191, 0.45);
-  --overlay: rgba(6, 18, 22, 0.72);
+  --bg:            #0C1012;
+  --surface:       #13181B;
+  --surface-2:     #1A2125;
+  --surface-3:     #232B30;
+  --border:        #222A2F;
+  --border-strong: #313B41;
+  --overlay:       rgba(5, 8, 9, 0.70);
 
-  --text: #F1FBFB;
-  --text-muted: #AFCBD1;
-  --text-faint: #6B8A92;
+  --text:       #E9EEF0;
+  --text-muted: #9AA7AD;
+  --text-faint: #7C888E;
 
-  --accent-text: #2DD4BF;
-  --accent-strong: #14B8A6;
-  --accent-soft: rgba(45, 212, 191, 0.14);
+  --accent:        #14B8A6;
+  --accent-hover:  #2DD4BF;
+  --accent-text:   #34D3C1;
+  --accent-soft:   rgba(45, 212, 191, 0.12);
   --accent-border: rgba(45, 212, 191, 0.30);
+  --accent-ring:   rgba(45, 212, 191, 0.20);
+  /* متنِ روی دکمه‌ی فیروزه‌ایِ پُر. سفید روی این فیروزه‌ای نسبتِ کنتراست ۲٫۵ دارد
+     که خواناییِ استاندارد را رد نمی‌کند؛ جوهرِ تیره ۶٫۷ می‌دهد. */
+  --on-accent:     #04211E;
 
-  --money-text: #34D399;
-  --money-strong: #10B981;
-  --money-soft: rgba(52, 211, 153, 0.14);
-  --money-border: rgba(52, 211, 153, 0.30);
+  --ok-text:   #5FD787;
+  --ok-strong: #3FBF6C;
+  --ok-soft:   rgba(95, 215, 135, 0.12);
+  --ok-border: rgba(95, 215, 135, 0.28);
 
-  /* رنگِ متنِ قیمت‌ها = همرنگِ متنِ اصلی؛ ته‌رنگِ فیروزه‌ای فقط برای چیپِ مبلغ */
-  --price: var(--text);
-  --price-strong: var(--text);
-  --price-soft: rgba(45, 212, 191, 0.15);
-  --price-border: rgba(45, 212, 191, 0.32);
+  --danger-text:   #F98080;
+  /* عمداً تیره‌تر از قرمزِ متن: روی این رنگ متنِ سفید می‌نشیند (دکمه‌ی حذف/ابطال و
+     نوارِ هشدارِ ذخیره‌سازی) و با قرمزِ روشن‌تر، سفید فقط ۳٫۹ کنتراست می‌گرفت. */
+  --danger-strong: #D8353B;
+  --danger-soft:   rgba(229, 72, 77, 0.13);
+  --danger-border: rgba(229, 72, 77, 0.30);
 
-  --danger-text: #FB7185;
-  --danger-strong: #F43F5E;
-  --danger-soft: rgba(244, 63, 94, 0.14);
-  --danger-border: rgba(244, 63, 94, 0.30);
+  --warn-text:   #F5C563;
+  --warn-strong: #E0A32E;
+  --warn-soft:   rgba(224, 163, 46, 0.13);
+  --warn-border: rgba(224, 163, 46, 0.30);
 
-  --card-bg: #122A31;
-  --card-border: #21424C;
-  --card-shadow: 0 22px 48px -26px rgba(0, 0, 0, 0.7);
-  --header-bg: rgba(18, 42, 49, 0.82);
+  /* چیپِ مبلغ — خنثی، فقط یک پله از زمینه جدا می‌شود */
+  --chip-bg:     rgba(255, 255, 255, 0.05);
+  --chip-border: rgba(255, 255, 255, 0.09);
 
-  /* کنترل‌ها (اینپوت‌ها، دکمه‌های تیپ و کارت‌های خدمات) — تمِ تیره */
-  --field-bg: #17323A;
-  --field-text: #F1FBFB;
-  --field-muted: #AFCBD1;
-  --field-hover-bg: rgba(45, 212, 191, 0.12);
-  --field-hover-border: rgba(45, 212, 191, 0.50);
-  --field-active-border: #2DD4BF;
+  --card-bg:     #13181B;
+  --card-border: #222A2F;
+  --header-bg:   rgba(12, 16, 18, 0.88);
+
+  /* کنترل‌ها: ورودی‌ها، دکمه‌های تیپ، کارت‌های قابلِ انتخاب */
+  --field-bg:            #171D21;
+  --field-text:          #E9EEF0;
+  --field-muted:         #9AA7AD;
+  --field-hover-bg:      #1C2429;
+  --field-hover-border:  #38434A;
+  --field-active-border: var(--accent);
+
+  --elev-float: 0 18px 40px -20px rgba(0, 0, 0, 0.72), 0 2px 8px -2px rgba(0, 0, 0, 0.5);
 }
 
-/* ===== تمِ روشن — «آبِ زلال روی سفید»، اکسنتِ فیروزه‌ای ===== */
+/* ===== تمِ روشن ===== */
 :root[data-theme="light"] {
-  --primary: #0D9488;
-  --primary-hover: #0F766E;
+  color-scheme: light;
 
-  --bg: #EDF6F5;
-  --surface: #FFFFFF;
-  --surface-2: #DEEDEB;
-  --border: #D7E7E5;
-  --border-strong: rgba(13, 148, 136, 0.35);
-  --overlay: rgba(6, 40, 40, 0.40);
+  --bg:            #F4F6F7;
+  --surface:       #FFFFFF;
+  --surface-2:     #EDF0F2;
+  --surface-3:     #E3E8EB;
+  --border:        #E0E5E8;
+  --border-strong: #C6CFD4;
+  --overlay:       rgba(14, 24, 27, 0.38);
 
-  --text: #0A2529;
-  --text-muted: #4C6A70;
-  --text-faint: #85A0A5;
+  --text:       #121A1D;
+  --text-muted: #5B686E;
+  --text-faint: #6E7C82;
 
-  --accent-text: #0D9488;
-  --accent-strong: #0D9488;
-  --accent-soft: rgba(13, 148, 136, 0.09);
+  --accent:        #14B8A6;
+  --accent-hover:  #0F9D8F;
+  --accent-text:   #0B7A70;
+  --accent-soft:   rgba(13, 148, 136, 0.10);
   --accent-border: rgba(13, 148, 136, 0.26);
+  --accent-ring:   rgba(13, 148, 136, 0.20);
+  /* همان جوهرِ تیره‌ی تمِ شب. دکمه‌ی اصلی عمداً در هر دو تم یک‌شکل است تا
+     کاربر در هر تمی که باشد «دکمه‌ی اصلی» را از یک جا بشناسد. */
+  --on-accent:     #04211E;
 
-  --money-text: #059669;
-  --money-strong: #059669;
-  --money-soft: rgba(5, 150, 105, 0.10);
-  --money-border: rgba(5, 150, 105, 0.28);
+  --ok-text:   #15803D;
+  --ok-strong: #16A34A;
+  --ok-soft:   rgba(22, 163, 74, 0.09);
+  --ok-border: rgba(22, 163, 74, 0.24);
 
-  /* رنگِ متنِ قیمت‌ها = همرنگِ متنِ اصلی؛ ته‌رنگِ فیروزه‌ای فقط برای چیپِ مبلغ */
-  --price: var(--text);
-  --price-strong: var(--text);
-  --price-soft: rgba(13, 148, 136, 0.10);
-  --price-border: rgba(13, 148, 136, 0.28);
+  --danger-text:   #C62B30;
+  --danger-strong: #DC2626;
+  --danger-soft:   rgba(220, 38, 38, 0.07);
+  --danger-border: rgba(220, 38, 38, 0.22);
 
-  --danger-text: #E11D48;
-  --danger-strong: #E11D48;
-  --danger-soft: rgba(225, 29, 72, 0.08);
-  --danger-border: rgba(225, 29, 72, 0.26);
+  --warn-text:   #A16207;
+  --warn-strong: #D97706;
+  --warn-soft:   rgba(217, 119, 6, 0.09);
+  --warn-border: rgba(217, 119, 6, 0.24);
 
-  --card-bg: #FFFFFF;
-  --card-border: #DCEBE9;
-  --card-shadow: 0 20px 44px -28px rgba(6, 60, 58, 0.18);
-  --header-bg: rgba(255, 255, 255, 0.82);
+  --chip-bg:     #F0F3F4;
+  --chip-border: #E2E7EA;
 
-  /* کنترل‌ها — تمِ روشن (سفیدِ تمیز با هاورِ فیروزه‌ایِ ملایم) */
-  --field-bg: #FFFFFF;
-  --field-text: #0A2529;
-  --field-muted: #35555B;
-  --field-hover-bg: #E6F5F2;
-  --field-hover-border: #99E0D5;
-  --field-active-border: #14B8A6;
+  --card-bg:     #FFFFFF;
+  --card-border: #E0E5E8;
+  --header-bg:   rgba(244, 246, 247, 0.88);
+
+  --field-bg:            #FFFFFF;
+  --field-text:          #121A1D;
+  --field-hover-bg:      #F4F6F7;
+  --field-muted:         #5B686E;
+  --field-hover-border:  #C1CBD0;
+  --field-active-border: var(--accent);
+
+  --elev-float: 0 18px 40px -22px rgba(13, 30, 35, 0.28), 0 2px 8px -3px rgba(13, 30, 35, 0.12);
+}
+
+/* رنگِ میله‌های نمودار — عمداً در هر دو تم یکی است.
+   این مقدار با ابزارِ سنجشِ پالت آزموده شده و در هر دو حالت (روی سفیدِ تمِ روشن
+   و روی سطحِ تیره) هر شش بررسی را پاس می‌کند: بازه‌ی روشنایی، حداقلِ اشباع،
+   و نسبتِ کنتراستِ بالای ۳. رنگِ اکسنتِ دکمه‌ها (#14B8A6) روی سفید فقط ۲٫۵
+   کنتراست دارد و برای میله مناسب نبود. */
+:root {
+  --chart-bar: #0D9488;
+  --chart-track: var(--surface-2);
 }
 
 @layer base {
@@ -141,15 +178,27 @@
     font-family: var(--font-sans);
     direction: rtl;
     text-align: right;
+    /* وزنِ پایه ۴۰۰. قبلاً تقریباً هر متنی bold بود و وقتی همه‌چیز ضخیم است،
+       ضخامت دیگر چیزی را برجسته نمی‌کند. */
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.7;
     color: var(--text);
     background-color: var(--bg);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    transition: background-color .2s ease, color .2s ease;
+    transition: background-color .18s ease, color .18s ease;
   }
 
-  h1, h2, h3 { font-family: var(--font-display); font-weight: 800; letter-spacing: -.015em; }
+  /* letter-spacing منفی روی فارسی اشتباه است: خطِ فارسی پیوسته است و فشردنش
+     اتصالِ حروف را خراب می‌کند. عمداً حذف شد. */
+  h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; line-height: 1.45; }
+
+  .font-display { font-weight: 700; }
   .font-mono { font-variant-numeric: tabular-nums; }
+
+  /* اعداد در جدول‌ها و مبلغ‌ها باید هم‌عرض باشند تا ستون‌ها روی هم بیفتند */
+  input[inputmode="numeric"], table { font-variant-numeric: tabular-nums; }
 
   /* 🔴 تضمینِ کلیک‌پذیریِ ورودی‌ها (به‌ویژه در الکترونِ ویندوز):
      هیچ لایه‌ی تزئینیِ پس‌زمینه نباید کلیک روی کنترل‌ها را بگیرد و متن هم باید
@@ -158,12 +207,28 @@
     pointer-events: auto;
   }
   input, textarea { -webkit-user-select: text; user-select: text; }
+
+  /* حلقه‌ی فوکوسِ یکدست برای کیبورد — قبلاً بعضی کنترل‌ها هیچ نشانه‌ی فوکوسی
+     نداشتند و با Tab گم می‌شدی. */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  /* روی ورودی‌ها حلقه دقیقاً روی لبه بنشیند (نه دو میلی‌متر بیرون‌تر) تا
+     کادرِ ورودی بزرگ‌تر به‌نظر نرسد و ردیفِ فرم نلرزد. */
+  input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline-offset: 0;
+    border-color: var(--accent);
+  }
+
+  ::selection { background: var(--accent-soft); color: var(--text); }
 }
 
 /* --- اسکرول‌بارِ ظریف --- */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--surface-2); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
 ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); background-clip: padding-box; }
 
 /* --- انیمیشنِ ورودِ ملایم --- */
@@ -175,7 +240,7 @@
 
 /* --- اسپلشِ برندِ یاتاش (هنگام باز شدن) --- */
 @keyframes cw-splash-in {
-  from { opacity: 0; transform: scale(0.92); }
+  from { opacity: 0; transform: scale(0.94); }
   to   { opacity: 1; transform: scale(1); }
 }
 @keyframes cw-splash-out {
@@ -186,57 +251,76 @@
 .cw-splash-logo { animation: cw-splash-in .5s cubic-bezier(0.22, 1, 0.36, 1); }
 
 /* ---------------------------------------------------------------
-   اجزای پایه — «آب و فولاد»: کارت‌های نرم با سایه‌ی لایه‌ای،
-   اکسنتِ فیروزه‌ای فقط روی نقاطِ کلیدی (دکمه/تب/مبلغ/لوگو).
+   اجزای پایه
+
+   مقیاسِ گردیِ گوشه‌ها فقط سه پله دارد (قبلاً شش مقدارِ پراکنده بود):
+     ۸px  چیپ و برچسب و ورودیِ داخلِ جدول
+     ۱۲px ورودی، دکمه، تب
+     ۱۶px کارت، پنل، مودال
+   سایه فقط برای چیزی است که واقعاً «شناور» است (مودال، اعلان، هدرِ چسبان).
+   کارت‌های داخلِ صفحه با خط و یک پله اختلافِ سطح از هم جدا می‌شوند، نه با سایه —
+   سایه‌ی نرم زیرِ هر کارت همان ظاهرِ قالبیِ تکراری بود.
 --------------------------------------------------------------- */
 .cw-card {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: 1.25rem;
-  box-shadow: var(--card-shadow);
-  /* جلای ظریفِ لبه‌ی بالا — حسِ «سطحِ براقِ خیس» بدونِ شلوغی */
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 42%);
+  border-radius: 16px;
 }
 
-/* دکمه‌ی اصلی: گرادیانِ فیروزه‌ای (امضای برند)، با درخششِ ملایم */
+/* دکمه‌ی اصلی — سطحِ فیروزه‌ای با جوهرِ تیره. بدونِ گرادیان و بدونِ هاله:
+   این دکمه باید تنها چیزِ بلندِ صفحه باشد، پس خودِ رنگِ تخت کافی است. */
 .cw-primary {
-  background: linear-gradient(135deg, #14B8A6 0%, #0F766E 100%);
-  color: #ffffff;
+  background: var(--accent);
+  color: var(--on-accent);
   border: 1px solid transparent;
-  box-shadow: 0 10px 22px -12px rgba(13, 148, 136, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.22);
-  transition: filter .16s ease, transform .05s ease, box-shadow .16s ease;
+  font-weight: 600;
+  transition: background-color .15s ease, transform .05s ease;
 }
-.cw-primary:hover { filter: brightness(1.08); box-shadow: 0 14px 28px -12px rgba(20, 184, 166, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.22); }
-.cw-primary:active { transform: translateY(1px); }
-.cw-primary:disabled { opacity: .5; filter: none; }
+.cw-primary:hover:not(:disabled) { background: var(--accent-hover); }
+.cw-primary:active:not(:disabled) { transform: translateY(1px); }
+.cw-primary:disabled { opacity: .45; cursor: not-allowed; }
 
-/* نشانِ لوگو: قلبِ اکسنتِ فیروزه‌ای→آبی‌دریایی */
+/* دکمه‌ی خطرناک (ابطال، حذف، ریست) — همان اسکلتِ دکمه‌ی اصلی با رنگِ هشدار،
+   تا «شکلِ دکمه‌ی قطعی» در کلِ برنامه یکی باشد. */
+.cw-danger {
+  background: var(--danger-strong);
+  color: #FFFFFF;
+  border: 1px solid transparent;
+  font-weight: 600;
+  transition: filter .15s ease, transform .05s ease;
+}
+.cw-danger:hover:not(:disabled) { filter: brightness(1.1); }
+.cw-danger:active:not(:disabled) { transform: translateY(1px); }
+.cw-danger:disabled { opacity: .45; cursor: not-allowed; }
+
+/* نشانِ لوگو — تنها جایی که گرادیان مجاز است، چون خودش یک نشانِ برند است */
 .cw-badge {
-  position: relative;
   background: linear-gradient(145deg, #5EEAD4 0%, #14B8A6 52%, #0D9488 100%);
-  color: #ffffff;
-  box-shadow: 0 12px 24px -10px rgba(13, 148, 136, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-}
-/* جلای شیشه‌ایِ بالای بَج */
-.cw-badge::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(120% 80% at 30% 0%, rgba(255, 255, 255, 0.4), transparent 60%);
-  pointer-events: none;
+  color: #04211E;
 }
 
-/* چیپِ مبلغِ کل — پنلِ فیروزه‌ایِ ملایم با جلای درونی */
+/* نوارِ مبلغِ کل — قهرمانِ صفحه‌ی صندوق.
+   خطِ فیروزه‌ایِ لبه‌ی راست یک نشانه‌ی ساختاری است نه تزئین: می‌گوید «عددی که
+   از مشتری می‌گیری همین است». */
 .cw-total {
-  background: var(--price-soft);
-  border: 1px solid var(--price-border);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  border-right: 3px solid var(--accent);
+}
+
+/* عددِ مبلغ — بزرگ، هم‌عرض، بی‌رنگ. تنها لحظه‌ی تایپوگرافیکِ بزرگِ صفحه. */
+.cw-amount {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  color: var(--text);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-fade-in { animation: none; }
+  .animate-fade-in, .cw-splash, .cw-splash-logo { animation: none; }
   body { transition: none; }
+  * { transition-duration: .01ms !important; }
 }
 
 /* ---------------------------------------------------------------

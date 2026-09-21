@@ -3,7 +3,7 @@ import { Printer, UserCheck, History as HistoryIcon } from 'lucide-react';
 import { Receipt } from '../../types';
 import { Store } from '../../data/store';
 import { formatCurrencyToman, toPersianDigits, tomanToRial } from '../../utils/format';
-import { Field, inputClass, NumberInput, PrimaryButton, SectionCard } from '../common';
+import { Callout, Field, inputClass, NumberInput, PrimaryButton, SectionCard } from '../common';
 
 interface Props {
   store: Store;
@@ -108,9 +108,7 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
       submittingRef.current = false;
     }, 700);
 
-    // 🔴 این پیام فقط «ثبت شدنِ قبض» را تأیید می‌کند، نه چاپ شدنش. سرنوشتِ چاپ
-    // جداگانه و بعد از اجرای واقعیِ آن اعلام می‌شود؛ وگرنه اگر چاپ شکست بخورد،
-    // صندوقدار پیامِ موفقیت می‌بیند و تا آخرِ شب خبردار نمی‌شود.
+    // این پیام فقط ثبتِ قبض را تأیید می‌کند؛ نتیجه‌ی چاپ جداگانه اعلام می‌شود.
     const noPrint = store.config.printMode === 'off';
     notify(
       `قبض شماره ${toPersianDigits(receipt.receiptNumber)} ${noPrint ? 'ثبت شد (چاپ غیرفعال)' : 'ثبت شد'}`,
@@ -120,11 +118,11 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
     onPrint(receipt);
   };
 
+  // بدونِ تیتر: زبانه‌ی بالای صفحه («قبض شست‌وشو») همین حالا اسمِ این صفحه را
+  // گفته و تکرارش فقط یک سطرِ اضافه بود.
   return (
-    <SectionCard
-
-    >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-7">
+    <SectionCard>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         {/* ===== سکشن ۱: مشتری و خودرو (گام‌های ۱، ۲، ۳) ===== */}
         {/* گام ۱، ۲ و ۳: مشتری و خودرو — در یک خط */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -135,7 +133,7 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
               placeholder="۰۹۱۲۳۴۵۶۷۸۹"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className={`${inputClass} text-right font-mono`}
+              className={`${inputClass} tabular-nums`}
             />
           </Field>
           <Field label="۲) نام مشتری" required>
@@ -158,27 +156,36 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
 
         {/* پنلِ سوابقِ مشتریِ قدیمی */}
         {existingCustomer && (
-          <div className="bg-[var(--accent-soft)] border border-[var(--accent-border)] rounded-xl p-4 flex flex-col gap-2 animate-fade-in">
-            <div className="flex items-center gap-2 text-[var(--accent-text)] text-xs font-bold">
-              <UserCheck className="w-4 h-4" />
-              مشتریِ قدیمی: {existingCustomer.name} — {toPersianDigits(history.length)} قبض پیشین
-            </div>
+          <Callout
+            tone="accent"
+            icon={UserCheck}
+            title={`مشتریِ قدیمی: ${existingCustomer.name} — ${toPersianDigits(history.length)} قبض پیشین`}
+            className="animate-fade-in"
+          >
             {history.length > 0 && (
-              <ul className="divide-y divide-[var(--accent-border)] text-[11px] font-semibold text-[var(--text-muted)] max-h-56 overflow-y-auto">
+              <ul className="divide-y divide-[var(--border)] max-h-56 overflow-y-auto -mb-1">
                 {history.slice(0, 10).map((r) => (
-                  <li key={r.id} className="py-1.5 flex items-center justify-between gap-2">
-                    <span className="flex items-center gap-2">
-                      <HistoryIcon className="w-3 h-3 text-[var(--text-faint)]" />
-                      {r.jalaliDate} — {r.tierName}
+                  <li key={r.id} className="py-1.5 flex items-center justify-between gap-3 text-xs">
+                    <span className="flex items-center gap-2 min-w-0">
+                      <HistoryIcon className="w-3 h-3 text-[var(--text-faint)] shrink-0" />
+                      <span className="truncate">
+                        {r.jalaliDate} — {r.tierName}
+                      </span>
                     </span>
-                    <span className={`font-mono ${r.status === 'voided' ? 'line-through text-[var(--text-faint)]' : 'text-[var(--price)]'}`}>
+                    <span
+                      className={`tabular-nums shrink-0 ${
+                        r.status === 'voided'
+                          ? 'line-through text-[var(--text-faint)]'
+                          : 'font-semibold text-[var(--text)]'
+                      }`}
+                    >
                       {formatCurrencyToman(r.price)}
                     </span>
                   </li>
                 ))}
               </ul>
             )}
-          </div>
+          </Callout>
         )}
 
         {/* خطِ جداکننده‌ی سکشن */}
@@ -186,16 +193,20 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
 
         {/* ===== سکشن ۲: تیپ ماشین (گام ۴) ===== */}
         <Field label="۴) تیپ ماشین" required>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {/* چیپِ انتخابی به‌جای شبکه‌ی دکمه‌های هم‌عرض: تعدادِ تیپ‌ها را کاربر
+              تعیین می‌کند، پس ردیفِ چیدمان باید با تعدادشان جلو برود نه با یک
+              شبکه‌ی ثابتِ سه‌ستونه که با چهار تیپ یک خانه‌ی خالی می‌ساخت. */}
+          <div className="flex flex-wrap gap-2">
             {tiers.map((t) => (
               <button
                 type="button"
                 key={t.id}
+                aria-pressed={tierId === t.id}
                 onClick={() => setTierId(t.id)}
-                className={`px-3 py-3 rounded-xl border-2 text-xs font-bold cursor-pointer transition-all ${
+                className={`px-4 py-2.5 rounded-xl border text-[13px] cursor-pointer transition-colors ${
                   tierId === t.id
-                    ? 'border-[var(--field-active-border)] bg-[var(--field-bg)] text-[var(--field-text)] shadow-sm'
-                    : 'border-[var(--border)] bg-[var(--field-bg)] text-[var(--field-muted)] hover:bg-[var(--field-hover-bg)] hover:border-[var(--field-hover-border)]'
+                    ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-text)] font-semibold'
+                    : 'border-[var(--border)] bg-[var(--field-bg)] text-[var(--text-muted)] font-medium hover:border-[var(--field-hover-border)] hover:text-[var(--text)]'
                 }`}
               >
                 {t.name}
@@ -215,22 +226,28 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
               return (
                 <label
                   key={s.id}
-                  className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                  className={`flex items-center justify-between gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
                     selected
-                      ? 'border-[var(--money-border)] bg-[var(--field-bg)] text-[var(--field-text)] shadow-sm'
-                      : 'border-[var(--border)] bg-[var(--field-bg)] text-[var(--field-muted)] hover:bg-[var(--field-hover-bg)] hover:border-[var(--field-hover-border)]'
+                      ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
+                      : 'border-[var(--border)] bg-[var(--field-bg)] hover:border-[var(--field-hover-border)]'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0">
                     <input
                       type="checkbox"
                       checked={selected}
                       onChange={() => toggleService(s.id)}
-                      className="w-4 h-4 accent-[var(--money-strong)]"
+                      className="w-4 h-4 accent-[var(--accent)] shrink-0"
                     />
-                    <span className="text-xs font-bold">{s.name}</span>
+                    <span
+                      className={`text-[13px] truncate ${
+                        selected ? 'font-semibold text-[var(--text)]' : 'font-medium text-[var(--text-muted)]'
+                      }`}
+                    >
+                      {s.name}
+                    </span>
                   </div>
-                  <span className="text-xs font-extrabold text-[var(--price)] font-mono px-2 py-0.5 rounded-md bg-[var(--price-soft)] shrink-0">
+                  <span className="text-xs font-semibold text-[var(--text)] tabular-nums px-2 py-1 rounded-lg bg-[var(--chip-bg)] border border-[var(--chip-border)] shrink-0">
                     {formatCurrencyToman(priceFor(s.id))}
                   </span>
                 </label>
@@ -260,7 +277,7 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
               placeholder="۰"
               value={tip}
               onValueChange={setTip}
-              className={`${inputClass} text-right font-mono tabular-nums`}
+              className={`${inputClass} tabular-nums`}
             />
           </Field>
           <Field label="۸) تخفیف (تومان)" hint="(اختیاری، از مبلغ کل کم می‌شود)">
@@ -268,7 +285,7 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
               placeholder="۰"
               value={discount}
               onValueChange={setDiscount}
-              className={`${inputClass} text-right font-mono tabular-nums`}
+              className={`${inputClass} tabular-nums`}
             />
           </Field>
         </div>
@@ -283,33 +300,39 @@ export default function NewReceipt({ store, notify, onPrint }: Props) {
           />
         </Field>
 
-        {/* جمع و ثبت */}
-        <div className="border-t border-[var(--border)] pt-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="w-full sm:w-auto flex flex-col gap-1.5">
-            {discountValue > 0 && (
-              <span className="text-[11px] font-semibold text-[var(--text-muted)] px-1">
-                جمع خدمات: {formatCurrencyToman(subtotal)}
-                <span className="text-[var(--danger-text)]"> — تخفیف: {formatCurrencyToman(discountValue)}</span>
-              </span>
-            )}
-            {/* مبلغ کل: یک خط، بدون آیکون، فونتِ معمولی — انعام در این مبلغ نیست */}
-            <div className="cw-total rounded-2xl px-5 py-3 flex items-center justify-between gap-4">
-              <span className="text-sm font-bold text-[var(--text-muted)]">مبلغ کل قابل پرداخت</span>
-              <span className="text-2xl font-extrabold text-[var(--price)] font-mono leading-none">
-                {formatCurrencyToman(total)}
+        {/* ===== نوارِ پایانی: مبلغ و ثبت =====
+            تنها عنصرِ «بلندِ» این صفحه. مبلغ بی‌رنگ ولی بزرگ و هم‌عرض است تا از
+            یک متری هم خوانده شود، و خطِ فیروزه‌ایِ لبه‌ی راستِ کادر می‌گوید عددی
+            که از مشتری می‌گیری همین است. */}
+        <div className="border-t border-[var(--border)] pt-5 flex flex-col gap-2.5">
+          {discountValue > 0 && (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--text-muted)] px-1">
+              <span className="tabular-nums">جمع خدمات: {formatCurrencyToman(subtotal)}</span>
+              <span className="tabular-nums text-[var(--danger-text)]">
+                تخفیف: {formatCurrencyToman(discountValue)}
               </span>
             </div>
-            {/* انعام جداگانه: جدا از مبلغِ کل نمایش داده می‌شود و مستقیم سهمِ کارگر است */}
-            {tipValue > 0 && (
-              <span className="text-[11px] font-bold text-[var(--money-text)] px-1">
-                💚 انعام کارگر (جدا از مبلغ کل): {formatCurrencyToman(tipValue)}
-              </span>
-            )}
+          )}
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* 🔴 فقط مبلغِ کل داخلِ این کادر باشد — تست‌ها عددِ داخلِ .cw-total را
+                به‌عنوانِ «مبلغِ کل» می‌خوانند و هر رقمِ دیگری آن را خراب می‌کند. */}
+            <div className="cw-total flex-1 px-5 py-3.5 flex items-center justify-between gap-4">
+              <span className="text-[13px] font-medium text-[var(--text-muted)]">مبلغ کل قابل پرداخت</span>
+              <span className="cw-amount text-[28px] leading-none">{formatCurrencyToman(total)}</span>
+            </div>
+            <PrimaryButton type="submit" className="shrink-0 px-8 !py-4 text-base">
+              <Printer className="w-5 h-5" />
+              ثبت و چاپ قبض
+            </PrimaryButton>
           </div>
-          <PrimaryButton type="submit" className="w-full sm:w-auto px-8 py-3.5 text-base rounded-2xl">
-            <Printer className="w-5 h-5" />
-            ثبت و چاپ قبض
-          </PrimaryButton>
+
+          {/* انعام جداگانه: جدا از مبلغِ کل نمایش داده می‌شود و مستقیم سهمِ کارگر است */}
+          {tipValue > 0 && (
+            <span className="text-xs font-medium text-[var(--ok-text)] tabular-nums px-1">
+              انعام کارگر (جدا از مبلغ کل): {formatCurrencyToman(tipValue)}
+            </span>
+          )}
         </div>
       </form>
     </SectionCard>

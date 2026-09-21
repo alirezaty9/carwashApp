@@ -40,8 +40,8 @@ export default function AdminPanel({
   notify: (m: string, t?: 'success' | 'error' | 'info') => void;
   onPrint: (receipt: Receipt) => void;
   onPrintSale: (sale: Sale) => void;
-  /** چاپِ یک فیشِ نمونه برای امتحانِ پرینتر؛ نتیجه‌اش در همان صفحه نشان داده می‌شود. */
-  onTestPrint: (kind: 'print' | 'pdf') => Promise<PrintReport>;
+  /** چاپِ یک فیشِ نمونه برای امتحانِ پرینتر. */
+  onTestPrint: () => Promise<PrintReport>;
   currentUser: User;
 }) {
   const [tab, setTab] = useState<AdminTab>('reports');

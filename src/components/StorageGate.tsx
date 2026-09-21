@@ -1,7 +1,7 @@
 import { ChangeEvent, ReactNode, useRef, useState } from 'react';
 import { AlertTriangle, Upload, PlayCircle, HardDrive } from 'lucide-react';
 import { BackupData } from '../types';
-import { GhostButton, PrimaryButton } from './common';
+import { Callout, DangerButton, GhostButton, PrimaryButton } from './common';
 
 /**
  * دروازه‌ی سلامتِ داده.
@@ -59,24 +59,21 @@ export default function StorageGate({
           <div className="p-3 rounded-2xl bg-[var(--danger-soft)] border border-[var(--danger-border)]">
             <AlertTriangle className="w-8 h-8 text-[var(--danger-text)]" />
           </div>
-          <h1 className="font-display text-2xl text-[var(--text)]">اطلاعاتِ برنامه خوانده نشد</h1>
-          <p className="text-xs font-semibold text-[var(--text-muted)] leading-relaxed max-w-sm">
+          <h1 className="text-2xl text-[var(--text)]">اطلاعاتِ برنامه خوانده نشد</h1>
+          <p className="text-[13px] text-[var(--text-muted)] leading-relaxed max-w-sm">
             برنامه نتوانست {failedKeys.length > 1 ? 'بخش‌هایی' : 'بخشی'} از اطلاعاتِ ذخیره‌شده را بخواند.
           </p>
         </div>
 
-        <div className="bg-[var(--money-soft)] border border-[var(--money-border)] text-[var(--money-text)] text-[11px] font-bold rounded-xl p-3 flex items-start gap-2 leading-relaxed">
-          <HardDrive className="w-4 h-4 shrink-0 mt-0.5" />
-          <span>
-            <b>هیچ داده‌ای پاک نشده است.</b> برنامه عمداً ذخیره‌سازی را متوقف کرده تا روی اطلاعاتِ قبلیِ شما
-            چیزی نوشته نشود. تا وقتی یکی از دو راهِ پایین را انتخاب نکنید، فایلِ اصلی دست‌نخورده می‌ماند.
-          </span>
-        </div>
+        <Callout tone="ok" icon={HardDrive} title="هیچ داده‌ای پاک نشده است">
+          برنامه عمداً ذخیره‌سازی را متوقف کرده تا روی اطلاعاتِ قبلیِ شما چیزی نوشته نشود. تا وقتی یکی از دو
+          راهِ پایین را انتخاب نکنید، فایلِ اصلی دست‌نخورده می‌ماند.
+        </Callout>
 
         {/* راهِ ۱ — بازیابی از پشتیبان */}
         <div className="border border-[var(--border)] rounded-xl p-4 flex flex-col gap-2.5">
-          <div className="text-sm font-bold text-[var(--text)]">۱) بازیابی از فایلِ پشتیبان (پیشنهاد می‌شود)</div>
-          <p className="text-[11px] font-semibold text-[var(--text-muted)] leading-relaxed">
+          <div className="text-[13px] font-semibold text-[var(--text)]">۱) بازیابی از فایلِ پشتیبان (پیشنهاد می‌شود)</div>
+          <p className="text-xs text-[var(--text-muted)] leading-relaxed">
             برنامه هر روز یک نسخه‌ی پشتیبانِ خودکار می‌سازد. مسیرش در «پنلِ مدیریت ← تنظیمات و بکاپ» نوشته
             شده. اگر فایلِ پشتیبانی دارید، همین‌جا انتخابش کنید.
           </p>
@@ -88,20 +85,16 @@ export default function StorageGate({
 
         {/* راهِ ۲ — شروع از نو */}
         <div className="border border-[var(--danger-border)] bg-[var(--danger-soft)] rounded-xl p-4 flex flex-col gap-2.5">
-          <div className="text-sm font-bold text-[var(--danger-text)]">۲) شروعِ دوباره با اطلاعاتِ خالی</div>
-          <p className="text-[11px] font-semibold text-[var(--danger-text)] leading-relaxed">
+          <div className="text-[13px] font-semibold text-[var(--danger-text)]">۲) شروعِ دوباره با اطلاعاتِ خالی</div>
+          <p className="text-xs text-[var(--text-muted)] leading-relaxed">
             فقط وقتی این را بزنید که پشتیبانی ندارید و می‌پذیرید سوابقِ قبلی در دسترس نباشد. از این لحظه
             برنامه دوباره شروع به ذخیره می‌کند و اطلاعاتِ قبلی بازنویسی خواهد شد.
           </p>
           {confirming ? (
             <div className="flex flex-col sm:flex-row gap-2">
-              <button
-                type="button"
-                onClick={onAcceptDataLoss}
-                className="flex-1 bg-[var(--danger-strong)] text-white font-bold text-sm px-5 py-2.5 rounded-xl cursor-pointer"
-              >
+              <DangerButton type="button" onClick={onAcceptDataLoss} className="flex-1">
                 بله، می‌پذیرم و از نو شروع کن
-              </button>
+              </DangerButton>
               <GhostButton type="button" onClick={() => setConfirming(false)} className="shrink-0">
                 انصراف
               </GhostButton>
@@ -114,9 +107,7 @@ export default function StorageGate({
         </div>
 
         {error && (
-          <div className="bg-[var(--danger-soft)] border border-[var(--danger-border)] text-[var(--danger-text)] text-xs font-bold rounded-xl p-3">
-            {error}
-          </div>
+          <Callout tone="danger">{error}</Callout>
         )}
       </div>
     </div>

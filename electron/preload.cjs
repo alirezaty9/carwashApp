@@ -35,18 +35,10 @@ contextBridge.exposeInMainWorld('printer', {
   //   silent = بدونِ پنجره‌ی چاپ (چاپِ مستقیم) یا با پنجره.
   // خروجی همیشه { success, reason? } است تا هیچ شکستی بی‌صدا نماند.
   print: (options) => ipcRenderer.invoke('printer:print', options),
-  // همان صفحه‌ای که برای چاپ می‌رود، به‌صورتِ فایلِ PDF روی میزِ کار — برای اینکه
-  // معلوم شود ایراد از ساختِ فیش است یا از پرینتر.
-  preview: (options) => ipcRenderer.invoke('printer:preview', options),
   // ---- چاپِ حرارتیِ مستقیم (بدونِ نیاز به درایور) ----
   // فیش تکه‌تکه عکس گرفته می‌شود، به نقطه‌های سیاه‌وسفید تبدیل و با زبانِ خودِ
   // پرینتر فرستاده می‌شود. سه مرحله دارد چون فیش بلندتر از پنجره است.
   thermalBegin: () => ipcRenderer.invoke('thermal:begin'),
   thermalCapture: (options) => ipcRenderer.invoke('thermal:capture', options),
   thermalFinish: (options) => ipcRenderer.invoke('thermal:finish', options),
-  // ---- گزارشِ مسیرِ چاپ ----
-  // log   = قدم‌های سمتِ رابطِ کاربری را به ترمینال می‌فرستد.
-  // onLog = قدم‌های سمتِ سیستم را به رابطِ کاربری می‌آورد تا در اپ هم دیده شوند.
-  log: (entry) => ipcRenderer.send('print:log', entry),
-  onLog: (handler) => ipcRenderer.on('print:log-main', (_event, entry) => handler(entry)),
 });

@@ -1,10 +1,20 @@
 import { useMemo, useState } from 'react';
 import { Users, Wallet, ReceiptText, PiggyBank, CircleDollarSign, Coins } from 'lucide-react';
 import { Store } from '../../data/store';
-import { formatCurrencyToman, toPersianDigits } from '../../utils/format';
+import { formatToman, toPersianDigits } from '../../utils/format';
 import { aggregateWorkerPayroll, filterReceiptsByPeriod, Period, PERIODS } from '../../utils/receipts';
 import { useJalaliToday } from '../../utils/useJalaliToday';
-import { PillTabs, SectionCard, StatCard } from '../common';
+import {
+  EmptyState,
+  PillTabs,
+  SectionCard,
+  StatCard,
+  rowHoverClass,
+  tableClass,
+  tableWrapClass,
+  tbodyClass,
+  theadRowClass,
+} from '../common';
 
 /**
  * دستمزد و کارکردِ کارگرها.
@@ -27,12 +37,14 @@ export default function WorkerPayroll({ store }: { store: Store }) {
   // پورسانت و انعام جدا نگه داشته می‌شوند و «سهمِ خالص» = درآمد منهای پورسانت.
   const { rows, totals, shopShare } = useMemo(() => aggregateWorkerPayroll(filtered), [filtered]);
 
+  // فقط دو کاشی تُن می‌گیرند: «سهمِ کارواش» و «درآمد کل» که عددهای تصمیم‌سازند.
+  // بقیه خنثی‌اند تا این دو دیده شوند؛ اگر همه رنگی باشند هیچ‌کدام دیده نمی‌شود.
   const summary = [
-    { label: 'درآمد کل', value: formatCurrencyToman(totals.revenue), icon: CircleDollarSign, color: 'text-[var(--price)] bg-[var(--price-soft)] border-[var(--price-border)]' },
-    { label: 'پورسانتِ کارگرها', value: formatCurrencyToman(totals.commission), icon: Wallet, color: 'text-[var(--money-text)] bg-[var(--money-soft)] border-[var(--money-border)]' },
-    { label: 'انعامِ کارگرها', value: formatCurrencyToman(totals.tip), icon: Coins, color: 'text-[var(--money-text)] bg-[var(--money-soft)] border-[var(--money-border)]' },
-    { label: 'سهمِ خالصِ کارواش', value: formatCurrencyToman(shopShare), icon: PiggyBank, color: 'text-[var(--accent-text)] bg-[var(--accent-soft)] border-[var(--accent-border)]' },
-    { label: 'تعداد قبض', value: `${toPersianDigits(totals.count)} قبض`, icon: ReceiptText, color: 'text-[var(--text-muted)] bg-[var(--surface-2)] border-[var(--border)]' },
+    { label: 'درآمد کل', value: formatToman(totals.revenue), unit: 'تومان', icon: CircleDollarSign, tone: 'accent' as const },
+    { label: 'پورسانتِ کارگرها', value: formatToman(totals.commission), unit: 'تومان', icon: Wallet, tone: 'neutral' as const },
+    { label: 'انعامِ کارگرها', value: formatToman(totals.tip), unit: 'تومان', icon: Coins, tone: 'neutral' as const },
+    { label: 'سهمِ خالصِ کارواش', value: formatToman(shopShare), unit: 'تومان', icon: PiggyBank, tone: 'accent' as const },
+    { label: 'تعداد قبض', value: toPersianDigits(totals.count), unit: 'قبض', icon: ReceiptText, tone: 'neutral' as const },
   ];
 
   return (
@@ -43,65 +55,67 @@ export default function WorkerPayroll({ store }: { store: Store }) {
       {/* کارت‌های خلاصه */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {summary.map((s) => (
-          <StatCard key={s.label} label={s.label} value={s.value} icon={s.icon} color={s.color} />
+          <StatCard key={s.label} label={s.label} value={s.value} unit={s.unit} icon={s.icon} tone={s.tone} />
         ))}
       </div>
 
       {/* جدولِ کارکردِ کارگرها */}
       <SectionCard
         title="دستمزد و کارکردِ کارگرها"
-        subtitle="دریافتیِ هر کارگر = پورسانتِ خدمات + انعام (جدا نمایش داده می‌شوند). انعام در درآمد و سهمِ کارواش حساب نمی‌شود؛ مستقیم به کارگر می‌رسد."
+        subtitle="همه‌ی مبالغ به تومان است. دریافتیِ هر کارگر = پورسانتِ خدمات + انعام (جدا نمایش داده می‌شوند). انعام در درآمد و سهمِ کارواش حساب نمی‌شود؛ مستقیم به کارگر می‌رسد."
       >
         {rows.length === 0 ? (
-          <p className="text-center text-xs text-[var(--text-faint)] py-8">در این بازه قبضی ثبت نشده است.</p>
+          <EmptyState icon={Users}>در این بازه قبضی ثبت نشده است.</EmptyState>
         ) : (
-          <div className="overflow-x-auto border border-[var(--border)] rounded-xl">
-            <table className="w-full text-right border-collapse text-xs">
+          <div className={tableWrapClass}>
+            {/* ستونِ آخر («جمعِ دریافتیِ کارگر») تنها عددی است که سرِ ماه به کارگر
+                پرداخت می‌شود، پس تنها ستونی است که پررنگ نوشته می‌شود. */}
+            <table className={tableClass}>
               <thead>
-                <tr className="bg-[var(--bg)] border-b border-[var(--border)]">
-                  <th className="px-4 py-3 font-bold text-[var(--text-muted)] min-w-[160px]">کارگر</th>
-                  <th className="px-4 py-3 font-bold text-[var(--text-muted)] text-center">تعداد قبض</th>
-                  <th className="px-4 py-3 font-bold text-[var(--text-muted)] text-center">مجموع فروش</th>
-                  <th className="px-4 py-3 font-bold text-[var(--money-text)] text-center">پورسانت</th>
-                  <th className="px-4 py-3 font-bold text-[var(--money-text)] text-center">انعام</th>
-                  <th className="px-4 py-3 font-bold text-[var(--money-text)] text-center">جمعِ دریافتیِ کارگر</th>
+                <tr className={theadRowClass}>
+                  <th className="px-4 py-3 min-w-[160px]">کارگر</th>
+                  <th className="px-4 py-3 text-center">تعداد قبض</th>
+                  <th className="px-4 py-3 text-center">مجموع فروش</th>
+                  <th className="px-4 py-3 text-center">پورسانت</th>
+                  <th className="px-4 py-3 text-center">انعام</th>
+                  <th className="px-4 py-3 text-center text-[var(--text)]">جمعِ دریافتیِ کارگر</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[var(--border)]">
+              <tbody className={tbodyClass}>
                 {rows.map((r, i) => (
-                  <tr key={i} className="hover:bg-[var(--surface-2)]">
+                  <tr key={i} className={rowHoverClass}>
                     <td className="px-4 py-3">
-                      <span className="flex items-center gap-2 font-bold text-[var(--text)]">
+                      <span className="flex items-center gap-2 font-medium text-[var(--text)]">
                         <Users className="w-4 h-4 text-[var(--text-faint)] shrink-0" />
                         {r.name}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center font-mono font-bold text-[var(--text-muted)]">
+                    <td className="px-4 py-3 text-center tabular-nums text-[var(--text-muted)]">
                       {toPersianDigits(r.count)}
                     </td>
-                    <td className="px-4 py-3 text-center font-mono font-bold text-[var(--text)]">
-                      {formatCurrencyToman(r.revenue)}
+                    <td className="px-4 py-3 text-center tabular-nums text-[var(--text-muted)]">
+                      {formatToman(r.revenue)}
                     </td>
-                    <td className="px-4 py-3 text-center font-mono font-bold text-[var(--money-text)]">
-                      {formatCurrencyToman(r.commission)}
+                    <td className="px-4 py-3 text-center tabular-nums text-[var(--text-muted)]">
+                      {formatToman(r.commission)}
                     </td>
-                    <td className="px-4 py-3 text-center font-mono font-bold text-[var(--money-text)]">
-                      {formatCurrencyToman(r.tip)}
+                    <td className="px-4 py-3 text-center tabular-nums text-[var(--text-muted)]">
+                      {formatToman(r.tip)}
                     </td>
-                    <td className="px-4 py-3 text-center font-mono font-black text-[var(--money-text)]">
-                      {formatCurrencyToman(r.commission + r.tip)}
+                    <td className="px-4 py-3 text-center tabular-nums font-semibold text-[var(--text)]">
+                      {formatToman(r.commission + r.tip)}
                     </td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
-                <tr className="bg-[var(--bg)] border-t-2 border-[var(--border)] font-black">
-                  <td className="px-4 py-3 text-[var(--text)]">جمع کل</td>
-                  <td className="px-4 py-3 text-center font-mono text-[var(--text)]">{toPersianDigits(totals.count)}</td>
-                  <td className="px-4 py-3 text-center font-mono text-[var(--text)]">{formatCurrencyToman(totals.revenue)}</td>
-                  <td className="px-4 py-3 text-center font-mono text-[var(--money-text)]">{formatCurrencyToman(totals.commission)}</td>
-                  <td className="px-4 py-3 text-center font-mono text-[var(--money-text)]">{formatCurrencyToman(totals.tip)}</td>
-                  <td className="px-4 py-3 text-center font-mono text-[var(--money-text)]">{formatCurrencyToman(totals.commission + totals.tip)}</td>
+                <tr className="bg-[var(--surface-2)] border-t border-[var(--border-strong)] font-semibold text-[var(--text)]">
+                  <td className="px-4 py-3">جمع کل</td>
+                  <td className="px-4 py-3 text-center tabular-nums">{toPersianDigits(totals.count)}</td>
+                  <td className="px-4 py-3 text-center tabular-nums">{formatToman(totals.revenue)}</td>
+                  <td className="px-4 py-3 text-center tabular-nums">{formatToman(totals.commission)}</td>
+                  <td className="px-4 py-3 text-center tabular-nums">{formatToman(totals.tip)}</td>
+                  <td className="px-4 py-3 text-center tabular-nums">{formatToman(totals.commission + totals.tip)}</td>
                 </tr>
               </tfoot>
             </table>

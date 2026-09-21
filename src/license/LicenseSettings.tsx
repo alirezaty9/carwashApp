@@ -1,5 +1,5 @@
 import { KeyRound, ShieldCheck, Sparkles, AlertTriangle } from 'lucide-react';
-import { SectionCard } from '../components/common';
+import { SectionCard, StatusPill } from '../components/common';
 import { toPersianDigits } from '../utils/format';
 import { getFormattedJalali } from '../utils/jalali';
 import { useLicense } from './useLicense';
@@ -12,13 +12,13 @@ export default function LicenseSettings() {
   const badge = (() => {
     switch (status.state) {
       case 'licensed':
-        return { icon: ShieldCheck, text: 'لایسنسِ فعال', cls: 'text-[var(--money-text)] bg-[var(--money-soft)] border-[var(--money-border)]' };
+        return { icon: ShieldCheck, text: 'لایسنسِ فعال', tone: 'ok' as const };
       case 'trial':
-        return { icon: Sparkles, text: 'نسخه‌ی آزمایشی', cls: 'text-[var(--accent-text)] bg-[var(--accent-soft)] border-[var(--accent-border)]' };
+        return { icon: Sparkles, text: 'نسخه‌ی آزمایشی', tone: 'accent' as const };
       case 'loading':
-        return { icon: KeyRound, text: 'در حال بررسی...', cls: 'text-[var(--text-muted)] bg-[var(--surface-2)] border-[var(--border)]' };
+        return { icon: KeyRound, text: 'در حال بررسی...', tone: 'neutral' as const };
       default:
-        return { icon: AlertTriangle, text: 'بدون لایسنسِ معتبر', cls: 'text-[var(--danger-text)] bg-[var(--danger-soft)] border-[var(--danger-border)]' };
+        return { icon: AlertTriangle, text: 'بدون لایسنسِ معتبر', tone: 'danger' as const };
     }
   })();
 
@@ -33,22 +33,21 @@ export default function LicenseSettings() {
     >
       {/* وضعیت */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-[var(--bg)] p-4 rounded-xl border border-[var(--border)] flex items-center justify-between gap-2">
-          <span className="text-[11px] font-bold text-[var(--text-muted)]">وضعیت</span>
-          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${badge.cls}`}>
-            <BadgeIcon className="w-3.5 h-3.5" />
+        <div className="p-4 rounded-xl border border-[var(--border)] flex items-center justify-between gap-2">
+          <span className="text-xs text-[var(--text-muted)]">وضعیت</span>
+          <StatusPill tone={badge.tone} icon={BadgeIcon}>
             {badge.text}
-          </span>
+          </StatusPill>
         </div>
-        <div className="bg-[var(--bg)] p-4 rounded-xl border border-[var(--border)] flex items-center justify-between gap-2">
-          <span className="text-[11px] font-bold text-[var(--text-muted)]">روزهای باقی‌مانده</span>
-          <span className="text-base font-black text-[var(--text)] font-mono">
+        <div className="p-4 rounded-xl border border-[var(--border)] flex items-center justify-between gap-2">
+          <span className="text-xs text-[var(--text-muted)]">روزهای باقی‌مانده</span>
+          <span className="text-[15px] font-semibold text-[var(--text)] tabular-nums">
             {status.state === 'trial' || status.state === 'licensed' ? `${toPersianDigits(status.daysLeft ?? 0)} روز` : '—'}
           </span>
         </div>
-        <div className="bg-[var(--bg)] p-4 rounded-xl border border-[var(--border)] flex items-center justify-between gap-2">
-          <span className="text-[11px] font-bold text-[var(--text-muted)]">اعتبار تا</span>
-          <span className="text-xs font-bold text-[var(--text)] font-mono">{expiryDate}</span>
+        <div className="p-4 rounded-xl border border-[var(--border)] flex items-center justify-between gap-2">
+          <span className="text-xs text-[var(--text-muted)]">اعتبار تا</span>
+          <span className="text-[13px] font-semibold text-[var(--text)] tabular-nums">{expiryDate}</span>
         </div>
       </div>
 

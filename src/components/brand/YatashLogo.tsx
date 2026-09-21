@@ -53,7 +53,7 @@ export function YatashLogo({
       <div className="flex flex-col leading-none">
         <span className="font-display text-2xl text-[var(--text)]">{BRAND.nameFa}</span>
         {subtitle && (
-          <span className="text-[9px] font-extrabold tracking-[0.35em] text-[var(--text-faint)] mt-0.5">
+          <span className="text-[11px] font-semibold tracking-[0.35em] text-[var(--text-faint)] mt-0.5">
             {BRAND.nameEn}
           </span>
         )}

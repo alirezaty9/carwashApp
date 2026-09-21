@@ -3,7 +3,7 @@ import { KeyRound, Copy, Check, Upload, ShieldAlert, Sparkles } from 'lucide-rea
 import { BRAND } from '../brand';
 import { YatashMark } from '../components/brand/YatashLogo';
 import { toPersianDigits } from '../utils/format';
-import { PrimaryButton, GhostButton } from '../components/common';
+import { Callout, PrimaryButton, GhostButton } from '../components/common';
 import { LicenseStatus } from './useLicense';
 
 type ImportFn = (content: string) => Promise<{ ok: boolean; error?: string }>;
@@ -60,15 +60,15 @@ export function ActivationCard({
     <div className="flex flex-col gap-4">
       {/* کدِ دستگاه */}
       <div>
-        <label className="block text-xs font-bold text-[var(--text-muted)] mb-2">
+        <label className="block text-xs font-medium text-[var(--text-muted)] mb-2">
           کدِ دستگاهِ شما (این را برای یاتاش بفرستید)
         </label>
         <div className="flex items-center gap-2">
-          <code className="flex-1 bg-[var(--bg)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-xs font-mono text-[var(--text)] break-all">
+          <code className="flex-1 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-xs text-[var(--text)] break-all">
             {machineId || '—'}
           </code>
           <GhostButton type="button" onClick={copyId} className="shrink-0">
-            {copied ? <Check className="w-4 h-4 text-[var(--money-text)]" /> : <Copy className="w-4 h-4" />}
+            {copied ? <Check className="w-4 h-4 text-[var(--ok-text)]" /> : <Copy className="w-4 h-4" />}
             {copied ? 'کپی شد' : 'کپی'}
           </GhostButton>
         </div>
@@ -76,7 +76,7 @@ export function ActivationCard({
 
       {/* بارگذاریِ فایلِ لایسنس */}
       <div>
-        <label className="block text-xs font-bold text-[var(--text-muted)] mb-2">
+        <label className="block text-xs font-medium text-[var(--text-muted)] mb-2">
           فایلِ لایسنس (<code>license.dat</code>) را که یاتاش برایتان فرستاده انتخاب کنید
         </label>
         <input
@@ -97,10 +97,9 @@ export function ActivationCard({
       </div>
 
       {error && (
-        <div className="bg-[var(--danger-soft)] border border-[var(--danger-border)] text-[var(--danger-text)] text-xs font-bold rounded-xl p-3 flex items-center gap-2">
-          <ShieldAlert className="w-4 h-4 shrink-0" />
+        <Callout tone="danger" icon={ShieldAlert}>
           {error}
-        </div>
+        </Callout>
       )}
     </div>
   );
@@ -121,15 +120,15 @@ function BlockingScreen({ status, importLicense }: { status: LicenseStatus; impo
           <div className="p-3 rounded-2xl bg-[var(--danger-soft)] border border-[var(--danger-border)]">
             <KeyRound className="w-8 h-8 text-[var(--danger-text)]" />
           </div>
-          <h1 className="font-display text-2xl text-[var(--text)]">{title}</h1>
-          <p className="text-xs font-semibold text-[var(--text-muted)] leading-relaxed max-w-sm">{subtitle}</p>
+          <h1 className="text-2xl text-[var(--text)]">{title}</h1>
+          <p className="text-[13px] text-[var(--text-muted)] leading-relaxed max-w-sm">{subtitle}</p>
         </div>
 
         <div className="border-t border-[var(--border)] pt-5">
           <ActivationCard machineId={status.machineId} importLicense={importLicense} />
         </div>
 
-        <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold text-[var(--text-faint)] pt-2 border-t border-[var(--border)]">
+        <div className="flex items-center justify-center gap-1.5 text-[11px] font-semibold text-[var(--text-faint)] pt-2 border-t border-[var(--border)]">
           {BRAND.poweredByFa}
           <YatashMark size={13} />
         </div>
@@ -146,13 +145,13 @@ function TrialBanner({ status, importLicense }: { status: LicenseStatus; importL
   return (
     <>
       <div className="no-print fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 bg-[var(--surface)] border border-[var(--accent-border)] shadow-2xl rounded-full px-4 py-2 animate-fade-in">
-        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--accent-text)]">
+        <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--accent-text)]">
           <Sparkles className="w-4 h-4" />
           نسخه‌ی آزمایشی — {toPersianDigits(days)} روز باقی مانده
         </span>
         <button
           onClick={() => setOpen(true)}
-          className="cw-primary text-[11px] px-3 py-1.5 rounded-full cursor-pointer"
+          className="cw-primary text-xs px-3.5 py-1.5 rounded-full cursor-pointer"
         >
           فعال‌سازی لایسنس
         </button>
@@ -164,7 +163,7 @@ function TrialBanner({ status, importLicense }: { status: LicenseStatus; importL
           onClick={() => setOpen(false)}
         >
           <div className="cw-card w-full max-w-md p-6 flex flex-col gap-5" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-display text-lg text-[var(--text)]">فعال‌سازیِ لایسنسِ یاتاش</h3>
+            <h3 className="text-lg text-[var(--text)]">فعال‌سازیِ لایسنسِ یاتاش</h3>
             <ActivationCard machineId={status.machineId} importLicense={importLicense} onDone={() => setOpen(false)} />
           </div>
         </div>

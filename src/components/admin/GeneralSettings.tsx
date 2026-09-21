@@ -4,7 +4,7 @@ import { Store } from '../../data/store';
 import { getJalaliDateParts } from '../../utils/jalali';
 import { toPersianDigits } from '../../utils/format';
 import { getStorageInfo, StorageInfo } from '../../data/persistence';
-import { SectionCard, inputClass, NumberInput, PrimaryButton, Field } from '../common';
+import { Callout, DangerButton, Field, NumberInput, PrimaryButton, SectionCard, inputClass } from '../common';
 import PrinterSettings from './PrinterSettings';
 import { PrintReport } from '../../utils/printing';
 
@@ -15,7 +15,7 @@ export default function GeneralSettings({
 }: {
   store: Store;
   notify: (m: string, t?: 'success' | 'error' | 'info') => void;
-  onTestPrint: (kind: 'print' | 'pdf') => Promise<PrintReport>;
+  onTestPrint: () => Promise<PrintReport>;
 }) {
   const { config, updateConfig, exportData, importData, resetAll } = store;
   const fileRef = useRef<HTMLInputElement>(null);
@@ -89,7 +89,7 @@ export default function GeneralSettings({
             <input value={shopName} onChange={(e) => setShopName(e.target.value)} className={inputClass} />
           </Field>
           <Field label="شروع شماره‌ی قبض">
-            <NumberInput thousands={false} value={counterStart} onValueChange={setCounterStart} placeholder="۱۰۰۰" className={`${inputClass} font-mono`} />
+            <NumberInput thousands={false} value={counterStart} onValueChange={setCounterStart} placeholder="۱۰۰۰" className={`${inputClass} tabular-nums`} />
           </Field>
           <div className="md:col-span-3">
             <Field label="متن پایین قبض">
@@ -109,26 +109,26 @@ export default function GeneralSettings({
 
       {/* پشتیبان‌گیری */}
       <SectionCard title="پشتیبان‌گیری و بازیابی" subtitle="تمام اطلاعات آفلاین ذخیره می‌شوند؛ برای اطمینان مرتب بکاپ بگیرید.">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             onClick={handleBackup}
-            className="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--surface-2)] flex items-center gap-3 cursor-pointer transition-all text-right"
+            className="p-4 rounded-xl border border-[var(--border)] hover:border-[var(--field-hover-border)] hover:bg-[var(--surface-2)] flex items-center gap-3 cursor-pointer transition-colors text-right"
           >
-            <Download className="w-6 h-6 text-[var(--money-text)] shrink-0" />
+            <Download className="w-5 h-5 text-[var(--text-muted)] shrink-0" />
             <div>
-              <div className="text-xs font-bold text-[var(--text)]">دانلود فایل پشتیبان</div>
-              <div className="text-[10px] text-[var(--text-faint)] mt-0.5">ذخیره‌ی همه‌چیز در یک فایل json</div>
+              <div className="text-[13px] font-semibold text-[var(--text)]">دانلود فایل پشتیبان</div>
+              <div className="text-[11px] text-[var(--text-muted)] mt-0.5">ذخیره‌ی همه‌چیز در یک فایل json</div>
             </div>
           </button>
 
           <button
             onClick={() => fileRef.current?.click()}
-            className="p-4 rounded-xl border border-[var(--accent-border)] bg-[var(--accent-soft)] hover:bg-[var(--accent-soft)] flex items-center gap-3 cursor-pointer transition-all text-right"
+            className="p-4 rounded-xl border border-[var(--border)] hover:border-[var(--field-hover-border)] hover:bg-[var(--surface-2)] flex items-center gap-3 cursor-pointer transition-colors text-right"
           >
-            <Upload className="w-6 h-6 text-[var(--accent-text)] shrink-0" />
+            <Upload className="w-5 h-5 text-[var(--text-muted)] shrink-0" />
             <div>
-              <div className="text-xs font-bold text-[var(--text)]">بازیابی از فایل</div>
-              <div className="text-[10px] text-[var(--text-faint)] mt-0.5">بارگذاری یک بکاپ قبلی</div>
+              <div className="text-[13px] font-semibold text-[var(--text)]">بازیابی از فایل</div>
+              <div className="text-[11px] text-[var(--text-muted)] mt-0.5">بارگذاری یک بکاپ قبلی</div>
             </div>
           </button>
           <input ref={fileRef} type="file" accept=".json" onChange={handleRestore} className="hidden" />
@@ -137,33 +137,32 @@ export default function GeneralSettings({
         {/* بکاپِ خودکار — بدونِ نشان دادنِ مسیر، این قابلیت عملاً نامرئی است و
             روزِ مبادا کسی نمی‌داند نسخه‌ی پشتیبان کجاست. */}
         {storageInfo && (
-          <div className="bg-[var(--money-soft)] border border-[var(--money-border)] rounded-xl p-4 flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-[var(--money-text)] text-xs font-bold">
-              <ShieldCheck className="w-4 h-4 shrink-0" />
-              پشتیبانِ خودکارِ روزانه فعال است — {toPersianDigits(storageInfo.backups.length)} نسخه موجود است
-            </div>
-            <p className="text-[11px] font-semibold text-[var(--text-muted)] leading-relaxed">
+          <Callout
+            tone="ok"
+            icon={ShieldCheck}
+            title={`پشتیبانِ خودکارِ روزانه فعال است — ${toPersianDigits(storageInfo.backups.length)} نسخه موجود است`}
+          >
+            <p>
               برنامه در اولین اجرای هر روز خودش یک نسخه‌ی پشتیبان می‌سازد و ۷ نسخه‌ی آخر را نگه می‌دارد. این
               جایگزینِ بکاپِ دستی نیست (چون روی همین کامپیوتر است)، ولی اگر فایلِ اصلی خراب شود نجاتتان می‌دهد.
             </p>
-            <div className="flex flex-col gap-1 text-[10px] font-mono text-[var(--text-faint)] break-all">
+            <div className="flex flex-col gap-1 mt-2 text-[11px] text-[var(--text-faint)] break-all">
               <span>پوشه‌ی پشتیبان‌ها: {storageInfo.backupDir}</span>
               <span>فایلِ اصلیِ اطلاعات: {storageInfo.dataPath}</span>
             </div>
-          </div>
+          </Callout>
         )}
 
-        <div className="mt-2 bg-[var(--danger-soft)] border border-[var(--danger-border)] rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="mt-1 rounded-xl border border-[var(--danger-border)] bg-[var(--danger-soft)] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h5 className="text-xs font-bold text-[var(--danger-text)]">بازنشانی کامل سیستم</h5>
-            <p className="text-[10px] text-[var(--danger-text)] mt-0.5">تمام داده‌ها حذف و به حالت اولیه برمی‌گردد (غیرقابل بازگشت).</p>
+            <h5 className="text-[13px] font-semibold text-[var(--danger-text)]">بازنشانی کامل سیستم</h5>
+            <p className="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">
+              تمام داده‌ها حذف و به حالت اولیه برمی‌گردد. این کار برگشت‌پذیر نیست — اول بکاپ بگیرید.
+            </p>
           </div>
-          <button
-            onClick={handleReset}
-            className="bg-[var(--danger-strong)] hover:bg-[var(--danger-strong)] text-white font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-1.5 cursor-pointer shrink-0"
-          >
+          <DangerButton onClick={handleReset} className="shrink-0 !px-4 !py-2 !text-[13px]">
             <RefreshCw className="w-4 h-4" /> ریست کامل
-          </button>
+          </DangerButton>
         </div>
       </SectionCard>
     </div>

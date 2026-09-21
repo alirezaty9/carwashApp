@@ -231,45 +231,14 @@ ipcMain.handle('storage:info', () => ({
 
 // ---- کانال‌های IPC پرینتر ----
 
-// ============================================================================
-// گزارشِ مسیرِ چاپ.
-//
-// چاپ از چند لایه رد می‌شود و وقتی چیزی بیرون نمی‌آید، تنها راهِ فهمیدنِ «کدام
-// لایه کار را زمین گذاشت» این است که مرزِ بینشان دیده شود. هر قدم دو جا نوشته
-// می‌شود: ترمینالی که برنامه از آن اجرا شده، و کادرِ «گزارشِ چاپ» داخلِ خودِ برنامه.
-// ============================================================================
-const PRINT_LOG_PREFIX = '[چاپ]';
-
-function logPrint(step, detail) {
-  console.log(`${PRINT_LOG_PREFIX}[سیستم] ${step}${detail ? ` | ${detail}` : ''}`);
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('print:log-main', { step, detail });
-  }
-}
-
-// قدم‌هایی که سمتِ رابطِ کاربری رخ می‌دهند هم به ترمینال می‌آیند، وگرنه نیمی از
-// مسیر فقط در ابزارِ توسعه‌دهنده دیده می‌شد و در نسخه‌ی نصب‌شده اصلاً دیده نمی‌شد.
-ipcMain.on('print:log', (_event, { step, detail } = {}) => {
-  console.log(`${PRINT_LOG_PREFIX}[اپ]     ${step}${detail ? ` | ${detail}` : ''}`);
-});
-
 // لیستِ پرینترهای نصب‌شده روی سیستم را برمی‌گرداند تا کاربر در تنظیمات انتخاب کند.
 ipcMain.handle('printer:list', async (event) => {
   const wc = BrowserWindow.fromWebContents(event.sender)?.webContents;
   if (!wc) return [];
   try {
     const printers = await wc.getPrintersAsync();
-    logPrint(
-      `سیستم‌عامل ${printers.length} پرینتر گزارش کرد`,
-      printers.length
-        ? printers
-            .map((p) => `«${p.name}»${p.isDefault ? ' (پیش‌فرض)' : ''}${p.status !== undefined ? ` وضعیت=${p.status}` : ''}`)
-            .join(' · ')
-        : `هیچ صفِ چاپی روی ${process.platform} تعریف نشده`,
-    );
     return printers.map((p) => ({ name: p.name, displayName: p.displayName, isDefault: p.isDefault }));
-  } catch (error) {
-    logPrint('گرفتنِ لیستِ پرینترها شکست خورد', error && error.message ? error.message : String(error));
+  } catch {
     return [];
   }
 });
@@ -295,12 +264,9 @@ const toPageSize = (page) => {
 const PRINT_BASE_OPTIONS = { printBackground: true, margins: { marginType: 'none' }, scaleFactor: 100 };
 
 /**
- * یک کارِ چاپ را اجرا می‌کند و **همیشه** با یک نتیجه‌ی خوانا برمی‌گردد.
- *
- * دو راهِ جداگانه برای شکست وجود دارد و هر دو باید گرفته شوند:
- *   ۱) شکستِ خودِ کارِ چاپ → از طریقِ callback با یک پیامِ علت،
- *   ۲) ردِ فوریِ تنظیمات (مثلاً نامِ پرینترِ نامعتبر) → به‌صورتِ خطای پرتاب‌شده.
- * قبلاً حالتِ دوم هیچ‌جا گرفته نمی‌شد و کلِ چاپ بی‌صدا از بین می‌رفت.
+ * یک کارِ چاپ را اجرا می‌کند و همیشه با یک نتیجه‌ی خوانا برمی‌گردد.
+ * شکست دو راهِ جدا دارد و هر دو باید گرفته شوند: شکستِ خودِ کارِ چاپ (از راهِ
+ * callback) و ردِ فوریِ تنظیمات مثلِ نامِ پرینترِ نامعتبر (به‌صورتِ خطای پرتاب‌شده).
  */
 const runPrintJob = (wc, options) =>
   new Promise((resolve) => {
@@ -311,9 +277,6 @@ const runPrintJob = (wc, options) =>
     }
   });
 
-/** بسته‌شدنِ پنجره‌ی چاپ توسطِ خودِ کاربر — خطا نیست و نباید دوباره تلاش شود. */
-const isCancelled = (reason) => typeof reason === 'string' && reason.toLowerCase().includes('cancel');
-
 // چاپِ فیش.
 //   silent = true  → بدونِ پنجره، مستقیم به پرینترِ انتخاب‌شده
 //   silent = false → پنجره‌ی چاپِ ویندوز باز می‌شود و کاربر خودش تأیید می‌کند
@@ -321,33 +284,15 @@ const isCancelled = (reason) => typeof reason === 'string' && reason.toLowerCase
 // برمی‌دارد که روی پرینترِ حرارتی یعنی رولِ پیوسته و کاغذِ بی‌پایان.
 ipcMain.handle('printer:print', async (event, { deviceName, page, silent } = {}) => {
   const wc = BrowserWindow.fromWebContents(event.sender)?.webContents;
-  if (!wc) {
-    logPrint('🔴 پنجره‌ی برنامه برای چاپ پیدا نشد');
-    return { success: false, reason: 'no-window' };
-  }
+  if (!wc) return { success: false, reason: 'no-window' };
 
   const pageSize = toPageSize(page);
   const options = { ...PRINT_BASE_OPTIONS, silent: silent !== false, deviceName: deviceName || undefined };
 
-  logPrint(
-    'کارِ چاپ به سیستم‌عامل سپرده شد',
-    `پرینتر=${options.deviceName || '(پیش‌فرضِ سیستم)'} · حالت=${options.silent ? 'بدونِ پنجره' : 'با پنجره‌ی چاپ'} · ` +
-      (pageSize
-        ? `اندازه=${Math.round(pageSize.width / 1000)}×${Math.round(pageSize.height / 1000)} میلی‌متر`
-        : '🟡 اندازه‌ی برگه نامعتبر بود و فرستاده نشد'),
-  );
-
-  const attempt = await runPrintJob(wc, pageSize ? { ...options, pageSize } : options);
-  logPrint(
-    attempt.success ? '✅ سیستم‌عامل کارِ چاپ را پذیرفت' : '🔴 سیستم‌عامل کارِ چاپ را رد کرد',
-    attempt.reason ? `پیامِ خام: ${attempt.reason}` : undefined,
-  );
-  return attempt;
-
-  // 🔴 عمداً هیچ «تلاشِ دومی با اندازه‌ی پیش‌فرضِ درایور» اینجا نیست.
-  // روی پرینترِ رولی، اندازه‌ی پیش‌فرضِ درایور معمولاً «رولِ پیوسته» یا A4 است؛
-  // تلاشِ دوم با آن اندازه یعنی متری کاغذ که بی‌صدا بیرون می‌آید. بینِ «چاپ نشد و
-  // علتش را گفتیم» و «یک رولِ کاغذ هدر رفت»، اولی همیشه انتخابِ درست است.
+  // 🔴 اگر این کارِ چاپ رد شد، عمداً دوباره با اندازه‌ی پیش‌فرضِ درایور تلاش
+  // نمی‌کنیم: آن اندازه روی پرینترِ رولی یعنی «رولِ پیوسته» و متری کاغذ. بینِ
+  // «چاپ نشد و علتش را گفتیم» و «یک رول کاغذ هدر رفت»، اولی انتخابِ درست است.
+  return runPrintJob(wc, pageSize ? { ...options, pageSize } : options);
 });
 
 // ============================================================================
@@ -369,7 +314,6 @@ let thermalBands = [];
 
 ipcMain.handle('thermal:begin', () => {
   thermalBands = [];
-  logPrint('▶️ چاپِ حرارتی شروع شد', 'مسیرِ مستقیمِ ESC/POS — بدونِ عبور از درایور');
   return { success: true };
 });
 
@@ -397,70 +341,21 @@ ipcMain.handle('thermal:capture', async (event, { rect, dotsPerLine } = {}) => {
     const target = Number(dotsPerLine) === escpos.DOTS_PER_LINE_58MM ? escpos.DOTS_PER_LINE_58MM : escpos.DOTS_PER_LINE;
     const scaled = shot.resize({ width: target, quality: 'best' });
     const size = scaled.getSize();
-    const raster = escpos.imageToRaster({ bgra: scaled.toBitmap(), width: size.width, height: size.height });
-    thermalBands.push(raster);
-    logPrint('تکه‌ای از فیش به نقطه تبدیل شد', `${size.width}×${size.height} نقطه`);
+    thermalBands.push(escpos.imageToRaster({ bgra: scaled.toBitmap(), width: size.width, height: size.height }));
     return { success: true };
   } catch (error) {
-    const reason = error && error.message ? error.message : String(error);
-    logPrint('🔴 عکس‌برداری از فیش شکست خورد', reason);
-    return { success: false, reason };
+    return { success: false, reason: error && error.message ? error.message : String(error) };
   }
 });
 
 ipcMain.handle('thermal:finish', async (_event, { deviceName } = {}) => {
-  if (thermalBands.length === 0) {
-    logPrint('🔴 چیزی برای چاپ ساخته نشد');
-    return { success: false, reason: 'هیچ تصویری از فیش ساخته نشد' };
-  }
+  if (thermalBands.length === 0) return { success: false, reason: 'هیچ تصویری از فیش ساخته نشد' };
 
   const job = escpos.buildReceiptJob(thermalBands);
   thermalBands = [];
-  logPrint('ارسالِ خام به پرینتر', `${(job.length / 1024).toFixed(1)} کیلوبایت · پرینتر=${deviceName || '(پیش‌فرضِ سیستم)'}`);
 
   const result = await sendRaw(job, deviceName || undefined);
-  logPrint(
-    result.ok ? '✅ فیش به پرینتر رسید' : '🔴 رساندنِ فیش به پرینتر شکست خورد',
-    result.ok ? result.note : result.reason,
-  );
   return result.ok ? { success: true } : { success: false, reason: result.reason };
-});
-
-/**
- * پیش‌نمایشِ PDF — دقیقاً همان صفحه‌ای که برای چاپ فرستاده می‌شود، ولی روی دیسک.
- *
- * چرا لازم است: این تنها راهی است که دو سؤال را از هم جدا می‌کند —
- * «برنامه فیش را درست می‌سازد؟» و «پرینتر/درایور آن را چاپ می‌کند؟».
- * اگر PDF درست و خوانا باشد ولی کاغذ خالی بیرون بیاید، ایراد قطعاً سمتِ
- * پرینتر است و نه سمتِ برنامه. برای امتحان روی لینوکس هم کاغذ لازم نیست.
- */
-ipcMain.handle('printer:preview', async (event, { page } = {}) => {
-  const wc = BrowserWindow.fromWebContents(event.sender)?.webContents;
-  if (!wc) return { success: false, reason: 'no-window' };
-
-  const pageSize = toPageSize(page);
-  try {
-    const data = await wc.printToPDF({
-      printBackground: true,
-      margins: { marginType: 'none' },
-      ...(pageSize ? { pageSize } : {}),
-    });
-    // روی میزِ کار ذخیره می‌شود چون کاربر باید بتواند بدونِ گشتن پیدایش کند.
-    let dir;
-    try {
-      dir = app.getPath('desktop');
-    } catch {
-      dir = USER_DATA_DIR;
-    }
-    const target = path.join(dir, 'yatash-print-preview.pdf');
-    fs.writeFileSync(target, data);
-    logPrint('📄 پیش‌نمایشِ PDF ساخته شد', target);
-    return { success: true, path: target };
-  } catch (error) {
-    const reason = error && error.message ? error.message : String(error);
-    logPrint('🔴 ساختِ پیش‌نمایشِ PDF شکست خورد', reason);
-    return { success: false, reason };
-  }
 });
 
 app.whenReady().then(() => {
@@ -470,10 +365,6 @@ app.whenReady().then(() => {
   makeDailyBackup();
   license.register(ipcMain, store);
   createWindow();
-  logPrint(
-    'برنامه بالا آمد',
-    `سیستم‌عامل=${process.platform} · الکترون=${process.versions.electron} · نسخه‌ی نصب‌شده=${app.isPackaged ? 'بله' : 'خیر (حالتِ توسعه)'}`,
-  );
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });

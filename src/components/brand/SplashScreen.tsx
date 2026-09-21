@@ -34,11 +34,11 @@ export default function SplashScreen() {
         <YatashMark size={96} className="drop-shadow-2xl" />
         <div className="flex flex-col items-center gap-1.5">
           <span className="font-display text-5xl text-[var(--text)] leading-none">{BRAND.nameFa}</span>
-          <span className="text-[11px] font-extrabold tracking-[0.4em] text-[var(--text-muted)]">
+          <span className="text-[11px] font-semibold tracking-[0.4em] text-[var(--text-muted)]">
             {BRAND.nameEn}
           </span>
         </div>
-        <span className="text-xs font-bold text-[var(--text-muted)] mt-1">{BRAND.taglineFa}</span>
+        <span className="text-xs font-semibold text-[var(--text-muted)] mt-1">{BRAND.taglineFa}</span>
       </div>
     </div>
   );

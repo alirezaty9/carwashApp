@@ -3,7 +3,26 @@ import { Printer, XCircle, CheckCircle, Search, ShoppingCart } from 'lucide-reac
 import { Sale, User } from '../../types';
 import { Store } from '../../data/store';
 import { formatCurrencyToman, toEnglishDigits, toPersianDigits } from '../../utils/format';
-import { Field, GhostButton, inputClass, Modal, ModalHeader, Pagination, SectionCard } from '../common';
+import {
+  Callout,
+  CountBadge,
+  DangerButton,
+  EmptyState,
+  Field,
+  GhostButton,
+  IconButton,
+  Modal,
+  ModalHeader,
+  Pagination,
+  SectionCard,
+  StatusPill,
+  inputClass,
+  rowHoverClass,
+  tableClass,
+  tableWrapClass,
+  tbodyClass,
+  theadRowClass,
+} from '../common';
 
 const PAGE_SIZE = 15;
 
@@ -55,24 +74,21 @@ export default function SalesHistory({ store, notify, onPrintSale, currentUser }
     <SectionCard
       title="تاریخچه‌ی فروش لوازم"
       subtitle="جستجو، چاپ مجدد و ابطال. با ابطالِ فروش، تعدادِ کالاها دوباره به انبار اضافه می‌شود."
-      action={
-        <span className="bg-[var(--surface-2)] text-[var(--text)] text-xs px-3.5 py-1.5 rounded-lg font-bold border border-[var(--border)]">
-          مجموع: {toPersianDigits(sales.length)} فروش
-        </span>
-      }
+      action={<CountBadge>مجموع: {toPersianDigits(sales.length)} فروش</CountBadge>}
     >
       {/* فیلترها */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-[var(--bg)] p-4 rounded-xl border border-[var(--border)]">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="relative">
-          <Search className="w-4 h-4 text-[var(--text-faint)] absolute right-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[var(--text-faint)] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             placeholder="جستجو: شماره فاکتور، کالا، تلفن..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className={`${inputClass} pr-9 py-2`}
+            aria-label="جستجوی فاکتور"
+            className={`${inputClass} pr-9`}
           />
         </div>
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className={`${inputClass} py-2`}>
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} aria-label="فیلترِ وضعیت" className={inputClass}>
           <option value="all">همه‌ی وضعیت‌ها</option>
           <option value="active">فعال</option>
           <option value="voided">باطل‌شده</option>
@@ -80,15 +96,14 @@ export default function SalesHistory({ store, notify, onPrintSale, currentUser }
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-12 bg-[var(--bg)] rounded-2xl border border-dashed border-[var(--border)]">
-          <ShoppingCart className="w-12 h-12 text-[var(--text-faint)] mx-auto mb-3" />
-          <p className="text-xs font-bold text-[var(--text-muted)]">هیچ فروشی یافت نشد.</p>
-        </div>
+        <EmptyState icon={ShoppingCart}>
+          هیچ فاکتوری با این جست‌وجو پیدا نشد. عبارتِ جست‌وجو یا فیلترِ وضعیت را عوض کنید.
+        </EmptyState>
       ) : (
-        <div className="overflow-x-auto border border-[var(--border)] rounded-xl">
-          <table className="w-full text-right border-collapse text-xs whitespace-nowrap">
+        <div className={tableWrapClass}>
+          <table className={`${tableClass} whitespace-nowrap`}>
             <thead>
-              <tr className="bg-[var(--bg)] text-[var(--text-muted)] font-bold border-b border-[var(--border)]">
+              <tr className={theadRowClass}>
                 <th className="px-3 py-3">ش.فاکتور</th>
                 <th className="px-3 py-3">اقلام</th>
                 <th className="px-3 py-3">تلفن</th>
@@ -98,53 +113,58 @@ export default function SalesHistory({ store, notify, onPrintSale, currentUser }
                 <th className="px-3 py-3 text-center">عملیات</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--border)] font-semibold text-[var(--text-muted)]">
+            <tbody className={`${tbodyClass} text-[var(--text-muted)]`}>
               {pageItems.map((s) => {
                 const voided = s.status === 'voided';
                 return (
-                  <tr key={s.id} className={`hover:bg-[var(--surface-2)] transition-all ${voided ? 'bg-[var(--danger-soft)] text-[var(--text-faint)]' : ''}`}>
-                    <td className="px-3 py-3 font-mono text-[var(--text)] font-bold">{toPersianDigits(s.saleNumber)}</td>
+                  <tr key={s.id} className={`${rowHoverClass} ${voided ? 'bg-[var(--danger-soft)]' : ''}`}>
+                    <td className="px-3 py-3 tabular-nums font-semibold text-[var(--text)]">
+                      {toPersianDigits(s.saleNumber)}
+                    </td>
                     <td className="px-3 py-3 max-w-[220px] whitespace-normal">
                       <div className="flex flex-wrap gap-1">
                         {s.items.map((it) => (
-                          <span key={it.productId} className="bg-[var(--money-soft)] border border-[var(--money-border)] text-[var(--money-text)] text-[9px] px-1.5 py-0.5 rounded">
+                          <span
+                            key={it.productId}
+                            className="bg-[var(--chip-bg)] border border-[var(--chip-border)] text-[var(--text-muted)] text-[11px] px-1.5 py-0.5 rounded-lg"
+                          >
                             {it.name} ×{toPersianDigits(it.qty)}
                           </span>
                         ))}
                       </div>
                     </td>
-                    <td className="px-3 py-3 font-mono text-[10px] text-[var(--text-muted)]">
+                    <td className="px-3 py-3 tabular-nums text-[11px]">
                       {s.customerPhone ? toPersianDigits(s.customerPhone) : '—'}
                     </td>
-                    <td className={`px-3 py-3 font-bold font-mono ${voided ? 'line-through text-[var(--text-faint)]' : 'text-[var(--price)]'}`}>
-                      {formatCurrencyToman(s.total)}
+                    <td className="px-3 py-3 tabular-nums">
+                      <span className={voided ? 'line-through text-[var(--text-faint)]' : 'font-semibold text-[var(--text)]'}>
+                        {formatCurrencyToman(s.total)}
+                      </span>
                     </td>
-                    <td className="px-3 py-3 text-[var(--text-muted)] text-[11px]">{s.jalaliDate}</td>
+                    <td className="px-3 py-3 text-[11px]">{s.jalaliDate}</td>
                     <td className="px-3 py-3">
                       {voided ? (
-                        <div className="flex flex-col gap-0.5">
-                          <span className="inline-flex items-center gap-1 text-[var(--danger-text)] bg-[var(--danger-soft)] border border-[var(--danger-border)] px-2 py-0.5 rounded-full text-[10px] font-bold w-fit">
-                            <XCircle className="w-3 h-3" /> باطل
-                          </span>
-                          {s.voidedBy && (
-                            <span className="text-[9px] font-bold text-[var(--text-muted)]">توسط {s.voidedBy}</span>
-                          )}
+                        <div className="flex flex-col gap-1">
+                          <StatusPill tone="danger" icon={XCircle}>
+                            باطل
+                          </StatusPill>
+                          {s.voidedBy && <span className="text-[11px] text-[var(--text-faint)]">توسط {s.voidedBy}</span>}
                         </div>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[var(--money-text)] bg-[var(--money-soft)] border border-[var(--money-border)] px-2 py-0.5 rounded-full text-[10px] font-bold">
-                          <CheckCircle className="w-3 h-3" /> فعال
-                        </span>
+                        <StatusPill tone="ok" icon={CheckCircle}>
+                          فعال
+                        </StatusPill>
                       )}
                     </td>
                     <td className="px-3 py-3">
-                      <div className="flex items-center justify-center gap-1">
-                        <button title="چاپ مجدد" onClick={() => onPrintSale(s)} className="p-1.5 text-[var(--accent-text)] hover:bg-[var(--surface-2)] rounded-lg cursor-pointer">
+                      <div className="flex items-center justify-center gap-0.5">
+                        <IconButton tone="accent" title="چاپ مجدد" aria-label="چاپ مجدد" onClick={() => onPrintSale(s)}>
                           <Printer className="w-4 h-4" />
-                        </button>
+                        </IconButton>
                         {!voided && (
-                          <button title="ابطال" onClick={() => setVoiding(s)} className="p-1.5 text-[var(--danger-text)] hover:bg-[var(--surface-2)] rounded-lg cursor-pointer">
+                          <IconButton tone="danger" title="ابطال" aria-label="ابطال" onClick={() => setVoiding(s)}>
                             <XCircle className="w-4 h-4" />
-                          </button>
+                          </IconButton>
                         )}
                       </div>
                     </td>
@@ -162,17 +182,13 @@ export default function SalesHistory({ store, notify, onPrintSale, currentUser }
       <Modal open={!!voiding} onClose={() => setVoiding(null)}>
         <ModalHeader title={`ابطال فاکتور ${voiding ? toPersianDigits(voiding.saleNumber) : ''}`} onClose={() => setVoiding(null)} />
         <form onSubmit={submitVoid} className="flex flex-col gap-4">
-          <div className="bg-[var(--accent-soft)] border border-[var(--accent-border)] text-[var(--accent-text)] text-[11px] font-bold rounded-xl p-3 leading-relaxed">
-            با ابطال، موجودیِ کالاهای این فاکتور دوباره به انبار برمی‌گردد.
-          </div>
+          <Callout tone="accent">با ابطال، موجودیِ کالاهای این فاکتور دوباره به انبار برمی‌گردد.</Callout>
           <Field label="علت ابطال" required>
             <input required value={voidReason} onChange={(e) => setVoidReason(e.target.value)} placeholder="مثال: مرجوعی مشتری" className={inputClass} />
           </Field>
           <div className="flex justify-end gap-2 border-t border-[var(--border)] pt-3">
             <GhostButton type="button" onClick={() => setVoiding(null)}>انصراف</GhostButton>
-            <button type="submit" className="bg-[var(--danger-strong)] hover:bg-[var(--danger-strong)] text-white font-bold text-sm px-5 py-2.5 rounded-xl cursor-pointer">
-              تایید ابطال
-            </button>
+            <DangerButton type="submit">تایید ابطال</DangerButton>
           </div>
         </form>
       </Modal>

@@ -4,7 +4,16 @@ import { UserRole } from '../../types';
 import { Store } from '../../data/store';
 import { MIN_PASSWORD_LENGTH, validatePasswordValue } from '../../auth';
 import { toPersianDigits } from '../../utils/format';
-import { SectionCard, inputClass, PrimaryButton } from '../common';
+import {
+  CountBadge,
+  Field,
+  IconButton,
+  PrimaryButton,
+  SectionCard,
+  StatusPill,
+  cellInputClass,
+  inputClass,
+} from '../common';
 
 /**
  * مدیریتِ کاربران: ساختنِ کاربرِ جدید (ادمین/صندوقدار)، تغییرِ نام/رمز/نقش و فعال‌سازی.
@@ -12,10 +21,17 @@ import { SectionCard, inputClass, PrimaryButton } from '../common';
  * دو نگهبانِ مهم:
  *  ۱) همیشه باید حداقل یک ادمینِ فعال بماند (در store کنترل می‌شود).
  *  ۲) 🔴 نام و رمز «هنگامِ تایپ» ذخیره نمی‌شوند، بلکه وقتی کاربر از کادر بیرون
- *     می‌رود (یا Enter می‌زند) اعتبارسنجی و بعد ثبت می‌شوند. قبلاً هر کلید
- *     مستقیماً ذخیره می‌شد؛ یعنی خالی‌کردنِ کادرِ رمز، همان لحظه حسابی بدونِ رمز
- *     می‌ساخت که هرکسی با زدنِ «ورود» واردش می‌شد.
+ *     می‌رود (یا Enter می‌زند) اعتبارسنجی و بعد ثبت می‌شوند. وگرنه خالی‌کردنِ کادرِ
+ *     رمز همان لحظه حسابی بدونِ رمز می‌ساخت که هرکسی واردش می‌شد.
  */
+
+/**
+ * چیدمانِ مشترکِ سرستون‌ها و ردیف‌ها.
+ * یک تعریف برای هر دو، تا ستون‌ها همیشه زیرِ هم بمانند (اگر جدا تعریف شوند، با
+ * اولین تغییرِ عرض از هم می‌افتند). زیرِ عرضِ `lg` ردیف‌ها روی هم می‌چینند.
+ */
+const ROW_GRID = 'grid grid-cols-1 lg:grid-cols-[minmax(0,1.6fr)_9.5rem_minmax(0,1fr)_6rem_2.5rem] gap-2.5';
+
 export default function UsersManager({
   store,
   notify,
@@ -78,58 +94,47 @@ export default function UsersManager({
     <SectionCard
       title="کاربران و دسترسی"
       subtitle="هر کاربر «ادمین» یا «صندوقدار» است. صندوقدار فقط به صندوق دسترسی دارد و وارد پنل مدیریت نمی‌شود. ابطالِ قبض با نامِ کاربرِ ادمین ثبت می‌شود."
-      action={
-        <span className="bg-[var(--surface-2)] text-[var(--text)] text-xs px-3.5 py-1.5 rounded-lg font-bold border border-[var(--border)]">
-          {users.length} کاربر
-        </span>
-      }
+      action={<CountBadge>{toPersianDigits(users.length)} کاربر</CountBadge>}
     >
-      {/* افزودنِ کاربرِ جدید */}
-      <div className="bg-[var(--bg)] rounded-2xl border border-[var(--border)] overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-[var(--border)] bg-[var(--surface)]">
-          <Plus className="w-4 h-4 text-[var(--accent-text)]" />
-          <span className="text-sm font-bold text-[var(--text)]">افزودنِ کاربرِ جدید</span>
-        </div>
-
-        <div className="p-4 grid grid-cols-1 sm:grid-cols-[1.4fr_1fr_auto] gap-3 items-end">
-          <div>
-            <label className="block text-[11px] font-bold text-[var(--text-muted)] mb-1.5">نام کاربر</label>
-            <input
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-              placeholder="مثال: ماهان"
-              className={inputClass}
-            />
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-bold text-[var(--text-muted)] mb-1.5">
-              رمز عبور <span className="text-[var(--danger-text)]">*</span>
-            </label>
-            <input
-              value={newPass}
-              onChange={(e) => setNewPass(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-              placeholder={`رمزِ ورود — حداقل ${toPersianDigits(MIN_PASSWORD_LENGTH)} کاراکتر`}
-              className={inputClass}
-            />
-          </div>
-
-          <PrimaryButton type="button" onClick={handleAdd} className="shrink-0 h-[42px]">
-            <Plus className="w-4 h-4" /> افزودن
-          </PrimaryButton>
-
-          {/* انتخابِ نقش — سگمنتِ دوتایی، خواناتر از select برای دو گزینه */}
-          <div className="sm:col-span-3">
-            <label className="block text-[11px] font-bold text-[var(--text-muted)] mb-1.5">نقشِ کاربر</label>
-            <RoleSegment value={newRole} onChange={setNewRole} />
-          </div>
-        </div>
+      {/* افزودنِ کاربرِ جدید — همه در یک ردیف */}
+      <div className="bg-[var(--bg)] rounded-2xl border border-[var(--border)] p-3.5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_11rem_auto] gap-3 items-end">
+        <Field label="نام کاربر" required>
+          <input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+            placeholder="مثال: ماهان"
+            className={inputClass}
+          />
+        </Field>
+        <Field label="رمز عبور" required hint={`(حداقل ${toPersianDigits(MIN_PASSWORD_LENGTH)} کاراکتر)`}>
+          <input
+            value={newPass}
+            onChange={(e) => setNewPass(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+            placeholder="رمزِ ورود"
+            className={inputClass}
+          />
+        </Field>
+        <Field label="نقش">
+          <RoleSegment value={newRole} onChange={setNewRole} />
+        </Field>
+        <PrimaryButton type="button" onClick={handleAdd} className="h-[42px] shrink-0">
+          <Plus className="w-4 h-4" /> افزودن
+        </PrimaryButton>
       </div>
 
-      {/* فهرستِ کاربران */}
-      <div className="flex flex-col gap-2.5">
+      {/* سرستون‌ها — فقط روی نمایشگرِ پهن، چون در حالتِ باریک ردیف‌ها روی هم می‌چینند */}
+      <div className={`${ROW_GRID} hidden lg:grid px-3 -mb-1.5 text-[11px] font-medium text-[var(--text-muted)]`}>
+        <span>نام کاربر</span>
+        <span>نقش</span>
+        <span>رمز عبور</span>
+        <span className="text-center">وضعیت</span>
+        <span />
+      </div>
+
+      {/* فهرستِ کاربران — هر کاربر یک ردیفِ واحد */}
+      <div className="flex flex-col gap-2">
         {users.map((u) => {
           const isMe = u.id === currentUserId;
           const isAdmin = u.role === 'admin';
@@ -137,109 +142,86 @@ export default function UsersManager({
           return (
             <div
               key={u.id}
-              className={`rounded-2xl border transition-colors ${
-                u.active
-                  ? 'bg-[var(--surface)] border-[var(--border)]'
-                  : 'bg-[var(--bg)] border-[var(--border)] opacity-70'
+              className={`${ROW_GRID} items-center rounded-xl border px-3 py-2.5 transition-colors ${
+                u.active ? 'bg-[var(--surface)] border-[var(--border)]' : 'bg-[var(--bg)] border-[var(--border)] opacity-70'
               }`}
             >
-              {/* طبقه‌ی ۱ — هویت: آواتار + نام + برچسبِ «شما» + وضعیت */}
-              <div className="flex items-center gap-3 p-3.5">
-                <div
-                  className={`w-10 h-10 rounded-xl grid place-items-center shrink-0 border ${
+              {/* نام — درجا قابلِ ویرایش */}
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span
+                  className={`w-8 h-8 rounded-lg grid place-items-center shrink-0 border ${
                     isAdmin
                       ? 'bg-[var(--accent-soft)] text-[var(--accent-text)] border-[var(--accent-border)]'
                       : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]'
                   }`}
+                  title={isAdmin ? 'مدیر — دسترسی کامل' : 'صندوقدار — فقط صندوق'}
                 >
-                  {isAdmin ? <ShieldCheck className="w-5 h-5" /> : <UserIcon className="w-5 h-5" />}
-                </div>
+                  {isAdmin ? <ShieldCheck className="w-4 h-4" /> : <UserIcon className="w-4 h-4" />}
+                </span>
+                <input
+                  value={nameDraft[u.id] ?? u.name}
+                  onChange={(e) => setNameDraft((d) => ({ ...d, [u.id]: e.target.value }))}
+                  onBlur={() => commitName(u.id, u.name)}
+                  onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+                  aria-label="نام کاربر"
+                  className="min-w-0 flex-1 bg-transparent text-[var(--text)] text-[13px] font-semibold rounded-lg px-2 py-1.5 hover:bg-[var(--surface-2)] focus:bg-[var(--field-bg)] outline-none transition-colors"
+                />
+                {isMe && <StatusPill tone="accent">شما</StatusPill>}
+              </div>
 
-                <div className="flex-1 min-w-0">
-                  <input
-                    value={nameDraft[u.id] ?? u.name}
-                    onChange={(e) => setNameDraft((d) => ({ ...d, [u.id]: e.target.value }))}
-                    onBlur={() => commitName(u.id, u.name)}
-                    onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-                    aria-label="نام کاربر"
-                    className="w-full bg-transparent text-[var(--text)] text-base font-bold rounded-lg px-1 py-0.5 -mr-1 hover:bg-[var(--surface-2)] focus:bg-[var(--field-bg)] focus:ring-2 focus:ring-[var(--accent-soft)] outline-none transition-all"
-                  />
-                  <div className="flex items-center gap-1.5 px-1 mt-0.5">
-                    <span className="text-[11px] font-bold text-[var(--text-muted)]">
-                      {isAdmin ? 'مدیر — دسترسی کامل' : 'صندوقدار — فقط صندوق'}
-                    </span>
-                    {isMe && (
-                      <span className="text-[10px] font-bold text-[var(--accent-text)] bg-[var(--accent-soft)] border border-[var(--accent-border)] px-1.5 py-0.5 rounded-md">
-                        شما
-                      </span>
-                    )}
-                  </div>
-                </div>
+              {/* نقش */}
+              <RoleSegment
+                value={u.role}
+                onChange={(r) => guarded(setUserRole(u.id, r))}
+                disabled={lastAdmin}
+                disabledHint="آخرین مدیرِ فعال"
+                compact
+              />
 
-                {/* وضعیتِ فعال/غیرفعال */}
+              {/* رمز عبور */}
+              <div className="relative min-w-0">
+                <input
+                  type={showPass[u.id] ? 'text' : 'password'}
+                  value={passDraft[u.id] ?? u.password}
+                  onChange={(e) => setPassDraft((d) => ({ ...d, [u.id]: e.target.value }))}
+                  onBlur={() => commitPassword(u.id, u.password)}
+                  onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+                  aria-label={`رمزِ ${u.name}`}
+                  className={`${cellInputClass} pl-8`}
+                />
                 <button
-                  onClick={() => guarded(toggleUser(u.id))}
-                  title={u.active ? 'غیرفعال کردن' : 'فعال کردن'}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold cursor-pointer shrink-0 border transition-colors ${
-                    u.active
-                      ? 'bg-[var(--money-soft)] text-[var(--money-text)] border-[var(--money-border)]'
-                      : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]'
-                  }`}
+                  type="button"
+                  onClick={() => setShowPass((s) => ({ ...s, [u.id]: !s[u.id] }))}
+                  className="absolute left-1.5 top-1/2 -translate-y-1/2 p-1 text-[var(--text-muted)] hover:text-[var(--text)] rounded-md cursor-pointer"
+                  title={showPass[u.id] ? 'پنهان' : 'نمایش'}
                 >
-                  <Power className="w-3.5 h-3.5" />
+                  {showPass[u.id] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+
+              {/* وضعیت */}
+              <button
+                onClick={() => guarded(toggleUser(u.id))}
+                title={u.active ? 'غیرفعال کردن' : 'فعال کردن'}
+                className="cursor-pointer flex lg:justify-center"
+              >
+                <StatusPill tone={u.active ? 'ok' : 'neutral'} icon={Power}>
                   {u.active ? 'فعال' : 'غیرفعال'}
-                </button>
-              </div>
+                </StatusPill>
+              </button>
 
-              {/* طبقه‌ی ۲ — اعتبارنامه‌ها: رمز + نقش + حذف */}
-              <div className="flex flex-wrap items-end gap-3 px-3.5 pb-3.5 pt-3 border-t border-[var(--border)]">
-                <div className="flex-1 min-w-[160px]">
-                  <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1">
-                    رمز عبور <span className="text-[var(--danger-text)]">*</span>
-                    <span className="text-[var(--text-faint)] font-medium mr-1">
-                      (اجباری، حداقل {toPersianDigits(MIN_PASSWORD_LENGTH)} کاراکتر)
-                    </span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showPass[u.id] ? 'text' : 'password'}
-                      value={passDraft[u.id] ?? u.password}
-                      onChange={(e) => setPassDraft((d) => ({ ...d, [u.id]: e.target.value }))}
-                      onBlur={() => commitPassword(u.id, u.password)}
-                      onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-                      className={`${inputClass} pl-9`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPass((s) => ({ ...s, [u.id]: !s[u.id] }))}
-                      className="absolute left-2 top-1/2 -translate-y-1/2 p-1 text-[var(--text-muted)] hover:text-[var(--text)] rounded cursor-pointer"
-                      title={showPass[u.id] ? 'پنهان' : 'نمایش'}
-                    >
-                      {showPass[u.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="w-40 shrink-0">
-                  <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1">نقش</label>
-                  <RoleSegment
-                    value={u.role}
-                    onChange={(r) => guarded(setUserRole(u.id, r))}
-                    disabled={lastAdmin}
-                    disabledHint="آخرین مدیرِ فعال"
-                  />
-                </div>
-
-                <button
-                  onClick={() => {
-                    if (confirm(`حذف کاربر «${u.name}»؟`)) guarded(removeUser(u.id));
-                  }}
-                  className="h-[42px] px-3 flex items-center gap-1.5 text-[var(--danger-text)] hover:bg-[var(--danger-soft)] border border-transparent hover:border-[var(--danger-border)] rounded-xl cursor-pointer shrink-0 text-xs font-bold transition-colors"
-                  title="حذف کاربر"
-                >
-                  <Trash2 className="w-4 h-4" /> حذف
-                </button>
-              </div>
+              {/* حذف */}
+              <IconButton
+                tone="danger"
+                title="حذف کاربر"
+                aria-label={`حذف ${u.name}`}
+                onClick={() => {
+                  if (confirm(`حذف کاربر «${u.name}»؟`)) guarded(removeUser(u.id));
+                }}
+                className="justify-self-start lg:justify-self-center"
+              >
+                <Trash2 className="w-4 h-4" />
+              </IconButton>
             </div>
           );
         })}
@@ -251,17 +233,20 @@ export default function UsersManager({
 /**
  * انتخابگرِ نقش به‌صورتِ دو دکمه‌ی کنارِ هم (segmented) — برای دو گزینه از select
  * خواناتر و کلیک‌راحت‌تر است. اگر disabled باشد (آخرین مدیرِ فعال) تغییر نمی‌کند.
+ * `compact` برای ردیف‌های فهرست است تا هم‌ارتفاعِ ورودی‌های فشرده بماند.
  */
 function RoleSegment({
   value,
   onChange,
   disabled = false,
   disabledHint,
+  compact = false,
 }: {
   value: UserRole;
   onChange: (r: UserRole) => void;
   disabled?: boolean;
   disabledHint?: string;
+  compact?: boolean;
 }) {
   const options: { id: UserRole; label: string }[] = [
     { id: 'cashier', label: 'صندوقدار' },
@@ -269,7 +254,9 @@ function RoleSegment({
   ];
   return (
     <div
-      className="flex gap-1 bg-[var(--field-bg)] p-1 rounded-xl border border-[var(--border)] h-[42px]"
+      className={`flex gap-1 bg-[var(--field-bg)] p-1 rounded-xl border border-[var(--border)] ${
+        compact ? 'h-[34px]' : 'h-[42px]'
+      }`}
       title={disabled ? disabledHint : undefined}
     >
       {options.map((o) => {
@@ -281,12 +268,13 @@ function RoleSegment({
             type="button"
             disabled={lock}
             onClick={() => !isActive && onChange(o.id)}
-            className={`flex-1 rounded-lg text-xs font-bold transition-all ${
+            aria-pressed={isActive}
+            className={`flex-1 rounded-lg transition-colors ${compact ? 'text-[12px]' : 'text-[13px]'} ${
               isActive
-                ? 'cw-primary'
+                ? 'bg-[var(--accent-soft)] text-[var(--accent-text)] font-semibold'
                 : lock
-                ? 'text-[var(--text-faint)] cursor-not-allowed'
-                : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)] cursor-pointer'
+                  ? 'text-[var(--text-faint)] cursor-not-allowed'
+                  : 'text-[var(--text-muted)] font-medium hover:bg-[var(--surface-2)] cursor-pointer'
             }`}
           >
             {o.label}

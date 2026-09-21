@@ -41,16 +41,18 @@ export default function LoginScreen({
         {/* برند */}
         <div className="flex flex-col items-center text-center gap-2">
           <YatashMark size={54} />
-          <h1 className="font-display text-2xl text-[var(--text)]">{shopName}</h1>
-          <p className="text-xs font-semibold text-[var(--text-muted)]">برای ورود، کاربرِ خود را انتخاب کنید</p>
+          <h1 className="text-2xl text-[var(--text)]">{shopName}</h1>
+          <p className="text-[13px] text-[var(--text-muted)]">
+            {selected ? 'رمزِ خود را وارد کنید' : 'برای ورود، کاربرِ خود را انتخاب کنید'}
+          </p>
         </div>
 
         {!selected ? (
           /* ===== گام ۱: انتخابِ کاربر ===== */
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {activeUsers.length === 0 && (
-              <p className="col-span-full text-center text-xs text-[var(--danger-text)] font-bold py-6">
-                هیچ کاربرِ فعالی نیست.
+              <p className="col-span-full text-center text-[13px] text-[var(--danger-text)] font-medium py-6 leading-relaxed">
+                هیچ کاربرِ فعالی نیست. برای ساختنِ کاربر، از پشتیبانی کمک بگیرید.
               </p>
             )}
             {activeUsers.map((u) => (
@@ -62,18 +64,18 @@ export default function LoginScreen({
                   setPassword('');
                   setError('');
                 }}
-                className="flex items-center gap-3 p-4 rounded-2xl border-2 border-[var(--border)] bg-[var(--field-bg)] hover:border-[var(--field-hover-border)] hover:bg-[var(--field-hover-bg)] cursor-pointer transition-all text-right"
+                className="flex items-center gap-3 p-3.5 rounded-xl border border-[var(--border)] bg-[var(--field-bg)] hover:border-[var(--accent)] hover:bg-[var(--accent-soft)] cursor-pointer transition-colors text-right"
               >
-                <div className="p-2.5 rounded-xl bg-[var(--surface-2)] shrink-0">
+                <div className="w-10 h-10 grid place-items-center rounded-xl bg-[var(--surface-2)] border border-[var(--border)] shrink-0">
                   {u.role === 'admin' ? (
-                    <ShieldCheck className="w-5 h-5 text-[var(--accent-text)]" />
+                    <ShieldCheck className="w-[18px] h-[18px] text-[var(--accent-text)]" />
                   ) : (
-                    <UserIcon className="w-5 h-5 text-[var(--text-muted)]" />
+                    <UserIcon className="w-[18px] h-[18px] text-[var(--text-muted)]" />
                   )}
                 </div>
                 <div className="min-w-0">
-                  <div className="text-sm font-bold text-[var(--field-text)] truncate">{u.name}</div>
-                  <div className="text-[10px] font-bold text-[var(--text-muted)]">
+                  <div className="text-sm font-semibold text-[var(--text)] truncate">{u.name}</div>
+                  <div className="text-[11px] text-[var(--text-muted)]">
                     {u.role === 'admin' ? 'مدیر' : 'صندوقدار'}
                   </div>
                 </div>
@@ -84,16 +86,16 @@ export default function LoginScreen({
           /* ===== گام ۲: رمزِ کاربرِ انتخاب‌شده ===== */
           <form onSubmit={submit} className="flex flex-col gap-4">
             <div className="flex items-center gap-3 p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)]">
-              <div className="p-2 rounded-lg bg-[var(--surface)] shrink-0">
+              <div className="w-9 h-9 grid place-items-center rounded-lg bg-[var(--surface)] border border-[var(--border)] shrink-0">
                 {selected.role === 'admin' ? (
-                  <ShieldCheck className="w-5 h-5 text-[var(--accent-text)]" />
+                  <ShieldCheck className="w-[18px] h-[18px] text-[var(--accent-text)]" />
                 ) : (
-                  <UserIcon className="w-5 h-5 text-[var(--text-muted)]" />
+                  <UserIcon className="w-[18px] h-[18px] text-[var(--text-muted)]" />
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-bold text-[var(--text)] truncate">{selected.name}</div>
-                <div className="text-[10px] font-bold text-[var(--text-muted)]">
+                <div className="text-sm font-semibold text-[var(--text)] truncate">{selected.name}</div>
+                <div className="text-[11px] text-[var(--text-muted)]">
                   {selected.role === 'admin' ? 'مدیر' : 'صندوقدار'}
                 </div>
               </div>
@@ -110,7 +112,7 @@ export default function LoginScreen({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[var(--text-muted)] mb-2">رمز عبور</label>
+              <label className="block text-xs font-medium text-[var(--text-muted)] mb-2">رمز عبور</label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-[var(--text-faint)] absolute right-3 top-1/2 -translate-y-1/2" />
                 <input
@@ -125,7 +127,7 @@ export default function LoginScreen({
                   className={`${inputClass} pr-9`}
                 />
               </div>
-              {error && <p className="text-[11px] font-bold text-[var(--danger-text)] mt-2">{error}</p>}
+              {error && <p className="text-xs font-medium text-[var(--danger-text)] mt-2">{error}</p>}
             </div>
 
             <PrimaryButton type="submit" className="w-full py-3">
@@ -134,7 +136,7 @@ export default function LoginScreen({
           </form>
         )}
 
-        <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold text-[var(--text-faint)] pt-2 border-t border-[var(--border)]">
+        <div className="flex items-center justify-center gap-1.5 text-[11px] font-semibold text-[var(--text-faint)] pt-2 border-t border-[var(--border)]">
           {BRAND.poweredByFa}
           <YatashMark size={13} />
         </div>

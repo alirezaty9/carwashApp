@@ -29,7 +29,16 @@ export const rialToToman = (rial: number): number => Math.floor(safeNumber(rial)
 /** تومان → ریال (برای ذخیره‌سازیِ ورودیِ کاربر). ورودیِ نامعتبر → ۰ */
 export const tomanToRial = (toman: number): number => Math.round(safeNumber(toman)) * 10;
 
-/** قالب‌بندیِ مبلغِ ذخیره‌شده (ریال) به‌صورتِ «… تومان» با ارقامِ فارسی */
+/**
+ * مبلغِ ذخیره‌شده (ریال) → فقط عدد، با جداکننده‌ی هزارگان و ارقامِ فارسی.
+ * در جدول‌ها و کاشی‌های آماری که واحدشان یک‌بار در عنوان آمده، همین کافی است و
+ * تکرارِ «تومان» جلوی هر عدد فقط ستون را پهن و عدد را ناخوانا می‌کند.
+ */
+export function formatToman(rial: number): string {
+  return new Intl.NumberFormat('fa-IR').format(rialToToman(rial));
+}
+
+/** همان عدد، ولی با واحد — برای جاهایی که مبلغ تنها می‌آید (فیشِ چاپی، فرمِ صندوق). */
 export function formatCurrencyToman(rial: number): string {
-  return `${new Intl.NumberFormat('fa-IR').format(rialToToman(rial))} تومان`;
+  return `${formatToman(rial)} تومان`;
 }

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { DollarSign, FileText, TrendingUp, ShoppingCart, Package } from 'lucide-react';
 import { Store } from '../../data/store';
-import { formatCurrencyToman, toPersianDigits } from '../../utils/format';
+import { formatCurrencyToman, formatToman, toPersianDigits } from '../../utils/format';
 import { getJalaliDateParts, JALALI_MONTH_NAMES } from '../../utils/jalali';
 import { activeReceipts, isOnJalaliDay, sumRevenue } from '../../utils/receipts';
 import { useJalaliToday } from '../../utils/useJalaliToday';
@@ -57,56 +57,53 @@ export default function Reports({ store }: { store: Store }) {
   const maxDaily = Math.max(...daily.map((d) => d.value), 100000);
   const maxMonthly = Math.max(...monthly.map((m) => m.value), 100000);
 
+  // کاشیِ آیکن فقط جایی تُن می‌گیرد که واقعاً معنا دارد؛ عددِ آماری همیشه با
+  // جوهرِ عادی نوشته می‌شود، چون رنگ در این برنامه فقط «حالت» را می‌گوید.
   const stats = [
-    { label: 'درآمد امروز', value: formatCurrencyToman(todayRevenue), icon: DollarSign, color: 'text-[var(--price)] bg-[var(--price-soft)] border-[var(--price-border)]' },
-    { label: 'درآمد ماه جاری', value: formatCurrencyToman(monthRevenue), icon: TrendingUp, color: 'text-[var(--price)] bg-[var(--price-soft)] border-[var(--price-border)]' },
-    { label: 'قبوض فعال', value: `${toPersianDigits(active.length)} قبض`, icon: FileText, color: 'text-[var(--text-muted)] bg-[var(--surface-2)] border-[var(--border)]' },
+    { label: 'درآمد امروز', value: formatToman(todayRevenue), unit: 'تومان', icon: DollarSign, tone: 'accent' as const },
+    { label: 'درآمد ماه جاری', value: formatToman(monthRevenue), unit: 'تومان', icon: TrendingUp, tone: 'accent' as const },
+    { label: 'قبوض فعال', value: toPersianDigits(active.length), unit: 'قبض', icon: FileText, tone: 'neutral' as const },
   ];
 
   return (
     <div className="flex flex-col gap-6">
       {/* کارت‌های خلاصه — درآمدِ شست‌وشو */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {stats.map((s) => (
-          <StatCard key={s.label} label={s.label} value={s.value} icon={s.icon} color={s.color} />
+          <StatCard key={s.label} label={s.label} value={s.value} unit={s.unit} icon={s.icon} tone={s.tone} />
         ))}
       </div>
 
       {/* درآمدِ فروشِ لوازم جانبی (جدا از شست‌وشو) */}
       <SectionCard title="فروش لوازم جانبی">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          <StatCard
-            label="فروش امروز"
-            value={formatCurrencyToman(salesTodayRevenue)}
-            icon={ShoppingCart}
-            color="text-[var(--price)] bg-[var(--price-soft)] border-[var(--price-border)]"
-          />
-          <StatCard
-            label="فروش ماه جاری"
-            value={formatCurrencyToman(salesMonthRevenue)}
-            icon={TrendingUp}
-            color="text-[var(--price)] bg-[var(--price-soft)] border-[var(--price-border)]"
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <StatCard label="فروش امروز" value={formatToman(salesTodayRevenue)} unit="تومان" icon={ShoppingCart} tone="accent" />
+          <StatCard label="فروش ماه جاری" value={formatToman(salesMonthRevenue)} unit="تومان" icon={TrendingUp} tone="accent" />
           <StatCard
             label="تعداد فاکتورهای فعال"
-            value={`${toPersianDigits(activeSales.length)} فاکتور`}
+            value={toPersianDigits(activeSales.length)}
+            unit="فاکتور"
             icon={Package}
-            color="text-[var(--text-muted)] bg-[var(--surface-2)] border-[var(--border)]"
           />
         </div>
       </SectionCard>
 
-      {/* نمودار ۷ روز اخیر */}
+      {/* نمودار ۷ روز اخیر — یک سری داده، پس یک رنگ و بدونِ راهنمای رنگ.
+          عدد فقط هنگامِ نگه‌داشتنِ نشانگر روی میله می‌آید؛ نوشتنِ عدد روی هر
+          میله نمودار را به یک جدولِ شلوغ تبدیل می‌کند. */}
       <SectionCard title="درآمد روزانه (۷ روز اخیر)">
-        <div className="h-48 flex items-end gap-3 sm:gap-6 border-b border-[var(--border)] pb-2">
+        <div className="h-48 flex items-end gap-2 sm:gap-4 border-b border-[var(--border)]">
           {daily.map((d, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center h-full justify-end group">
-              <span className="opacity-0 group-hover:opacity-100 bg-[var(--surface-2)] text-[var(--text)] text-[10px] px-2 py-1 rounded mb-1 transition-all text-center">
+            <div key={i} className="flex-1 flex flex-col items-center h-full justify-end group min-w-0">
+              <span className="opacity-0 group-hover:opacity-100 bg-[var(--surface-3)] border border-[var(--border)] text-[var(--text)] text-[11px] font-medium tabular-nums px-2 py-1 rounded-lg mb-1.5 transition-opacity text-center whitespace-nowrap">
                 {formatCurrencyToman(d.value)}
               </span>
-              <div style={{ height: `${(d.value / maxDaily) * 100}%` }} className="w-full bg-[var(--price-strong)] rounded-t-lg transition-all duration-500 min-h-[4px]" />
-              <span className="text-[10px] text-[var(--text-muted)] font-bold mt-2 truncate max-w-full">{d.dayName}</span>
-              <span className="text-[9px] text-[var(--text-faint)] mt-0.5">
+              <div
+                style={{ height: `${(d.value / maxDaily) * 100}%` }}
+                className="w-full bg-[var(--chart-bar)] rounded-t-[4px] transition-[height] duration-500 min-h-[3px]"
+              />
+              <span className="text-[11px] text-[var(--text-muted)] font-medium mt-2 truncate max-w-full">{d.dayName}</span>
+              <span className="text-[11px] text-[var(--text-faint)] mt-0.5 whitespace-nowrap">
                 {toPersianDigits(d.day)} {JALALI_MONTH_NAMES[d.month - 1]}
               </span>
             </div>
@@ -116,15 +113,18 @@ export default function Reports({ store }: { store: Store }) {
 
       {/* نمودار ماهانه */}
       <SectionCard title={`درآمد ماهانه (سال ${toPersianDigits(today.year)})`}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3.5">
           {monthly.map((m, i) => (
-            <div key={i} className="flex flex-col gap-1.5 p-3 rounded-xl border border-[var(--border)] bg-[var(--bg)]">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-[var(--text-muted)]">{m.name}</span>
-                <span className="font-black text-[var(--text)] font-mono">{formatCurrencyToman(m.value)}</span>
+            <div key={i} className="flex flex-col gap-1.5">
+              <div className="flex justify-between items-baseline gap-3 text-xs">
+                <span className="text-[var(--text-muted)]">{m.name}</span>
+                <span className="font-semibold text-[var(--text)] tabular-nums">{formatCurrencyToman(m.value)}</span>
               </div>
-              <div className="w-full bg-[var(--surface)] h-2.5 rounded-full overflow-hidden">
-                <div style={{ width: `${(m.value / maxMonthly) * 100}%` }} className="bg-[var(--price-strong)] h-full rounded-full transition-all duration-700" />
+              <div className="w-full bg-[var(--chart-track)] h-2 rounded-full overflow-hidden">
+                <div
+                  style={{ width: `${(m.value / maxMonthly) * 100}%` }}
+                  className="bg-[var(--chart-bar)] h-full rounded-full transition-[width] duration-700"
+                />
               </div>
             </div>
           ))}
@@ -133,18 +133,18 @@ export default function Reports({ store }: { store: Store }) {
 
       {/* گزارش ابطال */}
       <SectionCard title="سلامت قبوض">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-bold">
-          <div className="flex justify-between p-3 rounded-xl border border-[var(--border)] bg-[var(--bg)]">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[13px]">
+          <div className="flex justify-between items-center gap-3 p-3.5 rounded-xl border border-[var(--border)]">
             <span className="text-[var(--text-muted)]">قبوض فعال</span>
-            <span className="text-[var(--money-text)]">{toPersianDigits(active.length)}</span>
+            <span className="font-semibold text-[var(--ok-text)] tabular-nums">{toPersianDigits(active.length)}</span>
           </div>
-          <div className="flex justify-between p-3 rounded-xl border border-[var(--border)] bg-[var(--bg)]">
+          <div className="flex justify-between items-center gap-3 p-3.5 rounded-xl border border-[var(--border)]">
             <span className="text-[var(--text-muted)]">قبوض باطل‌شده</span>
-            <span className="text-[var(--danger-text)]">{toPersianDigits(voided.length)}</span>
+            <span className="font-semibold text-[var(--danger-text)] tabular-nums">{toPersianDigits(voided.length)}</span>
           </div>
-          <div className="flex justify-between p-3 rounded-xl border border-[var(--border)] bg-[var(--bg)]">
+          <div className="flex justify-between items-center gap-3 p-3.5 rounded-xl border border-[var(--border)]">
             <span className="text-[var(--text-muted)]">نرخ ابطال</span>
-            <span className="text-[var(--text)] font-mono">
+            <span className="font-semibold text-[var(--text)] tabular-nums">
               {receipts.length > 0 ? toPersianDigits(Math.round((voided.length / receipts.length) * 100)) : '۰'}٪
             </span>
           </div>

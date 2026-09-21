@@ -9,10 +9,9 @@ import { Receipt, Sale, User } from './types';
 import { useCarwashStore } from './data/store';
 import { getJalaliDateParts, JALALI_MONTH_NAMES } from './utils/jalali';
 import { toPersianDigits } from './utils/format';
-import { describePrintOutcome, printPreparedReceipt, savePrintPreview, PrintReport } from './utils/printing';
-import { startSystemLogBridge } from './utils/printLog';
+import { describePrintOutcome, printPreparedReceipt, PrintReport } from './utils/printing';
 import { needsPasswordChange } from './auth';
-import { NotificationBar, useNotification, PillTabs } from './components/common';
+import { NotificationBar, useNotification, PillTabs, GhostButton, IconButton } from './components/common';
 import NewReceipt from './components/pos/NewReceipt';
 import NewSale from './components/pos/NewSale';
 import AdminPanel from './components/admin/AdminPanel';
@@ -43,6 +42,21 @@ const POS_TABS: { id: PosTab; label: string; icon: typeof Droplets }[] = [
   { id: 'wash', label: 'قبض شست‌وشو', icon: Droplets },
   { id: 'sale', label: 'فروش لوازم', icon: Package },
 ];
+
+/**
+ * نشانِ کنارِ نامِ کارواش در هدر.
+ * قبلاً سه آیکن روی هم سوار بودند (ماشین + قطره + سپر) که در یک کاشیِ ۴۰ پیکسلی
+ * فقط شلوغی می‌ساخت. سپر حذف شد چون نقشِ کاربر همین چند سانتی‌متر آن‌طرف‌تر با
+ * حروف نوشته شده و تکرارش چیزی اضافه نمی‌کرد.
+ */
+function ShopMark() {
+  return (
+    <div className="cw-badge w-10 h-10 rounded-xl grid place-items-center relative shrink-0">
+      <CarFront className="w-[22px] h-[22px]" strokeWidth={2} />
+      <Droplets className="w-3 h-3 absolute top-1 left-1 opacity-70" strokeWidth={2.4} />
+    </div>
+  );
+}
 
 export default function App() {
   const store = useCarwashStore();
@@ -77,12 +91,6 @@ export default function App() {
     notify('رمزِ شما با موفقیت تغییر کرد', 'success');
   };
 
-  // گزارشِ مسیرِ چاپ: قدم‌هایی که بخشِ سیستمیِ برنامه می‌فرستد را هم به گزارشِ
-  // داخلِ اپ وصل می‌کند تا هر دو سمتِ ماجرا در یک کادر دیده شوند.
-  useEffect(() => {
-    startSystemLogBridge();
-  }, []);
-
   // تم روشن/تیره — روی <html data-theme> اعمال و در localStorage ذخیره می‌شود
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem('cw2_theme') as Theme) || 'dark',
@@ -103,9 +111,7 @@ export default function App() {
     // برگه سنجیده و اعلام می‌شود تا پرینترِ رولی کاغذِ اضافه بیرون ندهد.
     window.setTimeout(() => {
       void printPreparedReceipt(printMode, printerName).then((outcome) => {
-        // چاپِ موفق خودش را روی کاغذ نشان می‌دهد و پیام لازم ندارد؛ ولی هر شکست یا
-        // هر هشدار باید دیده شود. بی‌صدا ماندنِ شکستِ چاپ همان چیزی است که باعث
-        // می‌شد صندوقدار فکر کند «برنامه هیچ واکنشی نشان نمی‌دهد».
+        // چاپِ موفق خودش را روی کاغذ نشان می‌دهد؛ فقط شکست باید اعلام شود.
         const report = describePrintOutcome(outcome);
         if (report.type !== 'success') notify(report.text, report.type);
       });
@@ -125,30 +131,15 @@ export default function App() {
 
   /**
    * چاپِ آزمایشی از تنظیماتِ پرینتر — یک فیشِ نمونه که هیچ‌جا ذخیره نمی‌شود.
-   * نتیجه‌اش به‌جای اعلانِ گذرا، برگردانده می‌شود تا همان‌جا در صفحه‌ی تنظیمات
-   * بماند و کاربر فرصتِ خواندنش را داشته باشد.
+   * نتیجه‌اش برگردانده می‌شود تا در همان صفحه‌ی تنظیمات نشان داده شود.
    */
-  const handleTestPrint = async (kind: 'print' | 'pdf'): Promise<PrintReport> => {
+  const handleTestPrint = async (): Promise<PrintReport> => {
     const { printMode, printerName } = store.config;
     setPrintSaleTarget(null);
     setPrintTarget(createSampleReceipt());
     await new Promise<void>((resolve) => {
       window.setTimeout(resolve, PRINT_RENDER_SETTLE_MS);
     });
-
-    if (kind === 'pdf') {
-      const preview = await savePrintPreview();
-      return preview.success
-        ? {
-            type: 'success',
-            text: `فایلِ پیش‌نمایش ساخته شد: ${preview.path} — بازش کنید. اگر فیش داخلش درست و خوانا بود، ساختِ فیش در برنامه سالم است و ایراد سمتِ پرینتر یا درایور است.`,
-          }
-        : {
-            type: 'error',
-            text: `ساختِ فایلِ پیش‌نمایش انجام نشد.${preview.reason ? ` (جزئیات: ${preview.reason})` : ''}`,
-          };
-    }
-
     return describePrintOutcome(await printPreparedReceipt(printMode, printerName));
   };
 
@@ -199,113 +190,108 @@ export default function App() {
           <div className="no-print min-h-screen flex flex-col antialiased">
             <NotificationBar notice={notice} />
 
-            {/* 🔴 نوارِ شکستِ ذخیره‌سازی — تا وقتی کاربر نبندد سرِ جایش می‌ماند.
-                بدونِ این، خرابیِ دیسک بی‌صدا می‌ماند و کارِ کلِ روز از دست می‌رفت. */}
-            {store.saveError && (
-              <div className="bg-[var(--danger-strong)] text-white px-4 py-2.5 flex items-center justify-between gap-3 sticky top-0 z-50">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <AlertTriangle className="w-5 h-5 shrink-0" />
-                  <span className="text-xs font-bold leading-relaxed">
-                    ذخیره‌سازی روی دیسک انجام نمی‌شود! قبض‌های جدید ممکن است بعد از بستنِ برنامه از بین بروند.
-                    هرچه زودتر از «پنلِ مدیریت ← تنظیمات و بکاپ» یک نسخه‌ی پشتیبان بگیرید و با پشتیبانی تماس
-                    بگیرید. (علت: {store.saveError.message})
-                  </span>
+            {/* نوارِ هشدار و هدر با هم می‌چسبند. قبلاً هر دو جداگانه sticky top-0
+                بودند و هنگامِ اسکرول دقیقاً روی هم می‌افتادند و هدر را می‌پوشاندند. */}
+            <div className="sticky top-0 z-40">
+              {/* 🔴 نوارِ شکستِ ذخیره‌سازی — تا وقتی کاربر نبندد سرِ جایش می‌ماند.
+                  بدونِ این، خرابیِ دیسک بی‌صدا می‌ماند و کارِ کلِ روز از دست می‌رفت. */}
+              {store.saveError && (
+                <div className="bg-[var(--danger-strong)] text-white px-4 py-2.5 flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-2.5 min-w-0 max-w-5xl mx-auto">
+                    <AlertTriangle className="w-[18px] h-[18px] shrink-0 mt-0.5" />
+                    <span className="text-[13px] font-medium leading-relaxed">
+                      ذخیره‌سازی روی دیسک انجام نمی‌شود! قبض‌های جدید ممکن است بعد از بستنِ برنامه از بین بروند.
+                      هرچه زودتر از «پنلِ مدیریت ← تنظیمات و بکاپ» یک نسخه‌ی پشتیبان بگیرید و با پشتیبانی تماس
+                      بگیرید. (علت: {store.saveError.message})
+                    </span>
+                  </div>
+                  <button
+                    onClick={store.dismissSaveError}
+                    title="بستنِ پیام"
+                    aria-label="بستنِ پیام"
+                    className="p-1 rounded-lg hover:bg-white/20 cursor-pointer shrink-0"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-                <button
-                  onClick={store.dismissSaveError}
-                  title="بستنِ پیام"
-                  className="p-1 rounded-lg hover:bg-white/15 cursor-pointer shrink-0"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            )}
+              )}
 
-            {/* ===== هدر ===== */}
-            <header className="bg-[var(--header-bg)] backdrop-blur-md border-b border-[var(--border)] sticky top-0 z-40 shadow-[0_10px_30px_-24px_rgba(0,0,0,0.6)]">
-              <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-                {/* برند: برای ادمین لینکِ پنل است؛ برای صندوقدار فقط عنوان. */}
-                {isAdmin ? (
-                  <button
-                    type="button"
-                    onClick={goAdmin}
-                    title="ورود به پنل مدیریت"
-                    className="flex items-center gap-3 rounded-2xl -mr-1 pr-1 pl-2 py-1 cursor-pointer hover:bg-[var(--surface-2)] transition-all group"
-                  >
-                    <div className="cw-badge p-2.5 rounded-2xl relative">
-                      <CarFront className="w-6 h-6 relative z-10" strokeWidth={2.2} />
-                      <Droplets className="w-3 h-3 absolute top-1 left-1 z-10 text-white/75" strokeWidth={2.4} />
-                      <ShieldCheck className="w-3 h-3 absolute -bottom-1 -left-1 bg-[var(--surface)] text-[var(--text-muted)] rounded-full p-[1px] border border-[var(--border)]" />
-                    </div>
-                    <h1 className="font-display text-2xl text-[var(--text)] leading-none group-hover:text-[var(--accent-text)] transition-colors">
-                      {store.config.shopName}
-                    </h1>
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-3 -mr-1 pr-1 pl-2 py-1">
-                    <div className="cw-badge p-2.5 rounded-2xl relative">
-                      <CarFront className="w-6 h-6 relative z-10" strokeWidth={2.2} />
-                      <Droplets className="w-3 h-3 absolute top-1 left-1 z-10 text-white/75" strokeWidth={2.4} />
-                    </div>
-                    <h1 className="font-display text-2xl text-[var(--text)] leading-none">{store.config.shopName}</h1>
-                  </div>
-                )}
-
-                {/* کنترل‌ها */}
-                <div className="flex items-center gap-2">
-                  {/* تغییر تم */}
-                  <button
-                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                    title={theme === 'dark' ? 'تمِ روشن' : 'تمِ تیره'}
-                    className="p-2.5 rounded-xl border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] cursor-pointer transition-all"
-                  >
-                    {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                  </button>
-
-                  {/* ساعت زنده */}
-                  <div className="hidden lg:flex flex-col leading-tight items-end bg-[var(--surface-2)] px-3.5 py-1.5 rounded-xl border border-[var(--border)]">
-                    <span className="text-[13px] font-bold text-[var(--text)] font-mono tabular-nums">{timeLabel}</span>
-                    <span className="text-[10px] font-semibold text-[var(--text-muted)]">{dateLabel}</span>
-                  </div>
-
-                  {/* کاربرِ واردشده + نقش */}
-                  <div className="hidden sm:flex items-center gap-2 bg-[var(--surface-2)] px-3 py-1.5 rounded-xl border border-[var(--border)]">
-                    {isAdmin ? (
-                      <ShieldCheck className="w-4 h-4 text-[var(--accent-text)]" />
-                    ) : (
-                      <UserIcon className="w-4 h-4 text-[var(--text-muted)]" />
-                    )}
-                    <div className="flex flex-col leading-tight">
-                      <span className="text-xs font-bold text-[var(--text)]">{currentUser.name}</span>
-                      <span className="text-[10px] font-semibold text-[var(--text-muted)]">{isAdmin ? 'مدیر' : 'صندوقدار'}</span>
-                    </div>
-                  </div>
-
-                  {/* بازگشت به صندوق — فقط در پنل مدیریت */}
-                  {mode === 'admin' && (
+              {/* ===== هدر ===== */}
+              <header className="bg-[var(--header-bg)] backdrop-blur-md border-b border-[var(--border)]">
+                <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+                  {/* برند: برای ادمین لینکِ پنل است؛ برای صندوقدار فقط عنوان. */}
+                  {isAdmin ? (
                     <button
-                      onClick={leaveAdmin}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] cursor-pointer transition-all"
+                      type="button"
+                      onClick={goAdmin}
+                      title="ورود به پنل مدیریت"
+                      className="group flex items-center gap-3 rounded-xl -mr-2 px-2 py-1.5 cursor-pointer hover:bg-[var(--surface-2)] transition-colors"
                     >
-                      <ArrowRight className="w-4 h-4" />
-                      بازگشت به صندوق
+                      <ShopMark />
+                      <h1 className="text-xl text-[var(--text)] leading-none group-hover:text-[var(--accent-text)] transition-colors">
+                        {store.config.shopName}
+                      </h1>
                     </button>
+                  ) : (
+                    <div className="flex items-center gap-3 py-1.5">
+                      <ShopMark />
+                      <h1 className="text-xl text-[var(--text)] leading-none">{store.config.shopName}</h1>
+                    </div>
                   )}
 
-                  {/* خروج از حساب */}
-                  <button
-                    onClick={logout}
-                    title="خروج و تعویضِ کاربر"
-                    className="p-2.5 rounded-xl border border-[var(--border)] text-[var(--danger-text)] hover:bg-[var(--surface-2)] cursor-pointer transition-all"
-                  >
-                    <LogOut className="w-5 h-5" />
-                  </button>
+                  {/* کنترل‌ها — متنِ ساده به‌جای کادرهای تودرتو، تا هدر شلوغ نشود */}
+                  <div className="flex items-center gap-3">
+                    {/* ساعت زنده */}
+                    <div className="hidden lg:flex flex-col leading-tight items-end">
+                      <span className="text-sm font-semibold text-[var(--text)] tabular-nums">{timeLabel}</span>
+                      <span className="text-[11px] text-[var(--text-muted)]">{dateLabel}</span>
+                    </div>
+
+                    <span className="hidden lg:block w-px h-8 bg-[var(--border)]" />
+
+                    {/* کاربرِ واردشده + نقش */}
+                    <div className="hidden sm:flex items-center gap-2">
+                      {isAdmin ? (
+                        <ShieldCheck className="w-4 h-4 text-[var(--accent-text)] shrink-0" />
+                      ) : (
+                        <UserIcon className="w-4 h-4 text-[var(--text-muted)] shrink-0" />
+                      )}
+                      <div className="flex flex-col leading-tight">
+                        <span className="text-[13px] font-semibold text-[var(--text)]">{currentUser.name}</span>
+                        <span className="text-[11px] text-[var(--text-muted)]">{isAdmin ? 'مدیر' : 'صندوقدار'}</span>
+                      </div>
+                    </div>
+
+                    <span className="w-px h-8 bg-[var(--border)]" />
+
+                    {/* بازگشت به صندوق — فقط در پنل مدیریت */}
+                    {mode === 'admin' && (
+                      <GhostButton onClick={leaveAdmin} className="!py-2">
+                        <ArrowRight className="w-4 h-4" />
+                        بازگشت به صندوق
+                      </GhostButton>
+                    )}
+
+                    <IconButton
+                      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                      title={theme === 'dark' ? 'تمِ روشن' : 'تمِ تیره'}
+                      aria-label={theme === 'dark' ? 'تمِ روشن' : 'تمِ تیره'}
+                    >
+                      {theme === 'dark' ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
+                    </IconButton>
+
+                    <IconButton tone="danger" onClick={logout} title="خروج و تعویضِ کاربر" aria-label="خروج و تعویضِ کاربر">
+                      <LogOut className="w-[18px] h-[18px]" />
+                    </IconButton>
+                  </div>
                 </div>
-              </div>
-            </header>
+              </header>
+            </div>
 
             {/* ===== محتوا ===== */}
-            <main className="max-w-6xl mx-auto px-4 py-6 w-full flex-1 flex flex-col justify-center gap-6">
+            {/* از بالا چیده می‌شود، نه وسطِ صفحه: با عمودی‌چین‌کردن، هر بار که فرم
+                کوتاه/بلند می‌شد کلِ صفحه بالا و پایین می‌پرید. */}
+            <main className="max-w-6xl mx-auto px-4 py-6 w-full flex-1 flex flex-col gap-5">
               {mode === 'admin' && isAdmin ? (
                 <AdminPanel
                   store={store}
@@ -316,7 +302,7 @@ export default function App() {
                   currentUser={currentUser}
                 />
               ) : (
-                <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-5">
                   <PillTabs tabs={POS_TABS} active={posTab} onChange={setPosTab} />
                   {posTab === 'wash' ? (
                     <NewReceipt store={store} notify={notify} onPrint={handlePrint} />
@@ -327,11 +313,10 @@ export default function App() {
               )}
             </main>
 
-            <footer className="py-6 max-w-6xl mx-auto w-full border-t border-[var(--border)]">
-              <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[10px] text-[var(--text-faint)] font-semibold">
-                <span>{store.config.shopName} • سیستم آفلاین صدور قبض</span>
-                <span className="opacity-40">|</span>
-                <span className="inline-flex items-center gap-1.5 font-bold text-[var(--text-muted)]">
+            <footer className="border-t border-[var(--border)]">
+              <div className="max-w-6xl mx-auto w-full px-4 py-5 flex flex-wrap items-center justify-between gap-3 text-[11px] text-[var(--text-faint)]">
+                <span>سیستم آفلاین صدور قبض</span>
+                <span className="inline-flex items-center gap-1.5 font-medium text-[var(--text-muted)]">
                   {BRAND.poweredByFa}
                   <YatashMark size={14} />
                 </span>
