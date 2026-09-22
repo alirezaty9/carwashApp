@@ -41,4 +41,13 @@ contextBridge.exposeInMainWorld('printer', {
   thermalBegin: () => ipcRenderer.invoke('thermal:begin'),
   thermalCapture: (options) => ipcRenderer.invoke('thermal:capture', options),
   thermalFinish: (options) => ipcRenderer.invoke('thermal:finish', options),
+  // ---- گزارشِ فنی (ابزارِ موقتِ دوره‌ی تست) ----
+  // log         = قدم‌های سمتِ رابطِ کاربری را به ترمینال می‌فرستد.
+  // onLog       = قدم‌های سمتِ سیستم را به رابطِ کاربری می‌آورد.
+  // environment = مشخصاتِ سیستم و فهرستِ پرینترها.
+  // saveLog     = ذخیره‌ی کلِ گزارش در یک فایلِ متنی روی میزِ کار.
+  log: (entry) => ipcRenderer.send('diag:log', entry),
+  onLog: (handler) => ipcRenderer.on('diag:log', (_event, entry) => handler(entry)),
+  environment: () => ipcRenderer.invoke('diag:environment'),
+  saveLog: (text) => ipcRenderer.invoke('diag:saveLog', { text }),
 });

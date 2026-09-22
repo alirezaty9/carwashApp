@@ -9,7 +9,8 @@ import { Receipt, Sale, User } from './types';
 import { useCarwashStore } from './data/store';
 import { getJalaliDateParts, JALALI_MONTH_NAMES } from './utils/jalali';
 import { toPersianDigits } from './utils/format';
-import { describePrintOutcome, printPreparedReceipt, PrintReport } from './utils/printing';
+import { describePrintOutcome, getPrinterBridge, printPreparedReceipt, PrintReport } from './utils/printing';
+import { logStep, startSystemLogBridge } from './utils/techLog';
 import { needsPasswordChange } from './auth';
 import { NotificationBar, useNotification, PillTabs, GhostButton, IconButton } from './components/common';
 import NewReceipt from './components/pos/NewReceipt';
@@ -91,6 +92,34 @@ export default function App() {
     notify('رمزِ شما با موفقیت تغییر کرد', 'success');
   };
 
+  // گزارشِ فنی (ابزارِ موقتِ دوره‌ی تست): قدم‌های بخشِ سیستمی را به گزارش وصل
+  // می‌کند و مشخصاتِ سیستم را همان اولِ کار ثبت می‌کند تا همیشه بالای گزارش باشد.
+  useEffect(() => {
+    startSystemLogBridge();
+    const bridge = getPrinterBridge();
+    if (!bridge?.environment) {
+      logStep('برنامه در مرورگر اجرا شده', 'قابلیت‌های چاپ و گزارشِ سیستمی در دسترس نیستند', 'warn');
+      return;
+    }
+    void bridge.environment().then((info) => {
+      const env = info as Record<string, unknown> & {
+        printers?: { name: string; isDefault: boolean; status: number }[];
+      };
+      logStep(
+        'برنامه بالا آمد',
+        `سیستم‌عامل=${env.platform}/${env.arch} (${env.osRelease}) · الکترون=${env.electron} · ` +
+          `کروم=${env.chrome} · نسخه‌ی برنامه=${env.appVersion} · نصب‌شده=${env.packaged ? 'بله' : 'خیر'}`,
+      );
+      logStep(
+        `پرینترهای سیستم: ${env.printers?.length ?? 0} مورد`,
+        env.printers?.length
+          ? env.printers.map((p) => `«${p.name}»${p.isDefault ? ' (پیش‌فرض)' : ''} وضعیت=${p.status}`).join(' · ')
+          : 'هیچ پرینتری پیدا نشد',
+        env.printers?.length ? 'info' : 'warn',
+      );
+    });
+  }, []);
+
   // تم روشن/تیره — روی <html data-theme> اعمال و در localStorage ذخیره می‌شود
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem('cw2_theme') as Theme) || 'dark',
@@ -135,6 +164,7 @@ export default function App() {
    */
   const handleTestPrint = async (): Promise<PrintReport> => {
     const { printMode, printerName } = store.config;
+    logStep('👆 دکمه‌ی «چاپِ آزمایشی» زده شد', `تنظیماتِ فعلی: حالت=${printMode} · پرینتر=${printerName || '(انتخاب نشده)'}`);
     setPrintSaleTarget(null);
     setPrintTarget(createSampleReceipt());
     await new Promise<void>((resolve) => {

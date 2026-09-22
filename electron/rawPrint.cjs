@@ -35,8 +35,13 @@ function removeQuietly(file) {
   }
 }
 
+/** لاگ‌گیرِ پیش‌فرض: هیچ‌کاری نمی‌کند. صداکننده می‌تواند لاگ‌گیرِ واقعی بدهد. */
+const noopLog = () => {};
+
 /** اجرای یک دستور و برگرداندنِ نتیجه به‌صورتِ خوانا (هرگز پرتاب نمی‌کند). */
-function run(command, args, options = {}) {
+function run(command, args, options = {}, log = noopLog) {
+  const startedAt = Date.now();
+  log('info', `اجرای دستور: ${command}`, `آرگومان‌ها: ${args.join(' ')}`);
   return new Promise((resolve) => {
     let child;
     try {
@@ -47,6 +52,7 @@ function run(command, args, options = {}) {
     }
 
     let stderr = '';
+    let stdout = '';
     let settled = false;
     const finish = (result) => {
       if (settled) return;
@@ -66,8 +72,12 @@ function run(command, args, options = {}) {
     child.stderr?.on('data', (chunk) => {
       stderr += chunk.toString();
     });
+    child.stdout?.on('data', (chunk) => {
+      stdout += chunk.toString();
+    });
     child.on('error', (error) => {
       clearTimeout(timer);
+      log('error', `اجرای ${command} ممکن نشد`, error && error.message ? error.message : String(error));
       finish({
         ok: false,
         reason:
@@ -78,6 +88,13 @@ function run(command, args, options = {}) {
     });
     child.on('close', (code) => {
       clearTimeout(timer);
+      log(
+        code === 0 ? 'ok' : 'error',
+        `${command} با کدِ ${code} تمام شد`,
+        `زمان=${Date.now() - startedAt}ms` +
+          (stdout.trim() ? ` · خروجی: ${stdout.trim()}` : '') +
+          (stderr.trim() ? ` · خطا: ${stderr.trim()}` : ' · بدونِ پیامِ خطا'),
+      );
       finish(
         code === 0
           ? { ok: true }
@@ -159,22 +176,67 @@ public class YatashRawPrinter {
   }
 }
 "@
-if ([string]::IsNullOrEmpty($env:YATASH_PRINTER)) { throw 'نامِ پرینتر داده نشده' }
-[YatashRawPrinter]::Send($env:YATASH_PRINTER, $env:YATASH_FILE)
+try {
+  if ([string]::IsNullOrEmpty($env:YATASH_PRINTER)) { throw 'printer name is empty' }
+  if (-not (Test-Path -LiteralPath $env:YATASH_FILE)) { throw 'job file not found' }
+  [YatashRawPrinter]::Send($env:YATASH_PRINTER, $env:YATASH_FILE)
+  exit 0
+} catch {
+  # پیام به خروجیِ خطا می‌رود تا برنامه بتواند عینِ آن را به کاربر نشان دهد
+  [Console]::Error.WriteLine($_.Exception.Message)
+  exit 1
+}
 `;
 
-async function sendWindows(file, deviceName) {
+/**
+ * اسکریپت روی دیسک نوشته و با `-File` اجرا می‌شود، نه با `-Command`.
+ *
+ * چرا: دادنِ یک اسکریپتِ چندخطی به‌صورتِ آرگومانِ خطِ فرمان، از چند لایه‌ی
+ * نقل‌قول‌گذاری (نود → ویندوز → پاورشل) رد می‌شود و کافی است یکی از آن لایه‌ها
+ * یک کاراکتر را جابه‌جا کند تا کلِ اسکریپت بی‌صدا نامعتبر شود. اجرای فایل هیچ‌کدام
+ * از آن لایه‌ها را ندارد.
+ *
+ * علامتِ ابتدای فایل (BOM) هم لازم است، وگرنه پاورشلِ ویندوز فایلِ UTF-8 را با
+ * انکودینگِ محلی می‌خواند و کاراکترهای غیرِانگلیسی خراب می‌شوند.
+ */
+function writeTempScript() {
+  const file = path.join(os.tmpdir(), `yatash-rawprint-${process.pid}-${Date.now()}.ps1`);
+  fs.writeFileSync(file, `\uFEFF${WINDOWS_RAW_SCRIPT}`, 'utf8');
+  return file;
+}
+
+async function sendWindows(file, deviceName, log = noopLog) {
   if (!deviceName) {
+    log('error', '🔴 پرینتر انتخاب نشده', 'در ویندوز برای ارسالِ خام باید نامِ دقیقِ پرینتر مشخص باشد');
     return {
       ok: false,
       reason: 'برای چاپِ حرارتی باید پرینتر را از لیستِ تنظیمات انتخاب کنید (پیش‌فرضِ سیستم کافی نیست)',
     };
   }
-  return run(
-    'powershell.exe',
-    ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', WINDOWS_RAW_SCRIPT],
-    { env: { ...process.env, YATASH_PRINTER: deviceName, YATASH_FILE: file } },
+
+  const script = writeTempScript();
+  log(
+    'info',
+    'مسیرِ ویندوز: ارسالِ خام از راهِ صفِ چاپ',
+    `اسکریپت: ${script} · فایلِ کارِ چاپ: ${file} (${fs.statSync(file).size} بایت) · پرینتر: «${deviceName}»`,
   );
+  const args = ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script];
+  const options = { env: { ...process.env, YATASH_PRINTER: deviceName, YATASH_FILE: file } };
+
+  const queued = { ok: true, note: 'کارِ چاپ به صفِ چاپِ ویندوز تحویل شد.' };
+
+  try {
+    const result = await run('powershell.exe', args, options, log);
+    // نسخه‌های تازه‌ی ویندوز ممکن است فقط پاورشلِ جدید (pwsh) را داشته باشند
+    if (!result.ok && /نصب نیست/.test(result.reason || '')) {
+      log('warn', 'powershell.exe پیدا نشد؛ تلاش با pwsh.exe');
+      const retry = await run('pwsh.exe', args, options, log);
+      return retry.ok ? queued : retry;
+    }
+    return result.ok ? queued : result;
+  } finally {
+    removeQuietly(script);
+  }
 }
 
 /**
@@ -182,19 +244,20 @@ async function sendWindows(file, deviceName) {
  * گزینه‌ی `raw` به سیستمِ چاپ می‌گوید «این فایل از قبل به زبانِ پرینتر است، دست
  * نزن» — دقیقاً همان چیزی که لازم داریم.
  */
-async function sendUnix(file, deviceName) {
+async function sendUnix(file, deviceName, log = noopLog) {
   const args = deviceName ? ['-d', deviceName, '-o', 'raw', file] : ['-o', 'raw', file];
-  const result = await run('lp', args);
-  if (result.ok) return result;
+  log('info', 'مسیرِ لینوکس/مک: ارسالِ خام با دستورِ lp', `پرینتر: «${deviceName || '(پیش‌فرضِ سیستم)'}»`);
+  const result = await run('lp', args, {}, log);
+  if (result.ok) return { ok: true, note: 'کارِ چاپ به صفِ چاپِ سیستم تحویل شد.' };
 
   // اگر `lp` در دسترس نبود، آخرین راه نوشتنِ مستقیم روی خودِ دستگاه است.
-  // معمولاً به دسترسیِ ویژه نیاز دارد، پس علتش صریح گزارش می‌شود.
-  const direct = writeToDevice(file);
+  log('warn', 'lp جواب نداد؛ تلاش برای نوشتنِ مستقیم روی دستگاه', result.reason);
+  const direct = writeToDevice(file, log);
   return direct.ok ? direct : { ok: false, reason: `${result.reason} | ${direct.reason}` };
 }
 
 /** نوشتنِ مستقیم روی گره‌ی دستگاهِ پرینتر (مثلِ /dev/usb/lp0). */
-function writeToDevice(file) {
+function writeToDevice(file, log = noopLog) {
   let nodes = [];
   try {
     nodes = fs
@@ -204,6 +267,7 @@ function writeToDevice(file) {
   } catch {
     nodes = [];
   }
+  log('info', 'گره‌های دستگاهِ پرینتر', nodes.join(' · ') || 'هیچ');
   if (nodes.length === 0) return { ok: false, reason: 'هیچ دستگاهِ پرینتری در /dev/usb پیدا نشد' };
 
   const data = fs.readFileSync(file);
@@ -227,12 +291,17 @@ function writeToDevice(file) {
  * بایت‌های آماده را به پرینتر می‌رساند.
  * همیشه با یک نتیجه‌ی خوانا برمی‌گردد و هرگز خطا پرتاب نمی‌کند.
  */
-async function sendRaw(data, deviceName) {
-  if (!data || data.length === 0) return { ok: false, reason: 'داده‌ای برای چاپ ساخته نشد' };
+async function sendRaw(data, deviceName, log = noopLog) {
+  if (!data || data.length === 0) {
+    log('error', '🔴 داده‌ای برای چاپ نبود');
+    return { ok: false, reason: 'داده‌ای برای چاپ ساخته نشد' };
+  }
 
   const file = writeTempJob(data);
   try {
-    return process.platform === 'win32' ? await sendWindows(file, deviceName) : await sendUnix(file, deviceName);
+    return process.platform === 'win32'
+      ? await sendWindows(file, deviceName, log)
+      : await sendUnix(file, deviceName, log);
   } finally {
     removeQuietly(file);
   }

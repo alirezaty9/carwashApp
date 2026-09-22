@@ -10,6 +10,8 @@
  *      بیرون می‌آید.
  */
 
+import { logStep } from './techLog';
+
 /**
  * عرضی که سرِ چاپگر واقعاً می‌سوزاند — نه عرضِ رول.
  * رولِ ۸۰mm فقط ۷۲mm وسطش چاپ می‌شود و ۴mm هر طرف فیزیکاً بیرونِ سرِ چاپگر است.
@@ -70,6 +72,12 @@ export interface PrintOutcome {
   success: boolean;
   /** پیامِ خامِ سیستم‌عامل؛ برای تشخیصِ علت، نه برای نمایشِ مستقیم. */
   reason?: string;
+  /**
+   * توضیحِ اینکه فیش دقیقاً به کجا تحویل شد.
+   * چرا لازم است: «موفق» یعنی سیستم‌عامل کار را پذیرفت، نه اینکه کاغذ بیرون آمد.
+   * اگر چیزی چاپ نشد، کاربر باید بداند دنبالِ ادامه‌ی ماجرا کجا بگردد.
+   */
+  note?: string;
 }
 
 export interface PrinterBridge {
@@ -82,6 +90,9 @@ export interface PrinterBridge {
     dotsPerLine: number;
   }): Promise<PrintOutcome>;
   thermalFinish?(options: { deviceName?: string }): Promise<PrintOutcome>;
+  /** ابزارِ موقتِ گزارشِ فنی */
+  environment?(): Promise<Record<string, unknown>>;
+  saveLog?(text: string): Promise<{ success: boolean; path?: string; reason?: string }>;
 }
 
 /** پلِ پرینتر فقط در نسخه‌ی دسکتاپ وجود دارد؛ در مرورگر undefined است. */
@@ -201,8 +212,20 @@ export function printPreparedReceipt(mode: PrintMode, printerName: string): Prom
   return enqueuePrintJob(() => runPrintJob(mode, printerName));
 }
 
+const MODE_LABELS: Record<PrintMode, string> = {
+  thermal: 'چاپِ حرارتیِ مستقیم',
+  dialog: 'با پنجره‌ی چاپ',
+  silent: 'چاپِ معمولی',
+  off: 'بدونِ پرینتر',
+};
+
 async function runPrintJob(mode: PrintMode, printerName: string): Promise<PrintOutcome> {
-  if (mode === 'off') return { success: false, reason: 'print-disabled' };
+  logStep('▶️ درخواستِ چاپ', `حالت=${MODE_LABELS[mode]} · پرینترِ انتخاب‌شده=${printerName || '(انتخاب نشده)'}`);
+
+  if (mode === 'off') {
+    logStep('چاپ انجام نشد', 'حالتِ چاپ روی «بدونِ پرینتر» است', 'warn');
+    return { success: false, reason: 'print-disabled' };
+  }
 
   // مسیرِ حرارتی اصلاً وارد زنجیره‌ی چاپِ سیستم‌عامل نمی‌شود، پس نه اندازه‌ی برگه
   // لازم دارد و نه درایور.
@@ -211,12 +234,15 @@ async function runPrintJob(mode: PrintMode, printerName: string): Promise<PrintO
   let page: PrintPageSize;
   try {
     page = await preparePrintPage();
+    logStep('اندازه‌ی برگه اعلام شد', `${page.widthMm}×${page.heightMm} میلی‌متر`);
   } catch (error) {
+    logStep('🔴 آماده‌سازیِ فیش شکست خورد', errorText(error), 'error');
     return { success: false, reason: `prepare-failed: ${errorText(error)}` };
   }
 
   const bridge = getPrinterBridge();
   if (!bridge) {
+    logStep('🟡 اجرا در مرورگر', 'پلِ سیستمی وجود ندارد؛ پنجره‌ی چاپِ مرورگر باز می‌شود', 'warn');
     // مرورگر: پلِ سیستمی وجود ندارد و تنها راه، پنجره‌ی چاپِ خودِ مرورگر است.
     // در نسخه‌ی دسکتاپ هرگز به اینجا نمی‌رسیم.
     window.print();
@@ -224,8 +250,15 @@ async function runPrintJob(mode: PrintMode, printerName: string): Promise<PrintO
   }
 
   try {
-    return await bridge.print({ deviceName: printerName || undefined, page, silent: mode === 'silent' });
+    const outcome = await bridge.print({ deviceName: printerName || undefined, page, silent: mode === 'silent' });
+    logStep(
+      outcome.success ? '✅ کارِ چاپ تحویلِ سیستم شد' : '🔴 کارِ چاپ رد شد',
+      outcome.reason || 'بدونِ پیام',
+      outcome.success ? 'ok' : 'error',
+    );
+    return outcome;
   } catch (error) {
+    logStep('🔴 ارتباط با بخشِ سیستمی قطع شد', errorText(error), 'error');
     return { success: false, reason: errorText(error) };
   }
 }
@@ -247,6 +280,7 @@ async function runPrintJob(mode: PrintMode, printerName: string): Promise<PrintO
 export async function printThermalReceipt(printerName: string): Promise<PrintOutcome> {
   const bridge = getPrinterBridge();
   if (!bridge?.thermalBegin || !bridge.thermalCapture || !bridge.thermalFinish) {
+    logStep('🔴 چاپِ حرارتی در دسترس نیست', 'این قابلیت فقط در نسخه‌ی دسکتاپ کار می‌کند', 'error');
     return { success: false, reason: 'no-bridge' };
   }
 
@@ -254,7 +288,11 @@ export async function printThermalReceipt(printerName: string): Promise<PrintOut
   await waitForLayout();
 
   const area = document.querySelector<HTMLElement>('.print-area');
-  if (!area) return { success: false, reason: 'empty-print-area' };
+  if (!area) {
+    logStep('🔴 ناحیه‌ی چاپ خالی است', 'هیچ فیشی روی ناحیه‌ی چاپ ننشسته بود', 'error');
+    return { success: false, reason: 'empty-print-area' };
+  }
+  logStep('ناحیه‌ی چاپ پیدا شد', `متنِ فیش: ${area.innerText.trim().length} کاراکتر`);
 
   const root = document.documentElement;
   const previousTransform = area.style.transform;
@@ -274,27 +312,58 @@ export async function printThermalReceipt(printerName: string): Promise<PrintOut
     const viewportHeight = window.innerHeight;
     const totalHeight = layout.height * zoom;
 
-    const begin = await bridge.thermalBegin();
-    if (!begin.success) return begin;
+    const sliceCount = Math.max(1, Math.ceil(totalHeight / viewportHeight));
+    logStep(
+      'آماده‌سازیِ تصویرِ فیش',
+      `اندازه‌ی چیدمان=${Math.round(layout.width)}×${Math.round(layout.height)} · تراکمِ نمایشگر=${pixelRatio} · ` +
+        `بزرگ‌نمایی=${zoom.toFixed(3)} · ارتفاعِ کل=${Math.round(totalHeight)} پیکسل · ` +
+        `ارتفاعِ پنجره=${viewportHeight} · تعدادِ تکه=${sliceCount}`,
+    );
 
+    const begin = await bridge.thermalBegin();
+    if (!begin.success) {
+      logStep('🔴 شروعِ چاپِ حرارتی رد شد', begin.reason, 'error');
+      return begin;
+    }
+
+    let index = 0;
     for (let offset = 0; offset < totalHeight; offset += viewportHeight) {
+      index += 1;
       area.style.transform = `translateY(${-offset}px) scale(${zoom})`;
       await nextFrame();
 
       const rect = area.getBoundingClientRect();
       const top = Math.max(0, rect.top);
       const height = Math.min(viewportHeight, rect.bottom) - top;
-      if (height < 1) break;
+      logStep(
+        `تکه‌ی ${index} از ${sliceCount}`,
+        `جابه‌جایی=${Math.round(offset)} · ناحیه: چپ=${Math.round(rect.left)} بالا=${Math.round(top)} ` +
+          `عرض=${Math.round(rect.width)} ارتفاع=${Math.round(height)}`,
+      );
+      if (height < 1) {
+        logStep('تکه‌ی خالی — پایانِ عکس‌برداری', undefined, 'warn');
+        break;
+      }
 
       const captured = await bridge.thermalCapture({
         rect: { x: Math.max(0, rect.left), y: top, width: rect.width, height },
         dotsPerLine: THERMAL_DOTS_PER_LINE,
       });
-      if (!captured.success) return captured;
+      if (!captured.success) {
+        logStep('🔴 عکس‌برداری از تکه شکست خورد', captured.reason, 'error');
+        return captured;
+      }
     }
 
-    return await bridge.thermalFinish({ deviceName: printerName || undefined });
+    const outcome = await bridge.thermalFinish({ deviceName: printerName || undefined });
+    logStep(
+      outcome.success ? '✅ پایانِ چاپِ حرارتی' : '🔴 چاپِ حرارتی ناموفق',
+      outcome.success ? outcome.note : outcome.reason,
+      outcome.success ? 'ok' : 'error',
+    );
+    return outcome;
   } catch (error) {
+    logStep('🔴 خطای غیرمنتظره در چاپِ حرارتی', errorText(error), 'error');
     return { success: false, reason: errorText(error) };
   } finally {
     // هر اتفاقی افتاد، فیش باید از روی صفحه برداشته شود؛ وگرنه گوشه‌ی پنجره برای
@@ -319,7 +388,14 @@ const has = (reason: string, ...needles: string[]) => needles.some((n) => reason
 export function describePrintOutcome(outcome: PrintOutcome): PrintReport {
   const reason = (outcome.reason || '').toLowerCase();
 
-  if (outcome.success) return { type: 'success', text: 'فیش به پرینتر فرستاده شد.' };
+  if (outcome.success) {
+    return {
+      type: 'success',
+      text: outcome.note
+        ? `${outcome.note} اگر کاغذی بیرون نیامد، صفِ چاپ و پورتِ پرینتر را در تنظیماتِ سیستم بررسی کنید.`
+        : 'فیش به پرینتر فرستاده شد.',
+    };
+  }
 
   if (reason === 'print-disabled') {
     return { type: 'info', text: 'چاپ در تنظیمات روی «بدونِ پرینتر» است، پس چیزی چاپ نشد.' };

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DollarSign, Users, SlidersHorizontal, FileSpreadsheet, History as HistoryIcon, Wallet, Package, KeyRound, UserCog, LucideIcon } from 'lucide-react';
+import { DollarSign, Users, SlidersHorizontal, FileSpreadsheet, History as HistoryIcon, Wallet, Package, KeyRound, UserCog, Terminal, LucideIcon } from 'lucide-react';
 import { Receipt, Sale, User } from '../../types';
 import { Store } from '../../data/store';
 import { PrintReport } from '../../utils/printing';
@@ -13,8 +13,9 @@ import GeneralSettings from './GeneralSettings';
 import ProductsManager from './ProductsManager';
 import UsersManager from './UsersManager';
 import LicenseSettings from '../../license/LicenseSettings';
+import TechLog from './TechLog';
 
-type AdminTab = 'reports' | 'payroll' | 'history' | 'accessories' | 'pricing' | 'workers' | 'users' | 'general' | 'license';
+type AdminTab = 'reports' | 'payroll' | 'history' | 'accessories' | 'pricing' | 'workers' | 'users' | 'general' | 'license' | 'techlog';
 
 const TABS: { id: AdminTab; label: string; icon: LucideIcon }[] = [
   { id: 'reports', label: 'گزارش‌ها', icon: FileSpreadsheet },
@@ -26,6 +27,8 @@ const TABS: { id: AdminTab; label: string; icon: LucideIcon }[] = [
   { id: 'users', label: 'کاربران', icon: UserCog },
   { id: 'license', label: 'لایسنس', icon: KeyRound },
   { id: 'general', label: 'تنظیمات و بکاپ', icon: SlidersHorizontal },
+  // 🔴 موقت — ابزارِ عیب‌یابیِ دوره‌ی تست؛ بعد از تأییدِ چاپ روی ویندوز برداشته می‌شود.
+  { id: 'techlog', label: 'گزارشِ فنی', icon: Terminal },
 ];
 
 export default function AdminPanel({
@@ -60,6 +63,7 @@ export default function AdminPanel({
       {tab === 'users' && <UsersManager store={store} notify={notify} currentUserId={currentUser.id} />}
       {tab === 'license' && <LicenseSettings />}
       {tab === 'general' && <GeneralSettings store={store} notify={notify} onTestPrint={onTestPrint} />}
+      {tab === 'techlog' && <TechLog />}
     </div>
   );
 }

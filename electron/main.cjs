@@ -4,6 +4,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const Store = require('electron-store');
 const license = require('./license.cjs');
 
@@ -229,6 +230,70 @@ ipcMain.handle('storage:info', () => ({
 // ---- کانال‌های IPC لایسنس ----
 // ثبتشان پایینِ فایل و بعد از باز شدنِ انبار انجام می‌شود (داخلِ app.whenReady).
 
+// ============================================================================
+// گزارشِ فنی — ابزارِ موقتِ دوره‌ی تست.
+// هر قدمِ سمتِ سیستم هم در ترمینال چاپ می‌شود و هم به تبِ «گزارشِ فنی» می‌رود.
+// ============================================================================
+function logSystem(level, step, detail) {
+  console.log(`[یاتاش][${level}] ${step}${detail ? ` | ${detail}` : ''}`);
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('diag:log', { level, step, detail });
+  }
+}
+
+// قدم‌های سمتِ رابطِ کاربری هم به ترمینال می‌آیند تا در حالتِ توسعه یک‌جا دیده شوند.
+ipcMain.on('diag:log', (_event, { level, step, detail } = {}) => {
+  console.log(`[یاتاش][${level || 'info'}][اپ] ${step}${detail ? ` | ${detail}` : ''}`);
+});
+
+/** اطلاعاتِ محیط — اولین چیزی که در گزارش لازم است. */
+ipcMain.handle('diag:environment', async (event) => {
+  const wc = BrowserWindow.fromWebContents(event.sender)?.webContents;
+  let printers = [];
+  try {
+    printers = wc ? await wc.getPrintersAsync() : [];
+  } catch (error) {
+    printers = [];
+    logSystem('error', 'گرفتنِ لیستِ پرینترها شکست خورد', error && error.message ? error.message : String(error));
+  }
+  return {
+    platform: process.platform,
+    arch: process.arch,
+    osRelease: os.release(),
+    electron: process.versions.electron,
+    chrome: process.versions.chrome,
+    node: process.versions.node,
+    appVersion: app.getVersion(),
+    packaged: app.isPackaged,
+    userData: USER_DATA_DIR,
+    printers: printers.map((p) => ({
+      name: p.name,
+      displayName: p.displayName,
+      isDefault: p.isDefault,
+      status: p.status,
+      description: p.description,
+    })),
+  };
+});
+
+/** ذخیره‌ی گزارش در یک فایلِ متنی روی میزِ کار. */
+ipcMain.handle('diag:saveLog', async (_event, { text } = {}) => {
+  try {
+    let dir;
+    try {
+      dir = app.getPath('desktop');
+    } catch {
+      dir = USER_DATA_DIR;
+    }
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const target = path.join(dir, `yatash-log-${stamp}.txt`);
+    fs.writeFileSync(target, String(text ?? ''), 'utf8');
+    return { success: true, path: target };
+  } catch (error) {
+    return { success: false, reason: error && error.message ? error.message : String(error) };
+  }
+});
+
 // ---- کانال‌های IPC پرینتر ----
 
 // لیستِ پرینترهای نصب‌شده روی سیستم را برمی‌گرداند تا کاربر در تنظیمات انتخاب کند.
@@ -237,8 +302,14 @@ ipcMain.handle('printer:list', async (event) => {
   if (!wc) return [];
   try {
     const printers = await wc.getPrintersAsync();
+    logSystem(
+      'info',
+      `لیستِ پرینترها: ${printers.length} مورد`,
+      printers.map((p) => `«${p.name}»${p.isDefault ? ' (پیش‌فرض)' : ''} وضعیت=${p.status}`).join(' · ') || 'هیچ',
+    );
     return printers.map((p) => ({ name: p.name, displayName: p.displayName, isDefault: p.isDefault }));
-  } catch {
+  } catch (error) {
+    logSystem('error', 'لیستِ پرینترها گرفته نشد', error && error.message ? error.message : String(error));
     return [];
   }
 });
@@ -314,6 +385,7 @@ let thermalBands = [];
 
 ipcMain.handle('thermal:begin', () => {
   thermalBands = [];
+  logSystem('info', '▶️ چاپِ حرارتی شروع شد', 'حافظه‌ی تکه‌های تصویر خالی شد');
   return { success: true };
 });
 
@@ -329,33 +401,67 @@ ipcMain.handle('thermal:capture', async (event, { rect, dotsPerLine } = {}) => {
   const height = Math.round(Number(rect?.height) || 0);
   if (width <= 0 || height <= 0) return { success: false, reason: 'ناحیه‌ی عکس‌برداری نامعتبر بود' };
 
+  const startedAt = Date.now();
   try {
-    const shot = await wc.capturePage({
+    const captureRect = {
       x: Math.max(0, Math.round(Number(rect.x) || 0)),
       y: Math.max(0, Math.round(Number(rect.y) || 0)),
       width,
       height,
-    });
+    };
+    logSystem(
+      'info',
+      'عکس‌برداری از تکه‌ی فیش',
+      `ناحیه: x=${captureRect.x} y=${captureRect.y} عرض=${captureRect.width} ارتفاع=${captureRect.height}`,
+    );
+    const shot = await wc.capturePage(captureRect);
     // عرض دقیقاً روی تعدادِ نقطه‌های سرِ چاپگر تنظیم می‌شود؛ ارتفاع خودش به همان
     // نسبت تغییر می‌کند تا فیش کشیده یا فشرده نشود.
     const target = Number(dotsPerLine) === escpos.DOTS_PER_LINE_58MM ? escpos.DOTS_PER_LINE_58MM : escpos.DOTS_PER_LINE;
+    const rawSize = shot.getSize();
     const scaled = shot.resize({ width: target, quality: 'best' });
     const size = scaled.getSize();
-    thermalBands.push(escpos.imageToRaster({ bgra: scaled.toBitmap(), width: size.width, height: size.height }));
+    const bitmap = scaled.toBitmap();
+    const raster = escpos.imageToRaster({ bgra: bitmap, width: size.width, height: size.height });
+    thermalBands.push(raster);
+    logSystem(
+      'ok',
+      `تکه‌ی ${thermalBands.length} آماده شد`,
+      `عکسِ خام=${rawSize.width}×${rawSize.height} ← مقیاس‌شده=${size.width}×${size.height} · ` +
+        `پیکسل‌ها=${bitmap.length} بایت ← فرمانِ چاپ=${raster.length} بایت · زمان=${Date.now() - startedAt}ms`,
+    );
     return { success: true };
   } catch (error) {
-    return { success: false, reason: error && error.message ? error.message : String(error) };
+    const reason = error && error.message ? error.message : String(error);
+    logSystem('error', '🔴 عکس‌برداری شکست خورد', reason);
+    return { success: false, reason };
   }
 });
 
 ipcMain.handle('thermal:finish', async (_event, { deviceName } = {}) => {
-  if (thermalBands.length === 0) return { success: false, reason: 'هیچ تصویری از فیش ساخته نشد' };
+  if (thermalBands.length === 0) {
+    logSystem('error', '🔴 چیزی برای چاپ ساخته نشد', 'هیچ تکه‌ای از فیش عکس‌برداری نشده بود');
+    return { success: false, reason: 'هیچ تصویری از فیش ساخته نشد' };
+  }
 
   const job = escpos.buildReceiptJob(thermalBands);
+  const bandCount = thermalBands.length;
   thermalBands = [];
+  logSystem(
+    'info',
+    'بسته‌ی نهایی ساخته شد',
+    `${bandCount} تکه · ${job.length} بایت (${(job.length / 1024).toFixed(1)} کیلوبایت) · ` +
+      `پرینترِ مقصد=${deviceName || '(انتخاب نشده — پیش‌فرضِ سیستم)'} · سیستم‌عامل=${process.platform}`,
+  );
 
-  const result = await sendRaw(job, deviceName || undefined);
-  return result.ok ? { success: true } : { success: false, reason: result.reason };
+  const startedAt = Date.now();
+  const result = await sendRaw(job, deviceName || undefined, logSystem);
+  logSystem(
+    result.ok ? 'ok' : 'error',
+    result.ok ? '✅ ارسال بدونِ خطا تمام شد' : '🔴 ارسال شکست خورد',
+    `${result.ok ? result.note || '' : result.reason || ''} · زمانِ ارسال=${Date.now() - startedAt}ms`,
+  );
+  return result.ok ? { success: true, note: result.note } : { success: false, reason: result.reason };
 });
 
 app.whenReady().then(() => {
