@@ -134,12 +134,12 @@ export default function App() {
   const [printSaleTarget, setPrintSaleTarget] = useState<Sale | null>(null);
 
   const runPrint = () => {
-    const { printMode, printerName } = store.config;
+    const { printMode, printerName, paperWidth } = store.config;
     if (printMode === 'off') return;
     // مکثِ کوتاه تا React ناحیه‌ی چاپ را با فیشِ تازه پر کند؛ بعد اندازه‌ی دقیقِ
     // برگه سنجیده و اعلام می‌شود تا پرینترِ رولی کاغذِ اضافه بیرون ندهد.
     window.setTimeout(() => {
-      void printPreparedReceipt(printMode, printerName).then((outcome) => {
+      void printPreparedReceipt(printMode, printerName, paperWidth).then((outcome) => {
         // چاپِ موفق خودش را روی کاغذ نشان می‌دهد؛ فقط شکست باید اعلام شود.
         const report = describePrintOutcome(outcome);
         if (report.type !== 'success') notify(report.text, report.type);
@@ -163,14 +163,17 @@ export default function App() {
    * نتیجه‌اش برگردانده می‌شود تا در همان صفحه‌ی تنظیمات نشان داده شود.
    */
   const handleTestPrint = async (): Promise<PrintReport> => {
-    const { printMode, printerName } = store.config;
-    logStep('👆 دکمه‌ی «چاپِ آزمایشی» زده شد', `تنظیماتِ فعلی: حالت=${printMode} · پرینتر=${printerName || '(انتخاب نشده)'}`);
+    const { printMode, printerName, paperWidth } = store.config;
+    logStep(
+      '👆 دکمه‌ی «چاپِ آزمایشی» زده شد',
+      `تنظیماتِ فعلی: حالت=${printMode} · پرینتر=${printerName || '(انتخاب نشده)'} · کاغذ=${paperWidth}mm`,
+    );
     setPrintSaleTarget(null);
     setPrintTarget(createSampleReceipt());
     await new Promise<void>((resolve) => {
       window.setTimeout(resolve, PRINT_RENDER_SETTLE_MS);
     });
-    return describePrintOutcome(await printPreparedReceipt(printMode, printerName));
+    return describePrintOutcome(await printPreparedReceipt(printMode, printerName, paperWidth));
   };
 
   // ساعت زنده — هر ثانیه به‌روز می‌شود (ریل‌تایم)

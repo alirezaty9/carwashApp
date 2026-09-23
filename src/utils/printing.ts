@@ -13,20 +13,54 @@
 import { logStep } from './techLog';
 
 /**
- * عرضی که سرِ چاپگر واقعاً می‌سوزاند — نه عرضِ رول.
- * رولِ ۸۰mm فقط ۷۲mm وسطش چاپ می‌شود و ۴mm هر طرف فیزیکاً بیرونِ سرِ چاپگر است.
- * (برای پرینترِ ۵۸mm این عدد ۴۸ است.)
+ * عرضِ رولِ کاغذ. دو اندازه‌ی رایجِ پرینترهای فیش‌زن.
+ * این اندازه قابلِ تشخیصِ خودکار نیست — خودِ دستگاه هیچ‌جا اعلامش نمی‌کند — پس
+ * از تنظیماتِ برنامه خوانده می‌شود.
  */
-export const PAPER_PRINTABLE_WIDTH_MM = 72;
+export type PaperWidth = '58' | '80';
+
+interface PaperSpec {
+  /** عرضِ اسمیِ رول (همان عددی که روی جعبه‌ی کاغذ نوشته شده) */
+  rollMm: number;
+  /**
+   * عرضی که سرِ چاپگر واقعاً می‌سوزاند — نه عرضِ رول.
+   * چند میلی‌متر از هر طرفِ کاغذ فیزیکاً بیرونِ سرِ چاپگر است و هرگز چاپ نمی‌شود.
+   */
+  printableMm: number;
+  /** تعدادِ نقطه‌ی هر خط در تراکمِ استانداردِ ۲۰۳ نقطه بر اینچ */
+  dotsPerLine: number;
+}
+
+const PAPER_SPECS: Record<PaperWidth, PaperSpec> = {
+  '58': { rollMm: 58, printableMm: 48, dotsPerLine: 384 },
+  '80': { rollMm: 80, printableMm: 72, dotsPerLine: 576 },
+};
+
+/**
+ * 🔴 پیش‌فرض عمداً «باریک» است.
+ * اگر اندازه اشتباه باشد، دو نتیجه‌ی خیلی نابرابر دارد: فیشِ باریک روی کاغذِ پهن
+ * فقط حاشیه‌ی خالی می‌گذارد و کامل خوانده می‌شود، ولی فیشِ پهن روی کاغذِ باریک
+ * از لبه بیرون می‌زند و مبلغ و شماره‌ی قبض بریده می‌شوند. پس حدسِ ایمن، باریک است.
+ */
+export const DEFAULT_PAPER_WIDTH: PaperWidth = '58';
+
+/** مشخصاتِ کاغذ را از روی تنظیمات می‌دهد؛ مقدارِ ناشناخته یا نبود، به پیش‌فرضِ ایمن می‌افتد. */
+export const paperSpec = (width?: string): PaperSpec =>
+  PAPER_SPECS[width as PaperWidth] ?? PAPER_SPECS[DEFAULT_PAPER_WIDTH];
+
+/** فهرستِ اندازه‌ها برای نمایش در تنظیمات. */
+export const PAPER_OPTIONS: { id: PaperWidth; rollMm: number; printableMm: number }[] = (
+  Object.keys(PAPER_SPECS) as PaperWidth[]
+).map((id) => ({ id, rollMm: PAPER_SPECS[id].rollMm, printableMm: PAPER_SPECS[id].printableMm }));
 
 /** حاشیه‌ی داخلیِ فیش تا متن به لبه‌ی کاغذ نچسبد. */
-export const RECEIPT_PADDING_MM = 2;
+const RECEIPT_PADDING_MM = 2;
 
 /**
  * فاصله‌ی سرِ چاپگر تا لبه‌ی برش. بدونِ این مقدار کاغذِ اضافه، آخرین خطوطِ فیش
  * داخلِ دستگاه می‌مانند و هنگامِ کندنِ کاغذ خوانده نمی‌شوند.
  */
-export const TEAR_OFF_TAIL_MM = 15;
+const TEAR_OFF_TAIL_MM = 15;
 
 /** سقف و کفِ ایمنیِ طولِ برگه — تا هیچ خطای اندازه‌گیری یک رولِ کامل را بیرون ندهد. */
 const MIN_PAGE_HEIGHT_MM = 40;
@@ -43,12 +77,6 @@ const CAPTURING_CLASS = 'cw-capturing';
 
 /** تگِ <style>ی که قانونِ @page را نگه می‌دارد؛ هر بار بازنویسی می‌شود. */
 const PAGE_STYLE_ID = 'cw-print-page-size';
-
-/**
- * تعدادِ نقطه‌هایی که سرِ چاپگرِ یک پرینترِ ۸۰ میلی‌متری در هر خط می‌سوزاند.
- * فیش دقیقاً با همین عرض عکس‌برداری می‌شود تا نه کشیده شود و نه لبه‌اش بیفتد.
- */
-const THERMAL_DOTS_PER_LINE = 576;
 
 /** اندازه‌ی نهاییِ برگه — میلی‌متر برای CSS، میکرون برای الکترون. */
 export interface PrintPageSize {
@@ -107,9 +135,9 @@ const errorText = (error: unknown) => (error instanceof Error ? error.message : 
  * عرضِ کاغذ را به‌صورتِ متغیرِ CSS روی ریشه‌ی سند می‌نشاند تا هم ناحیه‌ی چاپ و هم
  * مرحله‌ی اندازه‌گیری از یک عددِ واحد تغذیه شوند (یک منبعِ حقیقت).
  */
-function applyPaperVars(): void {
+function applyPaperVars(spec: PaperSpec): void {
   const root = document.documentElement;
-  root.style.setProperty('--cw-paper-width', `${PAPER_PRINTABLE_WIDTH_MM}mm`);
+  root.style.setProperty('--cw-paper-width', `${spec.printableMm}mm`);
   root.style.setProperty('--cw-receipt-padding', `${RECEIPT_PADDING_MM}mm`);
 }
 
@@ -158,29 +186,29 @@ export function measureReceiptHeightMm(): number {
 }
 
 /** قانونِ @page را با اندازه‌ی دقیقِ همین فیش بازنویسی می‌کند. */
-function applyPageSize(heightMm: number): void {
+function applyPageSize(spec: PaperSpec, heightMm: number): void {
   let style = document.getElementById(PAGE_STYLE_ID) as HTMLStyleElement | null;
   if (!style) {
     style = document.createElement('style');
     style.id = PAGE_STYLE_ID;
     document.head.appendChild(style);
   }
-  style.textContent = `@page { size: ${PAPER_PRINTABLE_WIDTH_MM}mm ${heightMm}mm; margin: 0; }`;
+  style.textContent = `@page { size: ${spec.printableMm}mm ${heightMm}mm; margin: 0; }`;
 }
 
 /**
  * آماده‌سازیِ چاپ در مسیرِ سیستم‌عامل: منتظرِ رندر می‌ماند، ارتفاعِ فیش را می‌سنجد و
  * اندازه‌ی برگه را اعلام می‌کند.
  */
-export async function preparePrintPage(): Promise<PrintPageSize> {
-  applyPaperVars();
+export async function preparePrintPage(spec: PaperSpec): Promise<PrintPageSize> {
+  applyPaperVars(spec);
   await waitForLayout();
   const heightMm = measureReceiptHeightMm();
-  applyPageSize(heightMm);
+  applyPageSize(spec, heightMm);
   return {
-    widthMm: PAPER_PRINTABLE_WIDTH_MM,
+    widthMm: spec.printableMm,
     heightMm,
-    widthMicrons: PAPER_PRINTABLE_WIDTH_MM * 1000,
+    widthMicrons: spec.printableMm * 1000,
     heightMicrons: heightMm * 1000,
   };
 }
@@ -208,8 +236,12 @@ function enqueuePrintJob<T>(task: () => Promise<T>): Promise<T> {
  * `window.print()` هیچ خبری از سرنوشتِ کار نمی‌دهد — نه موفقیت، نه علتِ شکست —
  * پس هر شکستی بی‌صدا می‌ماند. مسیرِ پروسه‌ی اصلی همیشه یک جوابِ صریح برمی‌گرداند.
  */
-export function printPreparedReceipt(mode: PrintMode, printerName: string): Promise<PrintOutcome> {
-  return enqueuePrintJob(() => runPrintJob(mode, printerName));
+export function printPreparedReceipt(
+  mode: PrintMode,
+  printerName: string,
+  paperWidth?: string,
+): Promise<PrintOutcome> {
+  return enqueuePrintJob(() => runPrintJob(mode, printerName, paperSpec(paperWidth)));
 }
 
 const MODE_LABELS: Record<PrintMode, string> = {
@@ -219,8 +251,12 @@ const MODE_LABELS: Record<PrintMode, string> = {
   off: 'بدونِ پرینتر',
 };
 
-async function runPrintJob(mode: PrintMode, printerName: string): Promise<PrintOutcome> {
-  logStep('▶️ درخواستِ چاپ', `حالت=${MODE_LABELS[mode]} · پرینترِ انتخاب‌شده=${printerName || '(انتخاب نشده)'}`);
+async function runPrintJob(mode: PrintMode, printerName: string, spec: PaperSpec): Promise<PrintOutcome> {
+  logStep(
+    '▶️ درخواستِ چاپ',
+    `حالت=${MODE_LABELS[mode]} · پرینترِ انتخاب‌شده=${printerName || '(انتخاب نشده)'} · ` +
+      `کاغذ=${spec.rollMm}mm (عرضِ چاپ ${spec.printableMm}mm / ${spec.dotsPerLine} نقطه)`,
+  );
 
   if (mode === 'off') {
     logStep('چاپ انجام نشد', 'حالتِ چاپ روی «بدونِ پرینتر» است', 'warn');
@@ -229,11 +265,11 @@ async function runPrintJob(mode: PrintMode, printerName: string): Promise<PrintO
 
   // مسیرِ حرارتی اصلاً وارد زنجیره‌ی چاپِ سیستم‌عامل نمی‌شود، پس نه اندازه‌ی برگه
   // لازم دارد و نه درایور.
-  if (mode === 'thermal') return printThermalReceipt(printerName);
+  if (mode === 'thermal') return printThermalReceipt(printerName, spec);
 
   let page: PrintPageSize;
   try {
-    page = await preparePrintPage();
+    page = await preparePrintPage(spec);
     logStep('اندازه‌ی برگه اعلام شد', `${page.widthMm}×${page.heightMm} میلی‌متر`);
   } catch (error) {
     logStep('🔴 آماده‌سازیِ فیش شکست خورد', errorText(error), 'error');
@@ -277,14 +313,14 @@ async function runPrintJob(mode: PrintMode, printerName: string): Promise<PrintO
  * چرا تکه‌تکه: فیش بعد از بزرگ‌نمایی (تا برسد به تراکمِ نقطه‌ی پرینتر) بلندتر از
  * خودِ پنجره می‌شود و عکسِ صفحه فقط از ناحیه‌ی دیده‌شده گرفته می‌شود.
  */
-export async function printThermalReceipt(printerName: string): Promise<PrintOutcome> {
+export async function printThermalReceipt(printerName: string, spec: PaperSpec): Promise<PrintOutcome> {
   const bridge = getPrinterBridge();
   if (!bridge?.thermalBegin || !bridge.thermalCapture || !bridge.thermalFinish) {
     logStep('🔴 چاپِ حرارتی در دسترس نیست', 'این قابلیت فقط در نسخه‌ی دسکتاپ کار می‌کند', 'error');
     return { success: false, reason: 'no-bridge' };
   }
 
-  applyPaperVars();
+  applyPaperVars(spec);
   await waitForLayout();
 
   const area = document.querySelector<HTMLElement>('.print-area');
@@ -308,14 +344,15 @@ export async function printThermalReceipt(printerName: string): Promise<PrintOut
     // عکسِ صفحه با تراکمِ خودِ نمایشگر گرفته می‌شود؛ پس بزرگ‌نمایی باید همان را هم
     // حساب کند تا در نهایت دقیقاً به عرضِ موردنیازِ پرینتر برسیم و حروف تیز بمانند.
     const pixelRatio = window.devicePixelRatio || 1;
-    const zoom = Math.max(1, THERMAL_DOTS_PER_LINE / (layout.width * pixelRatio));
+    const zoom = Math.max(1, spec.dotsPerLine / (layout.width * pixelRatio));
     const viewportHeight = window.innerHeight;
     const totalHeight = layout.height * zoom;
 
     const sliceCount = Math.max(1, Math.ceil(totalHeight / viewportHeight));
     logStep(
       'آماده‌سازیِ تصویرِ فیش',
-      `اندازه‌ی چیدمان=${Math.round(layout.width)}×${Math.round(layout.height)} · تراکمِ نمایشگر=${pixelRatio} · ` +
+      `کاغذ=${spec.rollMm}mm/${spec.dotsPerLine} نقطه · اندازه‌ی چیدمان=${Math.round(layout.width)}×${Math.round(layout.height)} · ` +
+        `تراکمِ نمایشگر=${pixelRatio} · ` +
         `بزرگ‌نمایی=${zoom.toFixed(3)} · ارتفاعِ کل=${Math.round(totalHeight)} پیکسل · ` +
         `ارتفاعِ پنجره=${viewportHeight} · تعدادِ تکه=${sliceCount}`,
     );
@@ -347,7 +384,7 @@ export async function printThermalReceipt(printerName: string): Promise<PrintOut
 
       const captured = await bridge.thermalCapture({
         rect: { x: Math.max(0, rect.left), y: top, width: rect.width, height },
-        dotsPerLine: THERMAL_DOTS_PER_LINE,
+        dotsPerLine: spec.dotsPerLine,
       });
       if (!captured.success) {
         logStep('🔴 عکس‌برداری از تکه شکست خورد', captured.reason, 'error');

@@ -87,7 +87,11 @@ function loadAll() {
     receipts: read<Receipt[]>(KEYS.receipts, []),
     products: read(KEYS.products, DEFAULT_PRODUCTS),
     sales: read<Sale[]>(KEYS.sales, []),
-    config: read(KEYS.config, DEFAULT_CONFIG),
+    // 🔴 تنظیمات با پیش‌فرض‌ها ادغام می‌شود، نه جایگزینِ آن.
+    // وگرنه نصبی که از نسخه‌ی قدیمی‌تر آمده، هر تنظیمِ تازه‌ای را «خالی» می‌بیند
+    // (مثلاً اندازه‌ی کاغذ) و رفتارِ برنامه نامشخص می‌شود. همین ادغام در مسیرِ
+    // بازیابیِ بکاپ هم انجام می‌شود.
+    config: { ...DEFAULT_CONFIG, ...read(KEYS.config, DEFAULT_CONFIG) },
     users: read(KEYS.users, DEFAULT_USERS),
     failedKeys,
   };

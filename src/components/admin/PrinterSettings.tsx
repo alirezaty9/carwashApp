@@ -1,8 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Printer, Zap, Ban, RefreshCw, FileCheck2, CheckCircle, AlertCircle, Info, Receipt as ReceiptIcon } from 'lucide-react';
+import { Printer, Zap, Ban, RefreshCw, FileCheck2, CheckCircle, AlertCircle, Info, Receipt as ReceiptIcon, Scaling } from 'lucide-react';
 import { Store } from '../../data/store';
 import { Callout, GhostButton, IconButton, SectionCard, inputClass } from '../common';
-import { getPrinterBridge, PrinterInfo, PrintMode, PrintReport } from '../../utils/printing';
+import {
+  DEFAULT_PAPER_WIDTH,
+  getPrinterBridge,
+  PAPER_OPTIONS,
+  PrinterInfo,
+  PrintMode,
+  PrintReport,
+} from '../../utils/printing';
 
 const MODES: { id: PrintMode; title: string; desc: string; icon: typeof Printer }[] = [
   {
@@ -65,6 +72,9 @@ export default function PrinterSettings({
   }, [loadPrinters]);
 
   const isElectron = !!getPrinterBridge();
+  // نصبی‌های قدیمی این تنظیم را اصلاً ندارند؛ همان پیش‌فرضی که موقعِ چاپ هم
+  // استفاده می‌شود اینجا انتخاب‌شده نشان داده می‌شود تا کادرها بی‌انتخاب نمانند.
+  const activePaper = config.paperWidth ?? DEFAULT_PAPER_WIDTH;
 
   return (
     <SectionCard
@@ -99,6 +109,48 @@ export default function PrinterSettings({
           );
         })}
       </div>
+
+      {/* عرضِ رولِ کاغذ — روی همه‌ی حالت‌های چاپ اثر دارد */}
+      {config.printMode !== 'off' && (
+        <div className="border-t border-[var(--border)] pt-5 flex flex-col gap-3">
+          <div>
+            <p className="text-xs font-bold text-[var(--text)] flex items-center gap-2">
+              <Scaling className="w-4 h-4" />
+              عرضِ کاغذِ پرینتر
+            </p>
+            <p className="text-[11px] text-[var(--text-muted)] font-semibold mt-1">
+              رولِ کاغذ را با خط‌کش اندازه بگیرید و نزدیک‌ترین گزینه را بزنید. پرینتر این را خودش اعلام نمی‌کند، پس
+              باید دستی انتخاب شود.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {PAPER_OPTIONS.map((option) => {
+              const active = activePaper === option.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => updateConfig({ paperWidth: option.id })}
+                  className={`text-right p-3.5 rounded-xl border-2 transition-all cursor-pointer ${
+                    active
+                      ? 'border-[var(--field-active-border)] bg-[var(--field-bg)]'
+                      : 'border-[var(--border)] bg-[var(--field-bg)] hover:border-[var(--field-hover-border)]'
+                  }`}
+                >
+                  <span className="block text-xs font-bold text-[var(--field-text)]">
+                    {option.id === '58' ? 'باریک — رولِ ۵۸ میلی‌متری' : 'پهن — رولِ ۸۰ میلی‌متری'}
+                  </span>
+                  <span className="block text-[10px] leading-relaxed text-[var(--field-muted)] mt-1">
+                    {option.id === '58'
+                      ? 'عرضِ کاغذ حدودِ ۵ تا ۶ سانتی‌متر · فیش با عرضِ ۴۸ میلی‌متر چاپ می‌شود'
+                      : 'عرضِ کاغذ حدودِ ۸ سانتی‌متر · فیش با عرضِ ۷۲ میلی‌متر چاپ می‌شود'}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* راهنمای حالتِ حرارتی */}
       {config.printMode === 'thermal' && (
